@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar, displayName } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
+import { Name } from "@/components/Badge";
 import { FollowButton } from "@/components/FollowButton";
 import { BackIcon, SearchIcon, ShareIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
@@ -61,7 +62,7 @@ function People() {
     <div key={p.id} className="person-row">
       <Avatar profile={p} size={44} link />
       <div className="person-row__body">
-        <Link href={`/u/${p.username}`} className="name" style={{ textDecoration: "none" }}>{displayName(p)}</Link>
+        <Link href={`/u/${p.username}`} className="name" style={{ textDecoration: "none" }}><Name profile={p} /></Link>
         <span className="muted" style={{ fontSize: 13 }}>@{p.username}{sub ? ` · ${sub}` : ""}</span>
       </div>
       {p.id !== me?.id && following && <FollowButton userId={p.id} initial={following.has(p.id)} />}

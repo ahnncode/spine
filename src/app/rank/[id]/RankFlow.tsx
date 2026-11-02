@@ -9,7 +9,9 @@ import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import type { Book } from "@/lib/books";
-import { bucketList, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
+import { bucketList, countHeadToHeads, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, type Entry, type RankedEntry } from "@/lib/data";
+import { BADGE } from "@/lib/badges";
+import { Medallion } from "@/components/Badge";
 import {
   BUCKET_ORDER, BUCKETS, formatScore, MANUAL_SCORE_BOOKS, type Bucket,
 } from "@/lib/ranking";
@@ -42,6 +44,8 @@ interface Result {
   above: RankedEntry | null;
   below: RankedEntry | null;
   moments: Moment[];
+  /** Badges this ranking just earned. */
+  badges: string[];
 }
 
 const COUNT_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
@@ -146,7 +150,11 @@ function Flow() {
     setPhase("saving");
     try {
       await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, manualScore });
-      const [fresh, checkinDays] = await Promise.all([fetchShelf(), fetchCheckinDays().catch(() => [])]);
+      const [fresh, checkinDays, badges] = await Promise.all([
+        fetchShelf(),
+        fetchCheckinDays().catch(() => []),
+        refreshBadges().catch(() => []),
+      ]);
       const ranked = rankEntries(fresh);
       const meIdx = ranked.findIndex((e) => e.book_id === id);
       const inBucket = ranked.filter((e) => e.bucket === b);
@@ -157,6 +165,7 @@ function Flow() {
         above: meIdx > 0 ? ranked[meIdx - 1] : null,
         below: meIdx < ranked.length - 1 ? ranked[meIdx + 1] : null,
         moments: momentsFor(entries, fresh, id, checkinDays),
+        badges: badges.filter((x) => x.fresh && BADGE[x.key]).map((x) => x.key),
       });
       setEntries(fresh);
       setQueueLeft(shiftQueue(id));
@@ -172,7 +181,10 @@ function Flow() {
 
   function step(next: Placement, b: Bucket, sorted: RankedEntry[]) {
     setPlacement(next);
-    if (next.phase === "done") finish(b, next.result as number, sorted);
+    if (next.phase === "done") {
+      countHeadToHeads(next.steps);
+      finish(b, next.result as number, sorted);
+    }
     else setPhase("compare");
   }
 
@@ -381,6 +393,16 @@ function Flow() {
             <p className="moment" style={{ margin: "18px 0 0", fontSize: 17, lineHeight: 1.4, animationDelay: "0.25s" }}>
               {sentence(book.title, result)}
             </p>
+            {result.badges.length > 0 && (
+              <div className="moments">
+                {result.badges.map((k, i) => (
+                  <span key={k} className="moment badge-earned-pill" style={{ animationDelay: `${0.5 + i * 0.15}s` }}>
+                    <span className="medal-pop" style={{ display: "flex", animationDelay: `${0.6 + i * 0.15}s` }}><Medallion badge={k} earned size={32} /></span>
+                    <span>{BADGE[k].name} <small>badge earned</small></span>
+                  </span>
+                ))}
+              </div>
+            )}
             {result.moments.length > 0 && (
               <div className="moments">
                 {result.moments.map((m, i) => (

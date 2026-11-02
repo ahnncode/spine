@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
-import { Avatar, displayName } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
+import { Name } from "@/components/Badge";
 import { BookActions } from "@/components/BookActions";
 import { Cover } from "@/components/Cover";
 import { BackIcon } from "@/components/icons";
@@ -173,7 +174,7 @@ function Inner() {
                       <div className="person-row" style={{ borderBottom: 0, padding: 0 }}>
                         <Avatar profile={p} size={36} link />
                         <div className="person-row__body">
-                          <Link href={p?.username ? `/u/${p.username}` : "#"} className="name" style={{ textDecoration: "none" }}>{displayName(p)}</Link>
+                          <Link href={p?.username ? `/u/${p.username}` : "#"} className="name" style={{ textDecoration: "none" }}><Name profile={p} /></Link>
                           <span className="muted" style={{ fontSize: 12 }}>
                             {[m?.match != null ? `${m.match}% taste match` : null, `#${f.overall_rank} on their shelf`,
                               diff != null && Math.abs(diff) >= 2 ? (diff > 0 ? "liked it more" : "liked it less") : null]

@@ -1,0 +1,35 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { BADGE, BADGES, isEarlyAdopter, progressLabel, sortForCase } from "./badges";
+
+describe("badges", () => {
+  it("has the same 30 keys as the database", () => {
+    const sql = readFileSync("supabase/migrations/20261102250000_badges_referrals.sql", "utf8");
+    const keys = [...sql.matchAll(/\('([a-z_]+)',\s+[a-z_0-9:]+/g)].map((m) => m[1]);
+    expect(BADGES).toHaveLength(30);
+    expect(new Set(keys)).toEqual(new Set(BADGES.map((b) => b.key)));
+  });
+
+  it("labels progress", () => {
+    expect(progressLabel(BADGE.bookworm, { progress: 12, goal: 50 })).toBe("12 of 50 books");
+    expect(progressLabel(BADGE.time_traveler, { progress: 2, goal: 4 })).toBe("2 of 4 centuries");
+    expect(progressLabel(BADGE.page_turner, { progress: 12000, goal: 10000 })).toBe("10,000 of 10,000 pages");
+    expect(progressLabel(BADGE.old_soul, { progress: 0, goal: 1 })).toBeNull();
+  });
+
+  it("puts newest earned first, then closest", () => {
+    const sorted = sortForCase([
+      { key: "century", progress: 90, goal: 100, earned: null, fresh: false },
+      { key: "steady", progress: 1, goal: 4, earned: null, fresh: false },
+      { key: "first_chapter", progress: 1, goal: 1, earned: "2026-03-01T00:00:00Z", fresh: false },
+      { key: "early_adopter", progress: 1, goal: 1, earned: "2026-01-01T00:00:00Z", fresh: false },
+    ]);
+    expect(sorted.map((s) => s.key)).toEqual(["first_chapter", "early_adopter", "century", "steady"]);
+  });
+
+  it("marks 2026 sign-ups as early adopters (Eastern time)", () => {
+    expect(isEarlyAdopter("2026-12-31T23:30:00-05:00")).toBe(true);
+    expect(isEarlyAdopter("2027-01-01T00:30:00-05:00")).toBe(false);
+    expect(isEarlyAdopter(null)).toBe(false);
+  });
+});

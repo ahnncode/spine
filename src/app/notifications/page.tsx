@@ -3,7 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
-import { Avatar, displayName } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
+import { Medallion, Name } from "@/components/Badge";
+import { BADGE } from "@/lib/badges";
 import { EntryThread } from "@/components/EntryThread";
 import { FollowButton } from "@/components/FollowButton";
 import { BackIcon } from "@/components/icons";
@@ -76,7 +78,7 @@ function Inner() {
         {data && data.items.length === 0 && (
           <div className="empty">
             <p className="h2">Nothing yet</p>
-            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments and new followers show up here.</p>
+            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments, new followers and badges show up here.</p>
           </div>
         )}
         {data && data.items.length > 0 && (
@@ -85,11 +87,22 @@ function Inner() {
               const p = data.people.get(n.actor_id);
               const opensThread = n.target_type === "entry" && n.target_id;
               const checkin = n.target_type === "checkin" ? data.checkins.get(n.target_id ?? "") : undefined;
-              const body = (
+              const badge = n.kind === "badge" && n.badge ? BADGE[n.badge] : undefined;
+              const body = badge ? (
+                <>
+                  <span style={{ width: 40, display: "flex", justifyContent: "center", flexShrink: 0 }}><Medallion badge={badge.key} earned size={40} /></span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
+                    You earned <strong>{badge.name}</strong>
+                    <span className="muted" style={{ display: "block", fontSize: 13 }}>{badge.how}</span>
+                    <span className="when" style={{ display: "block" }}>{ago(n.created_at)}</span>
+                  </span>
+                  {!n.read_at && <span aria-label="New" style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0 }} />}
+                </>
+              ) : (
                 <>
                   <Avatar profile={p} size={40} />
                   <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
-                    <strong>{displayName(p)}</strong> {describe(n)}
+                    <strong><Name profile={p} /></strong> {describe(n)}
                     <span className="when" style={{ display: "block" }}>{ago(n.created_at)}</span>
                   </span>
                   {!n.read_at && <span aria-label="New" style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0 }} />}
@@ -102,7 +115,9 @@ function Inner() {
               };
               return (
                 <li key={n.id}>
-                  {opensThread ? (
+                  {badge ? (
+                    <Link href="/you#badges" style={rowStyle}>{body}</Link>
+                  ) : opensThread ? (
                     <button style={rowStyle} onClick={() => setThread(n.target_id)}>{body}</button>
                   ) : n.kind === "follow" && p?.username ? (
                     <div style={{ ...rowStyle, gap: 10 }}>

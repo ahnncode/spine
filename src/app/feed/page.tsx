@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar, displayName } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
+import { Name } from "@/components/Badge";
 import { Cover } from "@/components/Cover";
 import { EntryThread } from "@/components/EntryThread";
 import { ArrowIcon, BellIcon } from "@/components/icons";
@@ -174,7 +175,7 @@ function Feed() {
                   <div className="feed-card__head">
                     <Avatar profile={p} size={40} link />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <Link href={p?.username ? `/u/${p.username}` : "#"} style={{ fontWeight: 700, textDecoration: "none" }}>{displayName(p)}</Link>{" "}
+                      <Link href={p?.username ? `/u/${p.username}` : "#"} style={{ fontWeight: 700, textDecoration: "none" }}><Name profile={p} /></Link>{" "}
                       {verb}
                       <div className="when">{ago(item.at)}</div>
                     </div>

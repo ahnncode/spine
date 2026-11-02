@@ -7,7 +7,8 @@ import {
   type Comment, type HeartState, type Profile, type ScoredEntry,
 } from "@/lib/data";
 import { COMMENT_MAX } from "@/lib/thoughts";
-import { Avatar, displayName } from "./Avatar";
+import { Avatar } from "./Avatar";
+import { Name } from "@/components/Badge";
 import { Cover } from "./Cover";
 import { MoreIcon } from "./icons";
 import { ScoreChip } from "./ScoreChip";
@@ -96,7 +97,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Avatar profile={owner} size={36} link />
               <div style={{ flex: 1, minWidth: 0, fontSize: 14 }}>
-                <strong>{displayName(owner)}</strong> ranked
+                <strong><Name profile={owner} /></strong> ranked
               </div>
             </div>
             <Link href={`/book/${entry.book_id}`} style={{ display: "flex", gap: 14, marginTop: 12, textDecoration: "none", color: "inherit", alignItems: "center" }}>
@@ -127,7 +128,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
                   <div key={c.id} className="comment">
                     <Avatar profile={p} size={32} link />
                     <div className="comment__body">
-                      <span><strong>{displayName(p)}</strong> <span className="muted" style={{ fontSize: 12 }}>{ago(c.created_at)}</span></span>
+                      <span><strong><Name profile={p} /></strong> <span className="muted" style={{ fontSize: 12 }}>{ago(c.created_at)}</span></span>
                       <p>{c.body}</p>
                     </div>
                     <div style={{ position: "relative" }}>

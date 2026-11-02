@@ -1,6 +1,7 @@
 import { dedupeKey, sanitizeBook, type Book, type BookInput } from "./books";
 import type { ImportedBook } from "./goodreads";
 import { startingOrder } from "./goodreads";
+import type { BadgeStatus } from "./badges";
 import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
 import { supabase } from "./supabase";
 
@@ -46,6 +47,8 @@ export interface Profile {
   display_name: string | null;
   is_private: boolean;
   yearly_goal: number | null;
+  /** When they joined; joining in Spine's first year earns the Early Adopter mark. */
+  created_at?: string | null;
 }
 
 const ENTRY_SELECT =
@@ -377,7 +380,7 @@ export async function importGoodreads(
 
 /* ------------------------------ Profiles & follows ----------------------- */
 
-const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal";
+const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at";
 
 export async function fetchMyProfile(): Promise<Profile | null> {
   const uid = await myId();
@@ -759,7 +762,9 @@ export async function fetchScoredEntry(id: string): Promise<ScoredEntry | null> 
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow";
+  kind: "reaction" | "comment" | "follow" | "badge";
+  /** For badge notifications: which badge. */
+  badge?: string | null;
   target_type: TargetType | null;
   target_id: string | null;
   created_at: string;
@@ -770,7 +775,7 @@ export async function fetchNotifications(): Promise<Notification[]> {
   const uid = await myId();
   const { data, error } = await supabase()
     .from("notifications")
-    .select("id, actor_id, kind, target_type, target_id, created_at, read_at")
+    .select("id, actor_id, kind, badge, target_type, target_id, created_at, read_at")
     .eq("user_id", uid)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -832,4 +837,72 @@ export async function report(targetType: "comment" | "entry" | "checkin" | "prof
     .from("reports")
     .insert({ target_type: targetType, target_id: targetId, reason: reason?.trim().slice(0, 500) || null });
   if (error) throw error;
+}
+
+/* -------------------------------- Badges --------------------------------- */
+
+/** Award any badges you've newly earned and get progress on all of them. */
+export async function refreshBadges(): Promise<BadgeStatus[]> {
+  const { data, error } = await supabase().rpc("refresh_badges");
+  if (error) throw error;
+  return ((data as { badge_key: string; progress: number | string; goal: number | string; earned: string | null; fresh: boolean }[]) || []).map((r) => ({
+    key: r.badge_key,
+    progress: Number(r.progress),
+    goal: Number(r.goal),
+    earned: r.earned,
+    fresh: r.fresh,
+  }));
+}
+
+/** Badges someone has earned (empty for private shelves you can't see). */
+export async function fetchBadges(userId: string): Promise<{ key: string; earned_at: string }[]> {
+  const { data, error } = await supabase()
+    .from("badge_awards")
+    .select("badge, earned_at")
+    .eq("user_id", userId)
+    .order("earned_at", { ascending: false });
+  if (error) throw error;
+  return ((data as { badge: string; earned_at: string }[]) || []).map((r) => ({ key: r.badge, earned_at: r.earned_at }));
+}
+
+/** Count head-to-heads you answered (for the Decisive badge). Fire and forget. */
+export function countHeadToHeads(n: number): void {
+  if (n <= 0) return;
+  void supabase().rpc("add_head_to_heads", { n: Math.min(n, 20) }).then(() => {}, () => {});
+}
+
+/* ------------------------------- Invites --------------------------------- */
+
+const REF_KEY = "spine:ref";
+
+/** Remember who invited this browser, until sign-up finishes. */
+export function rememberReferrer(username: string): void {
+  try {
+    localStorage.setItem(REF_KEY, username.toLowerCase());
+  } catch {}
+}
+
+/** Credit whoever invited you, once. Safe to call more than once. */
+export async function claimPendingReferral(): Promise<void> {
+  let ref: string | null = null;
+  try {
+    ref = localStorage.getItem(REF_KEY);
+  } catch {}
+  if (!ref) return;
+  await supabase().rpc("claim_referral", { p_username: ref }).then(() => {}, () => {});
+  try {
+    localStorage.removeItem(REF_KEY);
+  } catch {}
+}
+
+/** Public: the name to show on an invite page. */
+export async function inviteInfo(username: string): Promise<{ display_name: string | null; username: string } | null> {
+  const { data, error } = await supabase().rpc("invite_info", { p_username: username });
+  if (error) throw error;
+  return ((data as { display_name: string | null; username: string }[]) || [])[0] ?? null;
+}
+
+export function inviteUrl(username: string): string {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://readspine.app";
+  return `${origin}/join/${username}`;
 }

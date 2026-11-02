@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { RequireAuth, useAuth, useProfile } from "@/components/Auth";
-import { fetchMyProfile, updateMyProfile, usernameAvailable } from "@/lib/data";
+import { claimPendingReferral, fetchMyProfile, refreshBadges, updateMyProfile, usernameAvailable } from "@/lib/data";
 
 export default function WelcomePage() {
   return (
@@ -61,6 +61,9 @@ function Welcome() {
       // Make sure it really saved before moving on, rather than bouncing back here.
       const saved = await fetchMyProfile();
       if (saved?.username !== username) throw new Error("Couldn’t save your username. Try again in a moment.");
+      // Credit whoever invited them, then hand out the badges they start with.
+      await claimPendingReferral();
+      await refreshBadges().catch(() => {});
       await reloadProfile();
       router.replace("/start");
     } catch (err) {

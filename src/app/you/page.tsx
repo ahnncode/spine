@@ -4,14 +4,18 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar, displayName } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
+import { EarlyPill, Name } from "@/components/Badge";
+import { BadgeCase } from "@/components/BadgeCase";
+import { InviteCard } from "@/components/InviteCard";
 import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
-import { deleteMyAccount, followCounts, rankEntries, updateMyProfile } from "@/lib/data";
-import { milestones, passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
+import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
+import { deleteMyAccount, followCounts, rankEntries, refreshBadges, updateMyProfile } from "@/lib/data";
+import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
 
 export default function YouPage() {
@@ -40,9 +44,14 @@ function You() {
   const { streak } = useStreak(entries);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
-  const ladder = milestones({ ranked: ranked.length, stamps: earnedStamps, streak: streak.weeks });
-  const earned = ladder.filter((m) => m.earned);
-  const next = ladder.filter((m) => !m.earned);
+  const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
+  // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
+  const shelfSize = entries?.length ?? -1;
+  useEffect(() => {
+    if (!profile) return;
+    refreshBadges().then(setBadges).catch(() => setBadges((b) => b ?? []));
+  }, [profile, shelfSize]);
+  const connector = badges?.find((b) => b.key === "connector");
 
   async function signOut() {
     await supabase().auth.signOut();
@@ -59,12 +68,13 @@ function You() {
           <Avatar profile={profile} size={60} />
           <div style={{ minWidth: 0, flex: 1 }}>
             <h1 className="h1" style={{ fontSize: 28, letterSpacing: "-0.04em", display: "flex", alignItems: "center", gap: 8 }}>
-              {displayName(profile)}
+              <span style={{ minWidth: 0 }}><Name profile={profile} markSize={20} /></span>
               {profile?.is_private && <LockIcon size={16} aria-label="Private" />}
             </h1>
             <div className="muted" style={{ fontSize: 13 }}>
               @{profile?.username} · {counts ? `${counts.followers} followers · ${counts.following} following` : " "}
             </div>
+            {isEarlyAdopter(profile?.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
           </div>
           <button className="btn btn--quiet" style={{ minHeight: 40, fontSize: 14, padding: "0 14px" }} onClick={() => setEditing(true)}>
             Edit
@@ -133,20 +143,11 @@ function You() {
           )}
         </section>
 
-        <section className="card" style={{ marginTop: 10, paddingTop: 12, paddingBottom: 6 }}>
-          <h2 className="h2">Milestones</h2>
-          {[...next, ...earned.slice().reverse().slice(0, 4)].map((m) => (
-            <div key={m.id} className="milestone" style={{ opacity: m.earned ? 1 : 0.9 }}>
-              <div className="milestone__badge" style={{ background: m.earned ? "var(--accent)" : "var(--well)" }}>
-                {m.earned ? "★" : <span className="m" style={{ fontSize: 11, fontWeight: 700 }}>{Math.round(m.progress * 100)}%</span>}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>{m.label}</div>
-                <div className="muted" style={{ fontSize: 12 }}>{m.earned ? "Earned" : m.detail}</div>
-              </div>
-            </div>
-          ))}
-        </section>
+        <BadgeCase statuses={badges} />
+
+        {profile?.username && (
+          <InviteCard username={profile.username} friends={connector?.progress ?? 0} earned={Boolean(connector?.earned)} />
+        )}
 
         {ranked.length > 0 && (
           <section className="card" style={{ marginTop: 10 }}>

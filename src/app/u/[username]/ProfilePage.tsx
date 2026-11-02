@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar, displayName } from "@/components/Avatar";
+import { Avatar } from "@/components/Avatar";
+import { EarlyPill, Name } from "@/components/Badge";
+import { BadgeStrip } from "@/components/BadgeCase";
+import { isEarlyAdopter } from "@/lib/badges";
 import { Cover } from "@/components/Cover";
 import { FollowButton } from "@/components/FollowButton";
 import { WantButton } from "@/components/WantButton";
@@ -12,7 +15,7 @@ import { BackIcon, LockIcon, MoreIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import {
-  block, fetchFollowing, fetchMyBlocks, fetchProfileByUsername, fetchShelf, followCounts, rankEntries, report, tasteMatches, unblock,
+  block, fetchBadges, fetchFollowing, fetchMyBlocks, fetchProfileByUsername, fetchShelf, followCounts, rankEntries, report, tasteMatches, unblock,
   type Entry, type Match, type Profile,
 } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
@@ -34,6 +37,7 @@ interface Loaded {
   counts: { followers: number; following: number };
   match: Match | undefined;
   blocked: boolean;
+  badges: { key: string; earned_at: string }[];
 }
 
 function Inner() {
@@ -73,10 +77,11 @@ function Inner() {
       const profile = await fetchProfileByUsername(username);
       if (!profile) return setData(null);
       if (profile.id === me?.id) return router.replace("/you");
-      const [theirs, mine, followingIds, counts, matches, blocks] = await Promise.all([
+      const [theirs, mine, followingIds, counts, matches, blocks, badges] = await Promise.all([
         fetchShelf(profile.id), fetchShelf(), fetchFollowing(), followCounts(profile.id), tasteMatches([profile.id]), fetchMyBlocks(),
+        fetchBadges(profile.id).catch(() => []),
       ]);
-      setData({ profile, theirs, mine, following: followingIds.includes(profile.id), counts, match: matches.get(profile.id), blocked: blocks.has(profile.id) });
+      setData({ profile, theirs, mine, following: followingIds.includes(profile.id), counts, match: matches.get(profile.id), blocked: blocks.has(profile.id), badges });
     })().catch(() => setData(null));
   }, [username, me?.id, router]);
 
@@ -115,8 +120,9 @@ function Inner() {
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
               <Avatar profile={data.profile} size={64} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h1 className="h1" style={{ fontSize: 28 }}>{displayName(data.profile)}</h1>
+                <h1 className="h1" style={{ fontSize: 28 }}><Name profile={data.profile} markSize={20} /></h1>
                 <div className="muted" style={{ fontSize: 13 }}>@{data.profile.username} · {data.counts.followers} followers</div>
+                {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
               </div>
               {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} />}
               <div style={{ position: "relative" }}>
@@ -156,6 +162,8 @@ function Inner() {
                     </div>
                   </div>
                 </div>
+
+                <BadgeStrip earned={data.badges} />
 
                 {disagree.length > 0 && (
                   <section className="card" style={{ marginTop: 10 }}>
