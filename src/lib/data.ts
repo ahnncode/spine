@@ -856,13 +856,9 @@ export async function refreshBadges(): Promise<BadgeStatus[]> {
   }));
 }
 
-/** Badges someone has earned (empty for private shelves you can't see). */
+/** Badges someone has earned, brought up to date first (empty for shelves you can't see). */
 export async function fetchBadges(userId: string): Promise<{ key: string; earned_at: string }[]> {
-  const { data, error } = await supabase()
-    .from("badge_awards")
-    .select("badge, earned_at")
-    .eq("user_id", userId)
-    .order("earned_at", { ascending: false });
+  const { data, error } = await supabase().rpc("profile_badges", { p_user: userId });
   if (error) throw error;
   return ((data as { badge: string; earned_at: string }[]) || []).map((r) => ({ key: r.badge, earned_at: r.earned_at }));
 }
