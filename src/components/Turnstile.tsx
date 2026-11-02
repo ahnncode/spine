@@ -5,6 +5,12 @@ import { useEffect, useRef } from "react";
 /** Cloudflare Turnstile site key (public). When unset, bot checks are off. */
 export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
+export type TurnstileStatus =
+  | { state: "loading" }
+  | { state: "ready" }
+  | { state: "error"; code: string }
+  | { state: "blocked" };
+
 interface TurnstileApi {
   render: (el: HTMLElement, opts: Record<string, unknown>) => string;
   reset: (id: string) => void;
@@ -30,7 +36,7 @@ function loadScript(): Promise<void> {
       s.onload = () => resolve();
       s.onerror = () => {
         loading = null;
-        reject(new Error("Couldn’t load the bot check"));
+        reject(new Error("blocked"));
       };
       document.head.appendChild(s);
     });
@@ -39,21 +45,34 @@ function loadScript(): Promise<void> {
 }
 
 /**
- * Cloudflare's invisible-by-default bot check. Most people never see it; it
- * hands back a token that Supabase verifies before sending a sign-in email.
- * `resetKey` changes force a fresh token (tokens are single-use).
+ * Cloudflare's bot check. Usually invisible; it shows a checkbox only when
+ * Cloudflare wants a human to tap it. Reports its state so the page can
+ * explain a stuck or failed check instead of just greying out the button.
  */
-export function Turnstile({ onToken, resetKey }: { onToken: (token: string | null) => void; resetKey: number }) {
+export function Turnstile({
+  onToken,
+  onStatus,
+  resetKey,
+}: {
+  onToken: (token: string | null) => void;
+  onStatus?: (s: TurnstileStatus) => void;
+  resetKey: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const idRef = useRef<string | null>(null);
-  const cb = useRef(onToken);
+  const cb = useRef({ onToken, onStatus });
   useEffect(() => {
-    cb.current = onToken;
+    cb.current = { onToken, onStatus };
   });
 
   useEffect(() => {
     if (!TURNSTILE_SITE_KEY) return;
     let cancelled = false;
+    cb.current.onStatus?.({ state: "loading" });
+    // A script that never arrives (blocked silently) shouldn't leave people waiting forever.
+    const watchdog = setTimeout(() => {
+      if (!window.turnstile && !cancelled) cb.current.onStatus?.({ state: "blocked" });
+    }, 8000);
     loadScript()
       .then(() => {
         if (cancelled || !ref.current || !window.turnstile) return;
@@ -61,14 +80,26 @@ export function Turnstile({ onToken, resetKey }: { onToken: (token: string | nul
           sitekey: TURNSTILE_SITE_KEY,
           appearance: "interaction-only",
           theme: "light",
-          callback: (t: string) => cb.current(t),
-          "expired-callback": () => cb.current(null),
-          "error-callback": () => cb.current(null),
+          retry: "auto",
+          "refresh-expired": "auto",
+          callback: (t: string) => {
+            cb.current.onToken(t);
+            cb.current.onStatus?.({ state: "ready" });
+          },
+          "expired-callback": () => cb.current.onToken(null),
+          "error-callback": (code: string | number) => {
+            cb.current.onToken(null);
+            cb.current.onStatus?.({ state: "error", code: String(code ?? "") });
+            return true; // handled here; don't also throw
+          },
         });
       })
-      .catch(() => cb.current(null));
+      .catch(() => {
+        if (!cancelled) cb.current.onStatus?.({ state: "blocked" });
+      });
     return () => {
       cancelled = true;
+      clearTimeout(watchdog);
       if (idRef.current && window.turnstile) window.turnstile.remove(idRef.current);
       idRef.current = null;
     };
@@ -76,11 +107,12 @@ export function Turnstile({ onToken, resetKey }: { onToken: (token: string | nul
 
   useEffect(() => {
     if (resetKey && idRef.current && window.turnstile) {
-      cb.current(null);
+      cb.current.onToken(null);
+      cb.current.onStatus?.({ state: "loading" });
       window.turnstile.reset(idRef.current);
     }
   }, [resetKey]);
 
   if (!TURNSTILE_SITE_KEY) return null;
-  return <div ref={ref} style={{ marginTop: 16, minHeight: 0 }} />;
+  return <div ref={ref} style={{ marginTop: 16 }} />;
 }

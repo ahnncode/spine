@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { peekDestination, SetupNotice, takeDestination, useAuth } from "@/components/Auth";
 import { BackIcon } from "@/components/icons";
-import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/Turnstile";
+import { Turnstile, TURNSTILE_SITE_KEY, type TurnstileStatus } from "@/components/Turnstile";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
 
 export default function Login() {
@@ -17,7 +17,29 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaRound, setCaptchaRound] = useState(0);
+  const [check, setCheck] = useState<TurnstileStatus>({ state: "loading" });
+  const [waiting, setWaiting] = useState(false);
   const needsCaptcha = Boolean(TURNSTILE_SITE_KEY);
+  // Lets a submit that beat the bot check wait for it to finish.
+  const tokenRef = useRef<string | null>(null);
+  const waiters = useRef<Array<(t: string | null) => void>>([]);
+
+  function onToken(t: string | null) {
+    tokenRef.current = t;
+    setCaptcha(t);
+    if (t) waiters.current.splice(0).forEach((w) => w(t));
+  }
+  function onStatus(st: TurnstileStatus) {
+    setCheck(st);
+    if (st.state === "error" || st.state === "blocked") waiters.current.splice(0).forEach((w) => w(null));
+  }
+  function tokenSoon(ms: number): Promise<string | null> {
+    if (tokenRef.current) return Promise.resolve(tokenRef.current);
+    return new Promise((resolve) => {
+      waiters.current.push(resolve);
+      setTimeout(() => resolve(tokenRef.current), ms);
+    });
+  }
 
   useEffect(() => {
     if (session) router.replace(takeDestination());
@@ -27,16 +49,25 @@ export default function Login() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (needsCaptcha && !captcha) {
-      setError("Just a moment — confirming you’re not a bot.");
-      return;
-    }
     setBusy(true);
     setError(null);
+    let token = captcha;
+    if (needsCaptcha && !token) {
+      // Pressed before the check finished: wait for it rather than greying out the button.
+      setWaiting(true);
+      token = await tokenSoon(15000);
+      setWaiting(false);
+      if (!token) {
+        setBusy(false);
+        setError(stuckMessage(check));
+        setCaptchaRound((n) => n + 1);
+        return;
+      }
+    }
     const { error } = await supabase().auth.signInWithOtp({
       email: email.trim(),
       // The email link opens in a new tab, so it carries the destination itself.
-      options: { emailRedirectTo: `${window.location.origin}${peekDestination()}`, captchaToken: captcha ?? undefined },
+      options: { emailRedirectTo: `${window.location.origin}${peekDestination()}`, captchaToken: token ?? undefined },
     });
     setBusy(false);
     // Bot-check tokens are single-use: get a fresh one for any retry.
@@ -88,11 +119,14 @@ export default function Login() {
                 placeholder="you@example.com"
               />
             </div>
-            <Turnstile onToken={setCaptcha} resetKey={captchaRound} />
+            <Turnstile onToken={onToken} onStatus={onStatus} resetKey={captchaRound} />
+            {needsCaptcha && (check.state === "blocked" || check.state === "error") && !error && (
+              <p className="notice" role="status" style={{ marginTop: 12 }}>{stuckMessage(check)}</p>
+            )}
             {error && <p className="error" role="alert">{error}</p>}
             <div className="spacer" style={{ minHeight: 24 }} />
-            <button className="btn btn--block" disabled={busy || !email.trim() || (needsCaptcha && !captcha)}>
-              {busy ? "Sending…" : "Email me a link"}
+            <button className="btn btn--block" disabled={busy || !email.trim()}>
+              {waiting ? "Checking you’re not a bot…" : busy ? "Sending…" : "Email me a link"}
             </button>
           </form>
         )}
@@ -107,4 +141,17 @@ function captchaMessage(raw: string): string {
   if (/secret/i.test(code)) return "Sign-in is misconfigured on our side (bot-check secret key). We’re on it.";
   if (/timeout|duplicate/i.test(code)) return "The bot check expired. Try again.";
   return `The bot check didn’t go through${code ? ` (${code})` : ""}. Try again.`;
+}
+
+/** Why the bot check hasn't produced a pass, in words someone can act on. */
+function stuckMessage(st: TurnstileStatus): string {
+  if (st.state === "blocked") {
+    return "Your browser blocked our bot check (often an ad or privacy blocker, or an in-app browser). Try turning the blocker off for readspine.app, or open the site in Safari or Chrome.";
+  }
+  if (st.state === "error") {
+    // Cloudflare's 110xxx/400xxx codes are setup problems on our side; others are usually the browser or network.
+    if (/^(110|400)/.test(st.code)) return `Sign-in is having trouble on our side (bot check ${st.code}). Please try again shortly.`;
+    return `The bot check couldn’t finish${st.code ? ` (${st.code})` : ""}. Reload the page, or try another browser.`;
+  }
+  return "The bot check is taking longer than usual. Reload the page and try again.";
 }
