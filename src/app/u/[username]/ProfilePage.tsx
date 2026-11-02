@@ -7,11 +7,11 @@ import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
 import { Cover } from "@/components/Cover";
 import { FollowButton } from "@/components/FollowButton";
-import { BackIcon, LockIcon } from "@/components/icons";
+import { BackIcon, LockIcon, MoreIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import {
-  fetchFollowing, fetchProfileByUsername, fetchShelf, followCounts, rankEntries, tasteMatches,
+  block, fetchFollowing, fetchMyBlocks, fetchProfileByUsername, fetchShelf, followCounts, rankEntries, report, tasteMatches, unblock,
   type Entry, type Match, type Profile,
 } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
@@ -32,6 +32,7 @@ interface Loaded {
   following: boolean;
   counts: { followers: number; following: number };
   match: Match | undefined;
+  blocked: boolean;
 }
 
 function Inner() {
@@ -40,16 +41,41 @@ function Inner() {
   const router = useRouter();
   const [data, setData] = useState<Loaded | null | undefined>(undefined);
   const [showAll, setShowAll] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  async function toggleBlock() {
+    if (!data) return;
+    setMenu(false);
+    if (data.blocked) {
+      await unblock(data.profile.id);
+      setData({ ...data, blocked: false });
+      setNotice(`Unblocked @${data.profile.username}.`);
+    } else {
+      if (!window.confirm(`Block @${data.profile.username}? You won't see each other's shelves, posts or comments, and any follows between you end.`)) return;
+      await block(data.profile.id);
+      setData({ ...data, blocked: true, following: false, theirs: [] });
+      setNotice(`Blocked @${data.profile.username}.`);
+    }
+  }
+
+  async function flag() {
+    if (!data) return;
+    setMenu(false);
+    const reason = window.prompt("What’s wrong with this profile? (optional)") ?? undefined;
+    await report("profile", data.profile.id, reason).catch(() => {});
+    setNotice("Thanks — we’ll take a look.");
+  }
 
   useEffect(() => {
     (async () => {
       const profile = await fetchProfileByUsername(username);
       if (!profile) return setData(null);
       if (profile.id === me?.id) return router.replace("/you");
-      const [theirs, mine, followingIds, counts, matches] = await Promise.all([
-        fetchShelf(profile.id), fetchShelf(), fetchFollowing(), followCounts(profile.id), tasteMatches([profile.id]),
+      const [theirs, mine, followingIds, counts, matches, blocks] = await Promise.all([
+        fetchShelf(profile.id), fetchShelf(), fetchFollowing(), followCounts(profile.id), tasteMatches([profile.id]), fetchMyBlocks(),
       ]);
-      setData({ profile, theirs, mine, following: followingIds.includes(profile.id), counts, match: matches.get(profile.id) });
+      setData({ profile, theirs, mine, following: followingIds.includes(profile.id), counts, match: matches.get(profile.id), blocked: blocks.has(profile.id) });
     })().catch(() => setData(null));
   }, [username, me?.id, router]);
 
@@ -88,10 +114,24 @@ function Inner() {
                 <h1 className="h1" style={{ fontSize: 28 }}>{displayName(data.profile)}</h1>
                 <div className="muted" style={{ fontSize: 13 }}>@{data.profile.username} · {data.counts.followers} followers</div>
               </div>
-              <FollowButton userId={data.profile.id} initial={data.following} />
+              {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} />}
+              <div style={{ position: "relative" }}>
+                <button className="icon-btn" aria-label="More options" aria-expanded={menu} onClick={() => setMenu(!menu)}>
+                  <MoreIcon size={20} />
+                </button>
+                {menu && (
+                  <div className="menu" role="menu">
+                    <button role="menuitem" onClick={toggleBlock}>{data.blocked ? "Unblock" : "Block"}</button>
+                    <button role="menuitem" onClick={flag}>Report</button>
+                  </div>
+                )}
+              </div>
             </div>
+            {notice && <p className="notice" role="status" style={{ marginTop: 12 }}>{notice}</p>}
 
-            {data.profile.is_private ? (
+            {data.blocked ? (
+              <div className="empty"><p className="h2">You blocked this reader</p><p style={{ margin: 0, fontSize: 14 }}>Unblock them from the menu to see their shelf again.</p></div>
+            ) : data.profile.is_private ? (
               <div className="empty"><LockIcon size={22} /><p className="h2" style={{ marginTop: 8 }}>This shelf is private</p></div>
             ) : (
               <>

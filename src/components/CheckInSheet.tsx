@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { checkIn, type Entry } from "@/lib/data";
+import { CHECKIN_NOTE_MAX, VIBES } from "@/lib/thoughts";
 import { Cover } from "./Cover";
 
 /**
@@ -15,6 +16,8 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   const [pct, setPct] = useState<number>(start);
   const [page, setPage] = useState<string>(pages && entry.progress_pct != null ? String(Math.round((entry.progress_pct / 100) * pages)) : "");
   const [touched, setTouched] = useState(false);
+  const [note, setNote] = useState("");
+  const [vibe, setVibe] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const today = new Date();
@@ -34,7 +37,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
     setBusy(true);
     setError(null);
     try {
-      await checkIn(entry.book_id, withProgress ? pct : null);
+      await checkIn(entry.book_id, withProgress ? pct : null, { note, vibe });
       await onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t check in");
@@ -78,6 +81,24 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           )}
         </div>
 
+        <div className="tag-list" role="group" aria-label="How’s it going?" style={{ marginTop: 18 }}>
+          {VIBES.map((v) => (
+            <button key={v.key} type="button" className="tag-chip" aria-pressed={vibe === v.key} onClick={() => setVibe(vibe === v.key ? null : v.key)}>
+              {v.label}
+            </button>
+          ))}
+        </div>
+        <label htmlFor="checkin-note" className="visually-hidden">A quick thought</label>
+        <input
+          id="checkin-note"
+          className="input"
+          style={{ width: "100%", marginTop: 10 }}
+          placeholder="A quick thought (optional)"
+          maxLength={CHECKIN_NOTE_MAX}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+
         {error && <p className="error" role="alert">{error}</p>}
         <div className="stack" style={{ marginTop: 20 }}>
           <button className="btn btn--block" disabled={busy} onClick={() => save(touched || entry.progress_pct != null)}>
@@ -86,7 +107,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           {pct >= 100 ? (
             <Link href={`/rank/${entry.book_id}`} className="btn btn--outline btn--block">Finished — rank it</Link>
           ) : (
-            <button className="btn btn--quiet btn--block" disabled={busy || doneToday} onClick={() => save(false)}>
+            <button className="btn btn--quiet btn--block" disabled={busy || (doneToday && !note.trim() && !vibe)} onClick={() => save(false)}>
               Just read a bit, skip progress
             </button>
           )}

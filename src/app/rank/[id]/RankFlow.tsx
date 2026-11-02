@@ -7,6 +7,7 @@ import { RequireAuth } from "@/components/Auth";
 import { Cover } from "@/components/Cover";
 import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
+import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import type { Book } from "@/lib/books";
 import { bucketList, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import {
@@ -407,6 +408,7 @@ function Flow() {
                 </li>
               ))}
             </ol>
+            <ThoughtsEditor entry={result.me} />
             <div className="spacer" style={{ minHeight: 24 }} />
             {queueLeft.length > 0 ? (
               <>

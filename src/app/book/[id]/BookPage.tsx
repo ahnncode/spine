@@ -8,10 +8,14 @@ import { Avatar, displayName } from "@/components/Avatar";
 import { BookActions } from "@/components/BookActions";
 import { Cover } from "@/components/Cover";
 import { BackIcon } from "@/components/icons";
+import { EntryThread } from "@/components/EntryThread";
 import { ScoreChip } from "@/components/ScoreChip";
+import { NoteText, TagList, VibePill } from "@/components/Social";
+import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
 import type { Book } from "@/lib/books";
 import {
+  fetchCheckins, type Checkin,
   bookStats, fetchBook, fetchFollowing, fetchProfiles, fetchShelf, friendsOnBook, predictedScore,
   rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry,
 } from "@/lib/data";
@@ -40,6 +44,9 @@ function Inner() {
   const [book, setBook] = useState<Book | null | undefined>(undefined);
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [social, setSocial] = useState<Social | null>(null);
+  const [thread, setThread] = useState<string | null>(null);
+  const [diary, setDiary] = useState<Checkin[]>([]);
+  const [editing, setEditing] = useState(false);
 
   const loadShelf = useCallback(async () => setEntries(await fetchShelf()), []);
 
@@ -55,6 +62,7 @@ function Inner() {
       const ids = friends.map((f) => f.user_id);
       const [profiles, matches] = await Promise.all([fetchProfiles(ids), tasteMatches(ids)]);
       if (live) setSocial({ stats, predicted, friends, profiles, matches });
+      fetchCheckins(id).then((c) => live && setDiary(c)).catch(() => {});
     })().catch(() => live && setBook((b) => b ?? null));
     return () => {
       live = false;
@@ -161,21 +169,78 @@ function Inner() {
                   const m = social?.matches.get(f.user_id);
                   const diff = myRanked ? f.score - myRanked.score : null;
                   return (
-                    <div key={f.id} className="person-row">
-                      <Avatar profile={p} size={36} link />
-                      <div className="person-row__body">
-                        <Link href={p?.username ? `/u/${p.username}` : "#"} className="name" style={{ textDecoration: "none" }}>{displayName(p)}</Link>
-                        <span className="muted" style={{ fontSize: 12 }}>
-                          {[m?.match != null ? `${m.match}% taste match` : null, `#${f.overall_rank} on their shelf`,
-                            diff != null && Math.abs(diff) >= 2 ? (diff > 0 ? "liked it more" : "liked it less") : null]
-                            .filter(Boolean).join(" · ")}
-                        </span>
+                    <div key={f.id} style={{ borderBottom: "1px solid var(--line)", padding: "10px 0" }}>
+                      <div className="person-row" style={{ borderBottom: 0, padding: 0 }}>
+                        <Avatar profile={p} size={36} link />
+                        <div className="person-row__body">
+                          <Link href={p?.username ? `/u/${p.username}` : "#"} className="name" style={{ textDecoration: "none" }}>{displayName(p)}</Link>
+                          <span className="muted" style={{ fontSize: 12 }}>
+                            {[m?.match != null ? `${m.match}% taste match` : null, `#${f.overall_rank} on their shelf`,
+                              diff != null && Math.abs(diff) >= 2 ? (diff > 0 ? "liked it more" : "liked it less") : null]
+                              .filter(Boolean).join(" · ")}
+                          </span>
+                        </div>
+                        <ScoreChip score={f.score} bucket={f.bucket} size={38} />
                       </div>
-                      <ScoreChip score={f.score} bucket={f.bucket} size={38} />
+                      {(f.tags?.length > 0 || f.note) && (
+                        <div style={{ marginTop: 8, paddingLeft: 48, display: "flex", flexDirection: "column", gap: 6 }}>
+                          <TagList tags={f.tags ?? []} max={3} />
+                          {f.note && <NoteText note={f.note} spoiler={f.note_spoiler} clamp={3} />}
+                        </div>
+                      )}
+                      <div style={{ paddingLeft: 48 }}>
+                        <button className="btn btn--ghost" style={{ minHeight: 36, padding: 0, fontSize: 13, color: "var(--cobalt-ink)" }} onClick={() => setThread(f.id)}>
+                          Hearts &amp; comments →
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
               </>
+            )}
+
+            {mine?.status === "ranked" && (
+              <section style={{ marginTop: 20 }}>
+                <h2 className="h2">Your thoughts</h2>
+                {editing ? (
+                  <div style={{ marginTop: 10 }}>
+                    <ThoughtsEditor entry={mine} compact onSaved={async () => { await loadShelf(); setEditing(false); }} />
+                  </div>
+                ) : (
+                  <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>
+                    <TagList tags={mine.tags ?? []} />
+                    {mine.note ? <NoteText note={mine.note} spoiler={mine.note_spoiler} mine /> : !mine.tags?.length && <p className="muted" style={{ margin: 0, fontSize: 14 }}>Nothing yet.</p>}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button className="btn btn--quiet" style={{ minHeight: 40, fontSize: 14 }} onClick={() => setEditing(true)}>
+                        {mine.note || mine.tags?.length ? "Edit" : "Add your thoughts"}
+                      </button>
+                      <button className="btn btn--ghost" style={{ minHeight: 40, fontSize: 14 }} onClick={() => setThread(mine.id)}>Hearts &amp; comments</button>
+                    </div>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {diary.length > 0 && (
+              <section style={{ marginTop: 20 }}>
+                <h2 className="h2">Your reading diary</h2>
+                <ol style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
+                  {diary.map((c) => (
+                    <li key={c.id} style={{ display: "flex", gap: 12, padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
+                      <span className="m muted" style={{ fontSize: 12, width: 52, flexShrink: 0, paddingTop: 2 }}>
+                        {new Date(`${c.checked_on}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                          {c.progress_pct != null && <span className="m" style={{ fontSize: 13, fontWeight: 700 }}>{c.progress_pct}%</span>}
+                          <VibePill vibe={c.vibe} />
+                        </div>
+                        {c.note && <p className="note" style={{ fontSize: 14 }}>{c.note}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </section>
             )}
 
             <div style={{ marginTop: 22 }}>
@@ -184,6 +249,7 @@ function Inner() {
           </div>
         )}
       </main>
+      {thread && <EntryThread entryId={thread} onClose={() => setThread(null)} />}
       <TabBar />
     </div>
   );

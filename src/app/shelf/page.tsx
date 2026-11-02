@@ -8,6 +8,8 @@ import { CheckInSheet } from "@/components/CheckInSheet";
 import { Cover } from "@/components/Cover";
 import { ArrowIcon, SearchIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
+import { NoteText, TagList } from "@/components/Social";
+import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
@@ -33,6 +35,7 @@ function Shelf() {
   const [year, setYear] = useState<string | null>(null);
   const [sheet, setSheet] = useState<Entry | RankedEntry | null>(null);
   const [checking, setChecking] = useState<Entry | null>(null);
+  const [editingThoughts, setEditingThoughts] = useState(false);
   const { streak, reloadCheckins } = useStreak(entries);
 
   const ranked = useMemo(() => rankEntries(entries || []), [entries]);
@@ -183,7 +186,7 @@ function Shelf() {
       </main>
 
       {sheet && (
-        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
+        <div className="sheet-backdrop" onClick={() => { setSheet(null); setEditingThoughts(false); }}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label={sheet.book.title} onClick={(ev) => ev.stopPropagation()}>
             <div className="sheet__grab" />
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
@@ -197,9 +200,34 @@ function Shelf() {
               </div>
               {"score" in sheet && <ScoreChip score={sheet.score} bucket={sheet.bucket} size={52} />}
             </div>
-            <div style={{ marginTop: 18 }}>
-              <BookActions bookId={sheet.book_id} entry={sheet} onChange={async () => { await reload(); setSheet(null); }} />
-            </div>
+            {sheet.status === "ranked" && (
+              <div style={{ marginTop: 16 }}>
+                {editingThoughts ? (
+                  <ThoughtsEditor
+                    entry={sheet}
+                    compact
+                    onSaved={async () => { await reload(); setEditingThoughts(false); setSheet(null); }}
+                  />
+                ) : (
+                  <>
+                    {(sheet.tags?.length > 0 || sheet.note) && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 10 }}>
+                        <TagList tags={sheet.tags} />
+                        {sheet.note && <NoteText note={sheet.note} spoiler={sheet.note_spoiler} mine />}
+                      </div>
+                    )}
+                    <button className="btn btn--quiet btn--block" onClick={() => setEditingThoughts(true)}>
+                      {sheet.note || sheet.tags?.length ? "Edit your thoughts" : "Add your thoughts"}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+            {!editingThoughts && (
+              <div style={{ marginTop: 10 }}>
+                <BookActions bookId={sheet.book_id} entry={sheet} onChange={async () => { await reload(); setSheet(null); }} />
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -6,7 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
 import { Cover } from "@/components/Cover";
-import { ArrowIcon } from "@/components/icons";
+import { EntryThread } from "@/components/EntryThread";
+import { ArrowIcon, BellIcon } from "@/components/icons";
+import { CommentButton, HeartButton, NoteText, TagList, VibePill } from "@/components/Social";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { CheckInSheet } from "@/components/CheckInSheet";
@@ -14,8 +16,8 @@ import { InstallHint } from "@/components/InstallHint";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
-  fetchFeed, fetchFollowing, fetchProfiles, rankEntries, tasteMatches,
-  type Entry, type FeedItem, type Match, type Profile,
+  commentCounts, feedUser, fetchFeed, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches, unreadCount,
+  type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType,
 } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
 
@@ -31,6 +33,8 @@ interface Loaded {
   items: FeedItem[];
   profiles: Map<string, Profile>;
   matches: Map<string, Match>;
+  hearts: Map<string, HeartState>;
+  comments: Map<string, number>;
   following: number;
 }
 
@@ -48,15 +52,28 @@ function Feed() {
   const [checking, setChecking] = useState<Entry | null>(null);
   const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [thread, setThread] = useState<string | null>(null);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     (async () => {
       const ids = await fetchFollowing();
       const items = await fetchFeed(ids);
-      const people = [...new Set(items.map((i) => i.entry.user_id))];
-      const [profiles, matches] = await Promise.all([fetchProfiles(people), tasteMatches(people)]);
-      setData({ items, profiles, matches, following: ids.length });
+      const people = [...new Set(items.map(feedUser))];
+      const targets: Array<{ type: TargetType; id: string }> = [];
+      for (const i of items) {
+        if (i.kind === "ranked") targets.push({ type: "entry", id: i.entry.id });
+        else if (i.kind === "checkin") targets.push({ type: "checkin", id: i.checkin.id });
+      }
+      const [profiles, matches, hearts, comments] = await Promise.all([
+        fetchProfiles(people),
+        tasteMatches(people),
+        fetchHearts(targets),
+        commentCounts(items.filter((i) => i.kind === "ranked").map((i) => (i.kind === "ranked" ? i.entry.id : ""))),
+      ]);
+      setData({ items, profiles, matches, hearts, comments, following: ids.length });
     })().catch((e) => setError(e instanceof Error ? e.message : "Couldn’t load your feed"));
+    unreadCount().then(setUnread).catch(() => {});
   }, []);
 
   const mine = useMemo(() => new Map(rankEntries(entries || []).map((e) => [e.book_id, e])), [entries]);
@@ -69,9 +86,15 @@ function Feed() {
       <main className="screen">
         <div className="topbar">
           <Logo size={30} />
-          <Link href="/you" aria-label="Your profile" style={{ textDecoration: "none" }}>
-            <Avatar profile={profile} size={40} />
-          </Link>
+          <div style={{ display: "flex", gap: 8 }}>
+            <Link href="/notifications" className="icon-btn" style={{ position: "relative" }} aria-label={unread ? `Notifications, ${unread} new` : "Notifications"}>
+              <BellIcon size={20} />
+              {unread > 0 && <span className="unread-dot" />}
+            </Link>
+            <Link href="/you" aria-label="Your profile" style={{ textDecoration: "none" }}>
+              <Avatar profile={profile} size={44} />
+            </Link>
+          </div>
         </div>
 
         <InstallHint />
@@ -129,28 +152,35 @@ function Feed() {
         {data && data.items.length > 0 && (
           <div className="feed">
             {data.items.map((item) => {
-              const p = data.profiles.get(item.entry.user_id);
-              const m = data.matches.get(item.entry.user_id);
-              const book = item.entry.book;
-              const myEntry = mine.get(item.entry.book_id);
-              const status = myStatus.get(item.entry.book_id);
+              const uid = feedUser(item);
+              const p = data.profiles.get(uid);
+              const m = data.matches.get(uid);
+              const book = item.kind === "checkin" ? item.checkin.book : item.entry.book;
+              const bookId = item.kind === "checkin" ? item.checkin.book_id : item.entry.book_id;
+              const myEntry = mine.get(bookId);
+              const status = myStatus.get(bookId);
+              const key = item.kind === "checkin" ? `c-${item.checkin.id}` : `${item.kind}-${item.entry.id}`;
+              const verb =
+                item.kind === "ranked"
+                  ? "ranked a book"
+                  : item.kind === "checkin"
+                    ? item.checkin.progress_pct != null && item.checkin.progress_pct > 0
+                      ? `is ${item.checkin.progress_pct}% through`
+                      : "checked in"
+                    : "started reading";
               return (
-                <article key={`${item.kind}-${item.entry.id}`} className="feed-card">
+                <article key={key} className="feed-card">
                   <div className="feed-card__head">
                     <Avatar profile={p} size={40} link />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <Link href={p?.username ? `/u/${p.username}` : "#"} style={{ fontWeight: 700, textDecoration: "none" }}>{displayName(p)}</Link>{" "}
-                      {item.kind === "ranked"
-                        ? "ranked a book"
-                        : item.entry.progress_pct != null && item.entry.progress_pct > 0
-                          ? `is ${item.entry.progress_pct}% through`
-                          : "started reading"}
+                      {verb}
                       <div className="when">{ago(item.at)}</div>
                     </div>
                     {m?.match != null && <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>{m.match}% match</span>}
                   </div>
-                  <Link href={`/book/${item.entry.book_id}`} className="feed-card__book">
-                    <Cover book={book} width={76} />
+                  <Link href={`/book/${bookId}`} className="feed-card__book">
+                    <Cover book={book} width={item.kind === "ranked" ? 76 : 56} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="feed-card__title">{book.title}</div>
                       <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{book.author}</div>
@@ -172,12 +202,46 @@ function Feed() {
                           </span>
                         </div>
                       )}
+                      {item.kind === "checkin" && item.checkin.progress_pct != null && (
+                        <div className="bar" style={{ height: 6, marginTop: 10 }}><span style={{ width: `${item.checkin.progress_pct}%`, background: "var(--accent)" }} /></div>
+                      )}
                     </div>
                   </Link>
-                  {!status && (
-                    <Link href={`/book/${item.entry.book_id}`} className="btn btn--outline btn--block" style={{ minHeight: 44, marginTop: 14, fontSize: 14 }}>
-                      Want to read · see scores
-                    </Link>
+
+                  {item.kind === "ranked" && (item.entry.tags?.length > 0 || item.entry.note) && (
+                    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                      <TagList tags={item.entry.tags} max={3} />
+                      {item.entry.note && (
+                        <button style={{ background: "none", border: 0, padding: 0, textAlign: "left" }} onClick={() => setThread(item.entry.id)} aria-label="Read the full note and comments">
+                          <NoteText note={item.entry.note} spoiler={item.entry.note_spoiler} clamp={4} />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {item.kind === "checkin" && (item.checkin.note || item.checkin.vibe) && (
+                    <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
+                      <VibePill vibe={item.checkin.vibe} />
+                      {item.checkin.note && <p className="note">{item.checkin.note}</p>}
+                    </div>
+                  )}
+
+                  {item.kind !== "reading" && (
+                    <div className="actions">
+                      {item.kind === "ranked" ? (
+                        <>
+                          <HeartButton type="entry" id={item.entry.id} initial={data.hearts.get(`entry:${item.entry.id}`)} />
+                          <CommentButton count={data.comments.get(item.entry.id) ?? 0} onClick={() => setThread(item.entry.id)} />
+                        </>
+                      ) : (
+                        <HeartButton type="checkin" id={item.checkin.id} initial={data.hearts.get(`checkin:${item.checkin.id}`)} />
+                      )}
+                      <span style={{ flex: 1 }} />
+                      {!status && (
+                        <Link href={`/book/${bookId}`} className="action-btn" style={{ textDecoration: "none" }}>
+                          Want to read
+                        </Link>
+                      )}
+                    </div>
                   )}
                 </article>
               );
@@ -189,6 +253,13 @@ function Feed() {
           </div>
         )}
       </main>
+      {thread && (
+        <EntryThread
+          entryId={thread}
+          onClose={() => setThread(null)}
+          onCountChange={(n) => setData((d) => (d ? { ...d, comments: new Map(d.comments).set(thread, n) } : d))}
+        />
+      )}
       {checking && (
         <CheckInSheet
           entry={checking}

@@ -112,3 +112,18 @@ export const SparkIcon = (p: P) => (
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />
   </Base>
 );
+export const HeartIcon = ({ filled, ...p }: P & { filled?: boolean }) => (
+  <Base strokeWidth={2} {...p}>
+    <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" fill={filled ? "currentColor" : "none"} />
+  </Base>
+);
+export const CommentIcon = (p: P) => (
+  <Base strokeWidth={2} {...p}>
+    <path d="M4 5h16v11H9l-5 4z" />
+  </Base>
+);
+export const MoreIcon = (p: P) => (
+  <Base strokeWidth={2.4} {...p}>
+    <path d="M5 12h.01M12 12h.01M19 12h.01" />
+  </Base>
+);

@@ -23,6 +23,10 @@ export interface Entry {
   last_checkin_on: string | null;
   /** A score you set yourself (your first few books); others fill in around it. */
   manual_score: number | null;
+  /** Your thoughts: a short review, quick tags, and whether it spoils the book. */
+  note: string | null;
+  tags: string[];
+  note_spoiler: boolean;
   source: string;
   created_at: string;
   book: Book;
@@ -45,7 +49,7 @@ export interface Profile {
 }
 
 const ENTRY_SELECT =
-  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, manual_score, source, created_at, book:books(*)";
+  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, manual_score, note, tags, note_spoiler, source, created_at, book:books(*)";
 
 export async function myId(): Promise<string> {
   const { data } = await supabase().auth.getSession();
@@ -207,14 +211,19 @@ export async function startReading(bookId: string): Promise<void> {
  * A reading check-in: "I read some of this today", optionally with progress.
  * One per book per day (a second one updates the first).
  */
-export async function checkIn(bookId: string, progressPct: number | null): Promise<void> {
+export async function checkIn(
+  bookId: string,
+  progressPct: number | null,
+  extras: { note?: string | null; vibe?: string | null } = {},
+): Promise<void> {
   const uid = await myId();
   const day = today();
   const pct = progressPct == null ? null : Math.max(0, Math.min(100, Math.round(progressPct)));
+  const note = extras.note?.trim() ? extras.note.trim().slice(0, 280) : null;
   const { error } = await supabase()
     .from("reading_checkins")
     .upsert(
-      { user_id: uid, book_id: bookId, checked_on: day, progress_pct: pct },
+      { user_id: uid, book_id: bookId, checked_on: day, progress_pct: pct, note, vibe: extras.vibe ?? null },
       { onConflict: "user_id,book_id,checked_on" },
     );
   if (error) throw error;
@@ -351,6 +360,7 @@ export async function importGoodreads(
       started_on: b.status === "reading" ? today() : null,
       // Date read stands in for when it was ranked, so imports don't flood friends' feeds.
       ranked_at: b.status === "ranked" ? (b.finishedOn ? `${b.finishedOn}T12:00:00Z` : "2000-01-01T00:00:00Z") : null,
+      note: b.review,
       source: "goodreads",
     }));
 
@@ -520,10 +530,13 @@ export interface ScoredEntry {
   score: number;
   overall_rank: number;
   ranked_at: string | null;
+  note: string | null;
+  tags: string[];
+  note_spoiler: boolean;
   book: Book;
 }
 
-const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, book:books(*)";
+const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, note, tags, note_spoiler, book:books(*)";
 
 /** People you follow who ranked this book. */
 export async function friendsOnBook(bookId: string, friendIds: string[]): Promise<ScoredEntry[]> {
@@ -537,19 +550,39 @@ export async function friendsOnBook(bookId: string, friendIds: string[]): Promis
   return ((data as unknown as ScoredEntry[]) || []).map((e) => ({ ...e, score: Number(e.score) }));
 }
 
+export interface Checkin {
+  id: string;
+  user_id: string;
+  book_id: string;
+  checked_on: string;
+  progress_pct: number | null;
+  note: string | null;
+  vibe: string | null;
+  created_at: string;
+  book: Book;
+}
+
+const CHECKIN_SELECT = "id, user_id, book_id, checked_on, progress_pct, note, vibe, created_at, book:books(*)";
+
 export type FeedItem =
   | { kind: "ranked"; at: string; entry: ScoredEntry }
+  | { kind: "checkin"; at: string; checkin: Checkin }
   | { kind: "reading"; at: string; entry: Entry };
+
+export function feedUser(item: FeedItem): string {
+  return item.kind === "checkin" ? item.checkin.user_id : item.entry.user_id;
+}
 
 export async function fetchFeed(friendIds: string[]): Promise<FeedItem[]> {
   if (!friendIds.length) return [];
-  const [ranked, reading] = await Promise.all([
+  const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString();
+  const [ranked, reading, checkins] = await Promise.all([
     supabase()
       .from("ranked_entries")
       .select(SCORED_SELECT)
       .in("user_id", friendIds)
       .not("ranked_at", "is", null)
-      .gte("ranked_at", new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString())
+      .gte("ranked_at", since)
       .order("ranked_at", { ascending: false })
       .limit(60),
     supabase()
@@ -559,20 +592,244 @@ export async function fetchFeed(friendIds: string[]): Promise<FeedItem[]> {
       .eq("status", "reading")
       .order("updated_at", { ascending: false })
       .limit(20),
+    supabase()
+      .from("reading_checkins")
+      .select(CHECKIN_SELECT)
+      .in("user_id", friendIds)
+      .gte("created_at", since)
+      .order("created_at", { ascending: false })
+      .limit(60),
   ]);
   if (ranked.error) throw ranked.error;
   if (reading.error) throw reading.error;
+  if (checkins.error) throw checkins.error;
+
+  const cis = (checkins.data as unknown as Checkin[]) || [];
+  // Only show a check-in when there's something to see: a note, a vibe, or progress.
+  const interesting = cis.filter((c) => c.note || c.vibe || c.progress_pct != null);
+  const checkedIn = new Set(cis.map((c) => `${c.user_id}:${c.book_id}`));
+
   const items: FeedItem[] = [
     ...((ranked.data as unknown as ScoredEntry[]) || []).map((e) => ({
       kind: "ranked" as const,
       at: e.ranked_at as string,
-      entry: { ...e, score: Number(e.score) },
+      entry: { ...e, score: Number(e.score), tags: e.tags ?? [] },
     })),
-    ...((reading.data as unknown as Entry[]) || []).map((e) => ({
-      kind: "reading" as const,
-      at: e.last_checkin_on ? `${e.last_checkin_on}T12:00:00Z` : e.started_on ? `${e.started_on}T12:00:00Z` : e.created_at,
-      entry: e,
-    })),
+    ...interesting.map((c) => ({ kind: "checkin" as const, at: c.created_at, checkin: c })),
+    // "Started reading" only when there's no check-in for that book yet.
+    ...((reading.data as unknown as Entry[]) || [])
+      .filter((e) => !checkedIn.has(`${e.user_id}:${e.book_id}`))
+      .map((e) => ({
+        kind: "reading" as const,
+        at: e.started_on ? `${e.started_on}T12:00:00Z` : e.created_at,
+        entry: e,
+      })),
   ];
   return items.sort((a, b) => b.at.localeCompare(a.at));
+}
+
+/** Check-ins on one book (yours or a friend's), newest first, for the reading diary. */
+export async function fetchCheckins(bookId: string, userId?: string): Promise<Checkin[]> {
+  const uid = userId ?? (await myId());
+  const { data, error } = await supabase()
+    .from("reading_checkins")
+    .select(CHECKIN_SELECT)
+    .eq("user_id", uid)
+    .eq("book_id", bookId)
+    .order("checked_on", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data as unknown as Checkin[]) || [];
+}
+
+/* ------------------------------ Thoughts --------------------------------- */
+
+export async function saveThoughts(
+  entryId: string,
+  t: { note: string | null; tags: string[]; spoiler: boolean; finishedOn?: string | null },
+): Promise<void> {
+  const fields: Record<string, unknown> = {
+    note: t.note?.trim() ? t.note.trim().slice(0, 2000) : null,
+    tags: t.tags.slice(0, 6),
+    note_spoiler: Boolean(t.note?.trim()) && t.spoiler,
+  };
+  if (t.finishedOn !== undefined) fields.finished_on = t.finishedOn;
+  const { error } = await supabase().from("shelf_entries").update(fields).eq("id", entryId);
+  if (error) throw error;
+}
+
+/* ------------------------------ Hearts & comments ------------------------ */
+
+export type TargetType = "entry" | "checkin";
+export interface HeartState {
+  count: number;
+  mine: boolean;
+}
+
+/** Hearts on a set of posts, keyed "type:id". */
+export async function fetchHearts(targets: Array<{ type: TargetType; id: string }>): Promise<Map<string, HeartState>> {
+  const out = new Map<string, HeartState>();
+  if (!targets.length) return out;
+  const uid = await myId();
+  const ids = [...new Set(targets.map((t) => t.id))];
+  for (let i = 0; i < ids.length; i += 150) {
+    const { data, error } = await supabase()
+      .from("reactions")
+      .select("target_type, target_id, user_id")
+      .in("target_id", ids.slice(i, i + 150));
+    if (error) throw error;
+    for (const r of data || []) {
+      const key = `${r.target_type}:${r.target_id}`;
+      const cur = out.get(key) ?? { count: 0, mine: false };
+      cur.count++;
+      if (r.user_id === uid) cur.mine = true;
+      out.set(key, cur);
+    }
+  }
+  return out;
+}
+
+export async function setHeart(type: TargetType, id: string, on: boolean): Promise<void> {
+  if (on) {
+    const { error } = await supabase().from("reactions").insert({ target_type: type, target_id: id });
+    if (error && error.code !== "23505") throw new Error(error.message);
+  } else {
+    const uid = await myId();
+    const { error } = await supabase().from("reactions").delete().eq("user_id", uid).eq("target_type", type).eq("target_id", id);
+    if (error) throw error;
+  }
+}
+
+export interface Comment {
+  id: string;
+  user_id: string;
+  target_owner: string;
+  body: string;
+  created_at: string;
+}
+
+export async function fetchComments(entryId: string): Promise<Comment[]> {
+  const { data, error } = await supabase()
+    .from("comments")
+    .select("id, user_id, target_owner, body, created_at")
+    .eq("target_type", "entry")
+    .eq("target_id", entryId)
+    .order("created_at", { ascending: true })
+    .limit(300);
+  if (error) throw error;
+  return (data as Comment[]) || [];
+}
+
+export async function commentCounts(entryIds: string[]): Promise<Map<string, number>> {
+  const out = new Map<string, number>();
+  if (!entryIds.length) return out;
+  const { data, error } = await supabase()
+    .from("comments")
+    .select("target_id")
+    .eq("target_type", "entry")
+    .in("target_id", entryIds.slice(0, 150));
+  if (error) throw error;
+  for (const r of data || []) out.set(r.target_id, (out.get(r.target_id) ?? 0) + 1);
+  return out;
+}
+
+export async function addComment(entryId: string, body: string): Promise<void> {
+  const text = body.trim().slice(0, 1000);
+  if (!text) return;
+  const { error } = await supabase().from("comments").insert({ target_type: "entry", target_id: entryId, body: text });
+  if (error) throw new Error(/react to that/.test(error.message) ? "You can’t comment on this." : error.message);
+}
+
+export async function deleteComment(id: string): Promise<void> {
+  const { error } = await supabase().from("comments").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** One ranked entry by id, as the database scores it (for comment threads). */
+export async function fetchScoredEntry(id: string): Promise<ScoredEntry | null> {
+  const { data, error } = await supabase().from("ranked_entries").select(SCORED_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const e = data as unknown as ScoredEntry;
+  return { ...e, score: Number(e.score), tags: e.tags ?? [] };
+}
+
+/* ------------------------------ Notifications ---------------------------- */
+
+export interface Notification {
+  id: string;
+  actor_id: string;
+  kind: "reaction" | "comment" | "follow";
+  target_type: TargetType | null;
+  target_id: string | null;
+  created_at: string;
+  read_at: string | null;
+}
+
+export async function fetchNotifications(): Promise<Notification[]> {
+  const uid = await myId();
+  const { data, error } = await supabase()
+    .from("notifications")
+    .select("id, actor_id, kind, target_type, target_id, created_at, read_at")
+    .eq("user_id", uid)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data as Notification[]) || [];
+}
+
+export async function unreadCount(): Promise<number> {
+  const uid = await myId();
+  const { count, error } = await supabase()
+    .from("notifications")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", uid)
+    .is("read_at", null);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function markAllRead(): Promise<void> {
+  const uid = await myId();
+  const { error } = await supabase()
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", uid)
+    .is("read_at", null);
+  if (error) throw error;
+}
+
+/** Check-ins by id (for notifications that point at one). */
+export async function fetchCheckinsById(ids: string[]): Promise<Map<string, Checkin>> {
+  if (!ids.length) return new Map();
+  const { data, error } = await supabase().from("reading_checkins").select(CHECKIN_SELECT).in("id", ids);
+  if (error) throw error;
+  return new Map(((data as unknown as Checkin[]) || []).map((c) => [c.id, c]));
+}
+
+/* ------------------------------ Blocking & reports ----------------------- */
+
+export async function fetchMyBlocks(): Promise<Set<string>> {
+  const uid = await myId();
+  const { data, error } = await supabase().from("blocks").select("blocked_id").eq("blocker_id", uid);
+  if (error) throw error;
+  return new Set((data || []).map((r) => r.blocked_id as string));
+}
+
+export async function block(userId: string): Promise<void> {
+  const { error } = await supabase().from("blocks").insert({ blocked_id: userId });
+  if (error && error.code !== "23505") throw error;
+}
+
+export async function unblock(userId: string): Promise<void> {
+  const uid = await myId();
+  const { error } = await supabase().from("blocks").delete().eq("blocker_id", uid).eq("blocked_id", userId);
+  if (error) throw error;
+}
+
+export async function report(targetType: "comment" | "entry" | "checkin" | "profile", targetId: string, reason?: string): Promise<void> {
+  const { error } = await supabase()
+    .from("reports")
+    .insert({ target_type: targetType, target_id: targetId, reason: reason?.trim().slice(0, 500) || null });
+  if (error) throw error;
 }

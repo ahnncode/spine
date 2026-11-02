@@ -1,0 +1,121 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { RequireAuth } from "@/components/Auth";
+import { Avatar, displayName } from "@/components/Avatar";
+import { EntryThread } from "@/components/EntryThread";
+import { BackIcon } from "@/components/icons";
+import { TabBar } from "@/components/TabBar";
+import {
+  fetchCheckinsById, fetchNotifications, fetchProfiles, markAllRead,
+  type Checkin, type Notification, type Profile,
+} from "@/lib/data";
+
+export default function NotificationsPage() {
+  return (
+    <RequireAuth>
+      <Inner />
+    </RequireAuth>
+  );
+}
+
+function ago(iso: string): string {
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m`;
+  if (s < 86400) return `${Math.round(s / 3600)}h`;
+  if (s < 86400 * 7) return `${Math.round(s / 86400)}d`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+interface Loaded {
+  items: Notification[];
+  people: Map<string, Profile>;
+  checkins: Map<string, Checkin>;
+}
+
+function Inner() {
+  const [data, setData] = useState<Loaded | null>(null);
+  const [thread, setThread] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const items = await fetchNotifications();
+      const [people, checkins] = await Promise.all([
+        fetchProfiles([...new Set(items.map((n) => n.actor_id))]),
+        fetchCheckinsById(items.filter((n) => n.target_type === "checkin" && n.target_id).map((n) => n.target_id!)),
+      ]);
+      setData({ items, people, checkins });
+      // Opening the list counts as reading it.
+      if (items.some((n) => !n.read_at)) markAllRead().catch(() => {});
+    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map() }));
+  }, []);
+
+  function describe(n: Notification): string {
+    if (n.kind === "follow") return "started following you";
+    if (n.kind === "comment") return "commented on your ranking";
+    if (n.target_type === "checkin") {
+      const c = data?.checkins.get(n.target_id ?? "");
+      return c ? `hearted your check-in on ${c.book.title}` : "hearted your check-in";
+    }
+    return "hearted your ranking";
+  }
+
+  return (
+    <div className="app">
+      <main className="screen">
+        <div className="topbar">
+          <Link href="/feed" className="icon-btn" aria-label="Back to feed"><BackIcon size={20} /></Link>
+        </div>
+        <h1 className="h1" style={{ marginTop: 12 }}>Notifications</h1>
+
+        {!data && <div aria-busy="true" style={{ minHeight: 200 }} />}
+        {data && data.items.length === 0 && (
+          <div className="empty">
+            <p className="h2">Nothing yet</p>
+            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments and new followers show up here.</p>
+          </div>
+        )}
+        {data && data.items.length > 0 && (
+          <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0 }}>
+            {data.items.map((n) => {
+              const p = data.people.get(n.actor_id);
+              const opensThread = n.target_type === "entry" && n.target_id;
+              const checkin = n.target_type === "checkin" ? data.checkins.get(n.target_id ?? "") : undefined;
+              const body = (
+                <>
+                  <Avatar profile={p} size={40} />
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
+                    <strong>{displayName(p)}</strong> {describe(n)}
+                    <span className="when" style={{ display: "block" }}>{ago(n.created_at)}</span>
+                  </span>
+                  {!n.read_at && <span aria-label="New" style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0 }} />}
+                </>
+              );
+              const rowStyle = {
+                display: "flex", alignItems: "center", gap: 12, padding: "12px 0", width: "100%",
+                textAlign: "left" as const, background: "none", border: 0, borderBottom: "1px solid var(--line)",
+                color: "inherit", textDecoration: "none",
+              };
+              return (
+                <li key={n.id}>
+                  {opensThread ? (
+                    <button style={rowStyle} onClick={() => setThread(n.target_id)}>{body}</button>
+                  ) : n.kind === "follow" && p?.username ? (
+                    <Link href={`/u/${p.username}`} style={rowStyle}>{body}</Link>
+                  ) : checkin ? (
+                    <Link href={`/book/${checkin.book_id}`} style={rowStyle}>{body}</Link>
+                  ) : (
+                    <div style={rowStyle}>{body}</div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </main>
+      {thread && <EntryThread entryId={thread} onClose={() => setThread(null)} />}
+      <TabBar />
+    </div>
+  );
+}

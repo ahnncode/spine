@@ -12,6 +12,8 @@ export interface ImportedBook {
   /** Goodreads community average, used to break ties between equal stars. */
   avgRating: number;
   finishedOn: string | null;
+  /** Your written Goodreads review, as plain text. */
+  review: string | null;
 }
 
 export interface ImportSummary {
@@ -49,6 +51,17 @@ function toDate(raw: string | undefined): string | null {
   const m = (raw || "").trim().match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
   if (!m) return null;
   return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+}
+
+/** Goodreads reviews come with <br/> and a little HTML; keep the words. */
+function cleanReview(raw: string | undefined): string | null {
+  const text = (raw || "")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return text ? text.slice(0, 2000) : null;
 }
 
 export function bucketForStars(stars: number): Bucket {
@@ -91,6 +104,7 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
       stars: stars > 0 ? stars : null,
       avgRating: parseFloat(row["Average Rating"] || "0") || 0,
       finishedOn: status === "ranked" || status === "unsorted" ? toDate(row["Date Read"]) : null,
+      review: cleanReview(row["My Review"]),
     });
   }
 
