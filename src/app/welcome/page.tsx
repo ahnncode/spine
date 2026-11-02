@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { RequireAuth, useAuth, useProfile } from "@/components/Auth";
-import { updateMyProfile } from "@/lib/data";
+import { fetchMyProfile, updateMyProfile, usernameAvailable } from "@/lib/data";
 
 export default function WelcomePage() {
   return (
@@ -27,14 +27,34 @@ function Welcome() {
   const [error, setError] = useState<string | null>(null);
 
   const valid = /^[a-z0-9_]{3,20}$/.test(username);
+  const [availability, setAvailability] = useState<{ name: string; free: boolean } | null>(null);
+  const taken = availability?.name === username && !availability.free;
+
+  // Check the username as they type, so "taken" shows before they hit Continue.
+  useEffect(() => {
+    if (!valid) return;
+    let live = true;
+    const t = setTimeout(() => {
+      usernameAvailable(username)
+        .then((free) => live && setAvailability({ name: username, free }))
+        .catch(() => {});
+    }, 300);
+    return () => {
+      live = false;
+      clearTimeout(t);
+    };
+  }, [username, valid]);
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (!valid) return;
+    if (!valid || taken || busy) return;
     setBusy(true);
     setError(null);
     try {
       await updateMyProfile({ username, display_name: name.trim() || username });
+      // Make sure it really saved before moving on, rather than bouncing back here.
+      const saved = await fetchMyProfile();
+      if (saved?.username !== username) throw new Error("Couldn’t save your username. Try again in a moment.");
       await reloadProfile();
       router.replace("/shelf");
     } catch (err) {
@@ -70,11 +90,19 @@ function Welcome() {
               aria-describedby="username-hint"
             />
           </div>
-          <span id="username-hint" className="muted" style={{ fontSize: 13 }}>3–20 letters, numbers or underscores</span>
+          <span id="username-hint" aria-live="polite" style={{ fontSize: 13, color: taken ? "#b42318" : availability?.name === username ? "#1f7a43" : "var(--muted)" }}>
+            {!valid
+              ? "3–20 lowercase letters, numbers or underscores"
+              : taken
+                ? `@${username} is taken — try another`
+                : availability?.name === username
+                  ? `@${username} is available`
+                  : "Checking…"}
+          </span>
         </div>
         {error && <p className="error" role="alert">{error}</p>}
         <div className="spacer" style={{ minHeight: 24 }} />
-        <button className="btn btn--block" disabled={busy || !valid}>
+        <button className="btn btn--block" disabled={busy || !valid || taken}>
           {busy ? "Saving…" : "Continue"}
         </button>
       </form>

@@ -315,11 +315,25 @@ export async function fetchMyProfile(): Promise<Profile | null> {
 
 export async function updateMyProfile(fields: Partial<Omit<Profile, "id">>): Promise<void> {
   const uid = await myId();
-  const { error } = await supabase().from("profiles").update(fields).eq("id", uid);
+  // Upsert, so an account that somehow has no profile row still gets one.
+  const { data, error } = await supabase()
+    .from("profiles")
+    .upsert({ id: uid, ...fields }, { onConflict: "id", defaultToNull: false })
+    .select("id");
   if (error) {
     if (error.code === "23505") throw new Error("That username is taken");
-    throw error;
+    if (error.code === "23514") throw new Error("Usernames are 3–20 lowercase letters, numbers or underscores");
+    throw new Error(error.message);
   }
+  if (!data?.length) throw new Error("Couldn’t save your profile. Try again in a moment.");
+}
+
+/** Whether a username is free (or already yours). */
+export async function usernameAvailable(username: string): Promise<boolean> {
+  const uid = await myId();
+  const { data, error } = await supabase().from("profiles").select("id").eq("username", username).maybeSingle();
+  if (error) throw error;
+  return !data || data.id === uid;
 }
 
 export async function fetchProfileByUsername(username: string): Promise<Profile | null> {
