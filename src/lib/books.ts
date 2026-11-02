@@ -43,7 +43,7 @@ export function dedupeKey(title: string, author: string | null): string {
   const main = norm(cleanTitle(title).split(/[:;]/)[0] || title);
   const authorParts = norm(author || "").split(" ").filter(Boolean);
   const surname = authorParts[authorParts.length - 1] || "";
-  return `${main}|${surname}`;
+  return `${main.slice(0, 400)}|${surname.slice(0, 100)}`;
 }
 
 const PALETTE: Array<[string, string]> = [
@@ -78,4 +78,21 @@ export function coverUrl(book: Pick<BookInput, "cover_id" | "isbn13">, size: "S"
   if (book.cover_id) return `https://covers.openlibrary.org/b/id/${book.cover_id}-${size}.jpg`;
   if (book.isbn13) return `https://covers.openlibrary.org/b/isbn/${book.isbn13}-${size}.jpg?default=false`;
   return null;
+}
+
+/** Keep catalog fields within the limits the database enforces. */
+export function sanitizeBook<T extends BookInput>(b: T): T {
+  const isbn = b.isbn13 && /^97[89]\d{10}$/.test(b.isbn13) ? b.isbn13 : null;
+  const pages = b.pages && b.pages > 0 && b.pages <= 50000 ? Math.round(b.pages) : null;
+  const year = b.year != null && b.year >= -3000 && b.year <= 2100 ? b.year : null;
+  return {
+    ...b,
+    title: (b.title || "Untitled").slice(0, 500),
+    author: b.author ? b.author.slice(0, 300) : null,
+    isbn13: isbn,
+    pages,
+    year,
+    cover_id: b.cover_id && b.cover_id > 0 ? b.cover_id : null,
+    genres: b.genres?.slice(0, 3),
+  };
 }

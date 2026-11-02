@@ -103,7 +103,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       next = sessionStorage.getItem("spine:next");
       sessionStorage.removeItem("spine:next");
     } catch {}
-    if (next && next !== path && next.startsWith("/")) router.replace(next);
+    // Same-site paths only ("//evil.com" would leave the site).
+    if (next && next !== path && /^\/(?![/\\])/.test(next)) router.replace(next);
   }, [session, path, router]);
 
   useEffect(() => {

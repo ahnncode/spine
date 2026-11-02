@@ -1,4 +1,4 @@
-import { dedupeKey, type Book, type BookInput } from "./books";
+import { dedupeKey, sanitizeBook, type Book, type BookInput } from "./books";
 import type { ImportedBook } from "./goodreads";
 import { startingOrder } from "./goodreads";
 import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
@@ -99,7 +99,8 @@ export function bucketList(entries: Entry[], bucket: Bucket, excludeBookId?: str
 /** Make sure each book exists in the catalog; returns ids keyed by dedupe key. */
 export async function ensureBooks(inputs: BookInput[]): Promise<Map<string, string>> {
   const rows = new Map<string, BookInput & { dedupe_key: string }>();
-  for (const b of inputs) {
+  for (const raw of inputs) {
+    const b = sanitizeBook(raw);
     const key = dedupeKey(b.title, b.author);
     if (!rows.has(key)) rows.set(key, { ...b, dedupe_key: key });
   }
@@ -144,7 +145,8 @@ export async function fetchBooks(ids: string[]): Promise<Book[]> {
 }
 
 /** Fill in cover, genres and year on a catalog book (only where missing). */
-export async function enrichBook(id: string, b: BookInput): Promise<void> {
+export async function enrichBook(id: string, raw: BookInput): Promise<void> {
+  const b = sanitizeBook(raw);
   const { error } = await supabase().rpc("enrich_book", {
     p_book: id,
     p_cover: b.cover_id ?? null,
@@ -326,6 +328,13 @@ export async function updateMyProfile(fields: Partial<Omit<Profile, "id">>): Pro
     throw new Error(error.message);
   }
   if (!data?.length) throw new Error("Couldn’t save your profile. Try again in a moment.");
+}
+
+/** Permanently delete the signed-in account, its shelf and its follows. */
+export async function deleteMyAccount(): Promise<void> {
+  const { error } = await supabase().rpc("delete_my_account");
+  if (error) throw new Error(error.message);
+  await supabase().auth.signOut();
 }
 
 /** Whether a username is free (or already yours). */

@@ -9,7 +9,7 @@ import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { useShelf } from "@/components/useShelf";
-import { followCounts, rankEntries, updateMyProfile } from "@/lib/data";
+import { deleteMyAccount, followCounts, rankEntries, updateMyProfile } from "@/lib/data";
 import { activityDates, milestones, passport, readInYear, TASTE_UNLOCK, weeklyStreak } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
 
@@ -183,6 +183,8 @@ function You() {
       {editing && profile && (
         <EditProfile
           initial={{ name: profile.display_name ?? "", goal: profile.yearly_goal, isPrivate: profile.is_private }}
+          username={profile.username ?? ""}
+          onDeleted={() => router.replace("/")}
           onClose={() => setEditing(false)}
           onSaved={async () => { await reloadProfile(); setEditing(false); }}
         />
@@ -193,17 +195,33 @@ function You() {
 }
 
 function EditProfile({
-  initial, onClose, onSaved,
+  initial, username, onClose, onSaved, onDeleted,
 }: {
   initial: { name: string; goal: number | null; isPrivate: boolean };
+  username: string;
   onClose: () => void;
   onSaved: () => Promise<void>;
+  onDeleted: () => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [typed, setTyped] = useState("");
   const [name, setName] = useState(initial.name);
   const [goal, setGoal] = useState(initial.goal ? String(initial.goal) : "");
   const [isPrivate, setPrivate] = useState(initial.isPrivate);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function remove() {
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteMyAccount();
+      onDeleted();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn’t delete your account");
+      setBusy(false);
+    }
+  }
 
   async function save() {
     setBusy(true);
@@ -244,6 +262,22 @@ function EditProfile({
         </label>
         {error && <p className="error" role="alert">{error}</p>}
         <button className="btn btn--block" style={{ marginTop: 20 }} disabled={busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
+        {!confirmDelete ? (
+          <button className="btn btn--ghost btn--block" style={{ marginTop: 8, color: "#b42318" }} disabled={busy} onClick={() => setConfirmDelete(true)}>
+            Delete account
+          </button>
+        ) : (
+          <div style={{ marginTop: 16, padding: 14, borderRadius: 16, background: "#fdecea" }}>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.45, color: "#7a1a12" }}>
+              This permanently deletes your account, shelf, rankings and follows. It can&rsquo;t be undone. Type <strong>{username}</strong> to confirm.
+            </p>
+            <label htmlFor="confirm-del" className="visually-hidden">Type your username to confirm</label>
+            <input id="confirm-del" className="input" style={{ width: "100%", marginTop: 10 }} value={typed} onChange={(e) => setTyped(e.target.value)} autoCapitalize="none" autoComplete="off" />
+            <button className="btn btn--block" style={{ marginTop: 10, background: "#b42318" }} disabled={busy || typed !== username} onClick={remove}>
+              Delete forever
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
