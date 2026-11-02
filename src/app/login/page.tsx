@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { SetupNotice, useAuth } from "@/components/Auth";
 import { BackIcon } from "@/components/icons";
+import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/Turnstile";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
 
 export default function Login() {
@@ -14,6 +15,9 @@ export default function Login() {
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaRound, setCaptchaRound] = useState(0);
+  const needsCaptcha = Boolean(TURNSTILE_SITE_KEY);
 
   useEffect(() => {
     if (session) router.replace("/feed");
@@ -23,15 +27,28 @@ export default function Login() {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (needsCaptcha && !captcha) {
+      setError("Just a moment — confirming you’re not a bot.");
+      return;
+    }
     setBusy(true);
     setError(null);
     const { error } = await supabase().auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/feed` },
+      options: { emailRedirectTo: `${window.location.origin}/feed`, captchaToken: captcha ?? undefined },
     });
     setBusy(false);
-    if (error) setError(error.message);
-    else setSent(true);
+    // Bot-check tokens are single-use: get a fresh one for any retry.
+    setCaptchaRound((n) => n + 1);
+    if (error) {
+      setError(
+        /rate limit/i.test(error.message)
+          ? "Too many sign-in emails just now. Wait a few minutes and try again."
+          : /captcha/i.test(error.message)
+            ? "The bot check didn’t go through. Try again."
+            : error.message,
+      );
+    } else setSent(true);
   }
 
   return (
@@ -70,9 +87,10 @@ export default function Login() {
                 placeholder="you@example.com"
               />
             </div>
+            <Turnstile onToken={setCaptcha} resetKey={captchaRound} />
             {error && <p className="error" role="alert">{error}</p>}
             <div className="spacer" style={{ minHeight: 24 }} />
-            <button className="btn btn--block" disabled={busy || !email.trim()}>
+            <button className="btn btn--block" disabled={busy || !email.trim() || (needsCaptcha && !captcha)}>
               {busy ? "Sending…" : "Email me a link"}
             </button>
           </form>
