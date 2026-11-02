@@ -527,3 +527,6 @@ img { display: block; max-width: 100%; }
 .shelf-cta__covers { display: flex; flex-shrink: 0; }
 .shelf-cta__covers > * { margin-left: -14px; box-shadow: 0 6px 12px -6px rgba(17,17,17,0.5); }
 .shelf-cta__covers > :first-child { margin-left: 0; }
+button.stamp { font: inherit; border: 0; cursor: pointer; transition: transform 0.12s; }
+button.stamp:active { transform: scale(0.95); }
+button.stamp--locked { border: 1.5px dashed #bdbcb6; }

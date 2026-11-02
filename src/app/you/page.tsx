@@ -10,6 +10,7 @@ import { BadgeCase } from "@/components/BadgeCase";
 import { InviteCard } from "@/components/InviteCard";
 import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
+import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
@@ -44,6 +45,9 @@ function You() {
   const { streak } = useStreak(entries);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
+  const [stamp, setStamp] = useState<string | null>(null);
+  const openStamp = stamps.find((s) => s.key === stamp);
+  const stampBooks = stamp ? ranked.filter((e) => e.book.genres?.includes(stamp)) : [];
   const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
   const shelfSize = entries?.length ?? -1;
@@ -137,15 +141,16 @@ function You() {
           <div className="stamp-grid">
             {stamps.map((s) =>
               s.count > 0 ? (
-                <div key={s.key} className="stamp" style={{ background: s.bg, color: s.fg }}>
+                <button key={s.key} className="stamp" style={{ background: s.bg, color: s.fg }} onClick={() => setStamp(s.key)}
+                  aria-label={`${s.label}: ${s.count} book${s.count === 1 ? "" : "s"}`}>
                   <span className="m" style={{ fontWeight: 700 }}>{s.count}</span>
                   <span>{s.label}</span>
-                </div>
+                </button>
               ) : (
-                <div key={s.key} className="stamp stamp--locked">
+                <button key={s.key} className="stamp stamp--locked" onClick={() => setStamp(s.key)} aria-label={`${s.label}: not earned yet`}>
                   <LockIcon size={14} />
                   <span>{s.label}</span>
-                </div>
+                </button>
               ),
             )}
           </div>
@@ -195,6 +200,47 @@ function You() {
           <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
         </p>
       </main>
+
+      {openStamp && (
+        <div className="sheet-backdrop" onClick={() => setStamp(null)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label={`${openStamp.label} books`} onClick={(e) => e.stopPropagation()}>
+            <div className="sheet__grab" />
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span className="stamp" style={{ background: openStamp.count ? openStamp.bg : "var(--well)", color: openStamp.count ? openStamp.fg : "var(--muted)", width: 64, minHeight: 64, flexShrink: 0 }}>
+                <span className="m" style={{ fontWeight: 700, fontSize: 18 }}>{openStamp.count}</span>
+              </span>
+              <div style={{ minWidth: 0 }}>
+                <h2 className="d" style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em" }}>{openStamp.label}</h2>
+                <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>
+                  {openStamp.count ? `${openStamp.count} ranked · best first` : "No stamp yet"}
+                </p>
+              </div>
+            </div>
+            {stampBooks.length === 0 ? (
+              <div style={{ marginTop: 18 }}>
+                <p style={{ margin: 0, fontSize: 15, color: "var(--ink-2)" }}>Rank a {openStamp.label.toLowerCase()} book to earn this stamp.</p>
+                <Link href="/add" className="btn btn--block" style={{ marginTop: 16 }}>Rank a book</Link>
+              </div>
+            ) : (
+              <ol style={{ listStyle: "none", margin: "12px 0 0", padding: 0, maxHeight: "60vh", overflowY: "auto" }}>
+                {stampBooks.map((e, i) => (
+                  <li key={e.id}>
+                    <Link href={`/book/${e.book_id}`} className="book-row">
+                      <span className={`book-row__rank ${i < 3 ? "book-row__rank--top" : ""}`}>{i + 1}</span>
+                      <Cover book={e.book} width={40} />
+                      <span className="book-row__body">
+                        <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
+                        <span className="book-row__sub" style={{ display: "block" }}>{e.book.author} · #{e.rank} overall</span>
+                      </span>
+                      <ScoreChip score={e.score} bucket={e.bucket} />
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </div>
+        </div>
+      )}
 
       {editing && profile && (
         <EditProfile
