@@ -81,6 +81,17 @@ function You() {
           </button>
         </div>
 
+        {profile?.bio ? (
+          <button className="status-line" style={{ display: "block", width: "100%", textAlign: "left", color: "inherit", font: "inherit", fontSize: 15, cursor: "pointer" }}
+            onClick={() => setEditing(true)} aria-label={`Your status: ${profile.bio}. Edit`}>
+            {profile.bio}
+          </button>
+        ) : (
+          <button className="status-line status-line--empty" onClick={() => setEditing(true)}>
+            + Add a status — what are you into right now?
+          </button>
+        )}
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 20 }}>
           <button className="card card--ink" style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }} onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
             <svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true">
@@ -187,7 +198,7 @@ function You() {
 
       {editing && profile && (
         <EditProfile
-          initial={{ name: profile.display_name ?? "", goal: profile.yearly_goal, isPrivate: profile.is_private }}
+          initial={{ name: profile.display_name ?? "", bio: profile.bio ?? "", goal: profile.yearly_goal, isPrivate: profile.is_private }}
           username={profile.username ?? ""}
           onDeleted={() => router.replace("/")}
           onClose={() => setEditing(false)}
@@ -202,7 +213,7 @@ function You() {
 function EditProfile({
   initial, username, onClose, onSaved, onDeleted,
 }: {
-  initial: { name: string; goal: number | null; isPrivate: boolean };
+  initial: { name: string; bio: string; goal: number | null; isPrivate: boolean };
   username: string;
   onClose: () => void;
   onSaved: () => Promise<void>;
@@ -211,6 +222,7 @@ function EditProfile({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [typed, setTyped] = useState("");
   const [name, setName] = useState(initial.name);
+  const [bio, setBio] = useState(initial.bio);
   const [goal, setGoal] = useState(initial.goal ? String(initial.goal) : "");
   const [isPrivate, setPrivate] = useState(initial.isPrivate);
   const [busy, setBusy] = useState(false);
@@ -235,6 +247,7 @@ function EditProfile({
       const g = parseInt(goal, 10);
       await updateMyProfile({
         display_name: name.trim() || null,
+        bio: bio.replace(/\s*\n\s*\n+/g, "\n").trim().slice(0, 160) || null,
         yearly_goal: Number.isFinite(g) && g > 0 ? Math.min(g, 1000) : null,
         is_private: isPrivate,
       });
@@ -253,6 +266,15 @@ function EditProfile({
         <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="pname">Name</label>
           <input id="pname" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+        </div>
+        <div className="field" style={{ marginTop: 14 }}>
+          <label htmlFor="pbio" style={{ display: "flex", justifyContent: "space-between" }}>
+            <span>Status</span>
+            <span className="m muted" style={{ fontWeight: 400 }}>{bio.length}/160</span>
+          </label>
+          <textarea id="pbio" className="input" rows={2} value={bio} maxLength={160} onChange={(e) => setBio(e.target.value)}
+            placeholder="Deep in a Russian novel phase. Send short books." style={{ resize: "none", paddingTop: 12, lineHeight: 1.4, height: "auto" }} />
+          <span className="muted" style={{ fontSize: 12 }}>Everyone can see this, even if your shelf is private.</span>
         </div>
         <div className="field" style={{ marginTop: 14 }}>
           <label htmlFor="pgoal">Books to read in {new Date().getFullYear()}</label>

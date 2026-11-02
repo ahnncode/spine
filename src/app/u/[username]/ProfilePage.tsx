@@ -102,11 +102,17 @@ function Inner() {
     [ranked, myRanked],
   );
   const disagree = [...shared].sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff)).filter((s) => Math.abs(s.diff) >= 2).slice(0, 3);
+  const bothLoved = shared
+    .filter(({ e, mine }) => e.bucket === "loved" && mine.bucket === "loved")
+    .sort((a, b) => b.e.score + b.mine.score - (a.e.score + a.mine.score))
+    .slice(0, 8);
   const stamps = passport(ranked).filter((s) => s.count > 0).length;
   const reading = (data?.theirs ?? []).filter((e) => e.status === "reading");
   // Your status for each book: ranked/reading ones need no button; want-to-read shows as Saved.
   const myStatus = useMemo(() => new Map((data?.mine ?? []).map((e) => [e.book_id, e.status])), [data]);
   const wantable = (bookId: string) => !myStatus.has(bookId) || myStatus.get(bookId) === "want";
+  // Their loved books you haven't ranked or started (saved ones still show, as Saved).
+  const picks = ranked.filter((e) => e.bucket === "loved" && wantable(e.book_id)).slice(0, 8);
 
   if (data === null) {
     return (
@@ -147,6 +153,7 @@ function Inner() {
                 )}
               </div>
             </div>
+            {!data.blocked && data.profile.bio && <p className="status-line">{data.profile.bio}</p>}
             {notice && <p className="notice" role="status" style={{ marginTop: 12 }}>{notice}</p>}
 
             {data.blocked ? (
@@ -155,6 +162,17 @@ function Inner() {
               <div className="empty"><LockIcon size={22} /><p className="h2" style={{ marginTop: 8 }}>This shelf is private</p></div>
             ) : (
               <>
+                {ranked.length >= 3 && (
+                  <div className="top3" aria-label="Their top three">
+                    {ranked.slice(0, 3).map((e) => (
+                      <Link key={e.id} href={`/book/${e.book_id}`} className="top3__item" aria-label={`#${e.rank} ${e.book.title}`}>
+                        <Cover book={e.book} width={96} />
+                        <span className="top3__rank m">#{e.rank}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+
                 {reading.length > 0 && (
                   <>
                     <h2 className="h2" style={{ marginTop: 20 }}>Reading now</h2>
@@ -199,6 +217,46 @@ function Inner() {
                     </div>
                   </div>
                 </div>
+
+                {bothLoved.length > 0 && (
+                  <section style={{ marginTop: 20 }}>
+                    <h2 className="h2">You both loved</h2>
+                    <div className="cover-strip">
+                      {bothLoved.map(({ e, mine }) => (
+                        <Link key={e.id} href={`/book/${e.book_id}`} className="cover-strip__item">
+                          <Cover book={e.book} width={76} />
+                          <span className="cover-strip__title">{e.book.title}</span>
+                          <span className="m muted" style={{ fontSize: 11 }}>them {formatScore(e.score)} · you {formatScore(mine.score)}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {picks.length > 0 && (
+                  <section style={{ marginTop: 20 }}>
+                    <h2 className="h2">Their favorites you haven&rsquo;t read</h2>
+                    <p className="muted" style={{ fontSize: 13, margin: "2px 0 0" }}>
+                      {data.match?.match != null && data.match.match >= 70
+                        ? `You match ${data.match.match}% — these are good bets.`
+                        : "Their highest-ranked books that aren’t on your shelf yet."}
+                    </p>
+                    <div className="cover-strip">
+                      {picks.map((e) => (
+                        <div key={e.id} className="cover-strip__item">
+                          <Link href={`/book/${e.book_id}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+                            <span style={{ position: "relative", display: "block" }}>
+                              <Cover book={e.book} width={76} />
+                              <span style={{ position: "absolute", right: -6, bottom: -6 }}><ScoreChip score={e.score} bucket={e.bucket} size={30} /></span>
+                            </span>
+                            <span className="cover-strip__title">{e.book.title}</span>
+                          </Link>
+                          <WantButton bookId={e.book_id} compact initialSaved={myStatus.get(e.book_id) === "want"} />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
                 {disagree.length > 0 && (
                   <section className="card" style={{ marginTop: 10 }}>

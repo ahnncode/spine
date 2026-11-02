@@ -49,6 +49,8 @@ export interface Profile {
   yearly_goal: number | null;
   /** When they joined; joining in Spine's first year earns the Early Adopter mark. */
   created_at?: string | null;
+  /** A short status line anyone can see. */
+  bio?: string | null;
 }
 
 const ENTRY_SELECT =
@@ -380,7 +382,7 @@ export async function importGoodreads(
 
 /* ------------------------------ Profiles & follows ----------------------- */
 
-const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at";
+const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at, bio";
 
 export async function fetchMyProfile(): Promise<Profile | null> {
   const uid = await myId();
