@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { RequireAuth } from "@/components/Auth";
+import { RequireAuth, useProfile } from "@/components/Auth";
 import { BookActions } from "@/components/BookActions";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { Cover } from "@/components/Cover";
@@ -29,6 +29,7 @@ type Tab = "ranked" | "want" | "unsorted";
 
 function Shelf() {
   const { entries, error, reload } = useShelf();
+  const { profile } = useProfile();
   useEnrichment(entries, reload);
   const [tab, setTab] = useState<Tab>("ranked");
   const [genre, setGenre] = useState<string | null>(null);
@@ -64,9 +65,16 @@ function Shelf() {
       <main className="screen">
         <div className="topbar">
           <h1 className="h1">Your shelf</h1>
-          <Link href="/search" className="icon-btn" aria-label="Find a book">
-            <SearchIcon size={20} />
-          </Link>
+          <span style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {profile?.username && (
+              <Link href={`/u/${profile.username}/shelf`} className="btn btn--quiet" style={{ minHeight: 40, fontSize: 14, padding: "0 14px" }}>
+                Filter &amp; sort
+              </Link>
+            )}
+            <Link href="/search" className="icon-btn" aria-label="Find a book">
+              <SearchIcon size={20} />
+            </Link>
+          </span>
         </div>
 
         {reading.length > 0 && (

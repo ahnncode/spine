@@ -174,6 +174,13 @@ export async function enrichBook(id: string, raw: BookInput): Promise<void> {
   if (error) throw error;
 }
 
+/** Pick a genre for a book Open Library couldn't place (only works while it has none). */
+export async function setBookGenre(bookId: string, genre: string): Promise<boolean> {
+  const { data, error } = await supabase().rpc("set_book_genre", { p_book: bookId, p_genre: genre });
+  if (error) throw error;
+  return Boolean(data);
+}
+
 /* ------------------------------ Shelf writes ----------------------------- */
 
 export async function addToWant(bookId: string): Promise<void> {

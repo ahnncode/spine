@@ -12,10 +12,12 @@ import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
+import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
-import { deleteMyAccount, followCounts, rankEntries, refreshBadges, updateMyProfile } from "@/lib/data";
+import { deleteMyAccount, followCounts, rankEntries, refreshBadges, setBookGenre, updateMyProfile } from "@/lib/data";
+import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
 
@@ -30,7 +32,8 @@ export default function YouPage() {
 function You() {
   const router = useRouter();
   const { profile, reloadProfile } = useProfile();
-  const { entries } = useShelf();
+  const { entries, reload } = useShelf();
+  useEnrichment(entries, reload);
   const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -48,6 +51,18 @@ function You() {
   const [stamp, setStamp] = useState<string | null>(null);
   const openStamp = stamps.find((s) => s.key === stamp);
   const stampBooks = stamp ? ranked.filter((e) => e.book.genres?.includes(stamp)) : [];
+  const pendingGenres = ranked.filter((e) => !e.book.enriched).length;
+  const noGenre = ranked.filter((e) => e.book.enriched && !e.book.genres?.length);
+  const [sorting, setSorting] = useState(false);
+  const [picked, setPicked] = useState<Record<string, string>>({});
+  async function pickGenre(bookId: string, genre: string) {
+    setPicked((p) => ({ ...p, [bookId]: genre }));
+    try {
+      await setBookGenre(bookId, genre);
+    } catch {
+      setPicked((p) => { const n = { ...p }; delete n[bookId]; return n; });
+    }
+  }
   const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
   const shelfSize = entries?.length ?? -1;
@@ -154,8 +169,13 @@ function You() {
               ),
             )}
           </div>
-          {ranked.length > 0 && earnedStamps === 0 && (
-            <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Genres fill in as we look up your books — check back after a visit to your shelf.</p>
+          {pendingGenres > 0 && (
+            <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Looking up genres for {pendingGenres} book{pendingGenres === 1 ? "" : "s"}… stamps fill in as you browse.</p>
+          )}
+          {noGenre.length > 0 && (
+            <button className="link-btn" style={{ marginTop: 10, fontSize: 13 }} onClick={() => setSorting(true)}>
+              {noGenre.length} book{noGenre.length === 1 ? "" : "s"} without a genre — sort {noGenre.length === 1 ? "it" : "them"}
+            </button>
           )}
         </section>
 
@@ -181,6 +201,7 @@ function You() {
 
         <div className="stack" style={{ marginTop: 10 }}>
           {[
+            ...(profile?.username ? [{ href: `/u/${profile.username}/shelf`, label: "Your whole library" }] : []),
             { href: `/wrap/${year}`, label: `Your ${year} in books` },
             { href: "/people", label: "Find friends" },
             { href: "/import", label: "Import from Goodreads" },
@@ -238,6 +259,35 @@ function You() {
                 ))}
               </ol>
             )}
+          </div>
+        </div>
+      )}
+
+      {sorting && (
+        <div className="sheet-backdrop" onClick={() => { setSorting(false); if (Object.keys(picked).length) reload(); }}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label="Pick genres" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet__grab" />
+            <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Pick a genre</h2>
+            <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>We couldn&rsquo;t find these in the catalogue. Your pick counts toward your passport.</p>
+            <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, maxHeight: "60vh", overflowY: "auto" }}>
+              {noGenre.map((e) => (
+                <li key={e.id} className="book-row" style={{ gap: 12 }}>
+                  <Cover book={e.book} width={36} />
+                  <span className="book-row__body">
+                    <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{e.book.title}</span>
+                    <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>
+                  </span>
+                  <label className="sort-select">
+                    <span className="visually-hidden">Genre for {e.book.title}</span>
+                    <select value={picked[e.book_id] ?? ""} disabled={Boolean(picked[e.book_id])} onChange={(ev) => pickGenre(e.book_id, ev.target.value)}>
+                      <option value="" disabled>Genre</option>
+                      {GENRES.map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}
+                    </select>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <button className="btn btn--block" style={{ marginTop: 16 }} onClick={() => { setSorting(false); if (Object.keys(picked).length) reload(); }}>Done</button>
           </div>
         </div>
       )}

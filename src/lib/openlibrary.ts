@@ -23,7 +23,7 @@ function toBook(d: OLDoc, isbn13?: string): BookInput {
     isbn13: isbn13 ?? d.isbn?.find((i) => i.length === 13) ?? null,
     year: d.first_publish_year ?? null,
     pages: d.number_of_pages_median ?? null,
-    genres: genresFromSubjects(d.subject),
+    genres: genresFromSubjects(d.subject, d.first_publish_year),
   };
 }
 

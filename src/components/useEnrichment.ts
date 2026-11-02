@@ -4,8 +4,10 @@ import { useEffect, useRef } from "react";
 import { enrichBook, type Entry } from "@/lib/data";
 import { lookup } from "@/lib/openlibrary";
 
-const PER_VISIT = 40;
-const GAP_MS = 350;
+const PER_VISIT = 250;
+const GAP_MS = 250;
+/** Refresh the page every this many filled-in books, so progress shows. */
+const REFRESH_EVERY = 20;
 
 /**
  * Imported books arrive without covers or genres. While someone looks at
@@ -30,12 +32,13 @@ export function useEnrichment(entries: Entry[] | null, onDone: () => void) {
           // Mark as enriched even when nothing matched, so we don't retry forever.
           await enrichBook(e.book_id, found ?? { title: e.book.title, author: e.book.author });
           if (found?.cover_id || found?.genres?.length) changed++;
+          if (changed && changed % REFRESH_EVERY === 0 && !cancelled) onDone();
         } catch {
           // Network hiccup: leave it for next visit.
         }
         await new Promise((r) => setTimeout(r, GAP_MS));
       }
-      if (!cancelled && changed) onDone();
+      if (!cancelled && changed % REFRESH_EVERY) onDone();
     })();
 
     return () => {
