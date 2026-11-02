@@ -14,7 +14,9 @@ export function InviteCard({ username, friends, earned }: { username: string; fr
     const text = "I’m ranking my books on Spine — come compare taste with me.";
     try {
       if (navigator.share) {
-        await navigator.share({ title: "Join me on Spine", text, url });
+        // One string, not text + url: iOS treats those as two items, so
+        // "Copy" and Messages show the link twice.
+        await navigator.share({ text: `${text} ${url}` });
         return;
       }
     } catch (e) {
