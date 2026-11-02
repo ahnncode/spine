@@ -4,13 +4,13 @@
  */
 export const LEGAL = {
   /** Who runs Spine (your name, or a company if you form one). */
-  operator: "[YOUR NAME]",
+  operator: "Paul Ahnn",
   /** Where people can reach you about privacy, accounts or legal questions. */
-  contactEmail: "[CONTACT EMAIL]",
+  contactEmail: "hello@readspine.app",
   /** Whose laws apply to the terms. */
-  governingState: "[STATE]",
+  governingState: "Pennsylvania",
   /** Where the Supabase project lives (Supabase → Project Settings → General → Region). */
-  dataRegion: "[REGION, e.g. the United States]",
+  dataRegion: "the United States (East US)",
   effectiveDate: "November 2, 2026",
   minimumAge: 13,
 };
