@@ -12,19 +12,51 @@ export const BUCKETS: Record<
 };
 
 /**
- * Scores for a bucket's books, best first. The best book gets the top of the
- * bucket's range and the rest spread evenly down it, so a score always says
- * both how you felt and where the book sits among its peers.
+ * Scores for a bucket's books, best first.
+ *
+ * Books spread evenly between the top and bottom of the tier's range, as if
+ * the range's ends were two invisible books: one loved book scores 8.4 (the
+ * middle), and the top creeps toward 10 as the tier fills. So early scores
+ * stay calm and a near-10 has to be earned.
+ *
+ * Scores you set yourself (`manual`, for your first few books) are anchors:
+ * they stay put and other books fill in between them.
+ *
+ * Mirrored in SQL by the `ranked_entries` view — keep the two in step.
  */
-export function bucketScores(count: number, bucket: Bucket): number[] {
+export function bucketScores(manual: number | Array<number | null>, bucket: Bucket): number[] {
   const [lo, hi] = BUCKETS[bucket].range;
-  const step = count > 0 ? (hi - lo) / count : 0;
-  return Array.from({ length: count }, (_, i) => round1(hi - i * step));
+  const fixed = typeof manual === "number" ? Array<number | null>(manual).fill(null) : manual;
+  const n = fixed.length;
+  // Anchor points as (position, score), positions 1..n, with the range ends at 0 and n + 1.
+  const anchors: Array<[number, number]> = [[0, hi]];
+  fixed.forEach((s, i) => {
+    if (s != null) anchors.push([i + 1, Math.min(hi, Math.max(lo, s))]);
+  });
+  anchors.push([n + 1, lo]);
+  return fixed.map((s, i) => {
+    const pos = i + 1;
+    if (s != null) return round1(Math.min(hi, Math.max(lo, s)));
+    let a = anchors[0];
+    let b = anchors[anchors.length - 1];
+    for (const pt of anchors) {
+      if (pt[0] < pos) a = pt;
+      else if (pt[0] > pos) {
+        b = pt;
+        break;
+      }
+    }
+    return round1(a[1] + ((b[1] - a[1]) * (pos - a[0])) / (b[0] - a[0]));
+  });
 }
 
+/** Round to one decimal, halves away from zero (matching Postgres numeric rounding). */
 export function round1(n: number): number {
-  return Math.round(n * 10) / 10;
+  return Math.round(n * 10 + (n >= 0 ? 1e-9 : -1e-9)) / 10;
 }
+
+/** How many of your first books get a score you set yourself. */
+export const MANUAL_SCORE_BOOKS = 3;
 
 export function formatScore(n: number): string {
   return n.toFixed(1);

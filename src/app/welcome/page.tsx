@@ -56,7 +56,7 @@ function Welcome() {
       const saved = await fetchMyProfile();
       if (saved?.username !== username) throw new Error("Couldn’t save your username. Try again in a moment.");
       await reloadProfile();
-      router.replace("/shelf");
+      router.replace("/start");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn’t save that");
       setBusy(false);

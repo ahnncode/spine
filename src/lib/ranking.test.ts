@@ -27,9 +27,11 @@ describe("binary placement", () => {
 });
 
 describe("scores", () => {
-  it("gives the best loved book a 10 and stays within the bucket", () => {
-    const s = bucketScores(8, "loved");
-    expect(s[0]).toBe(10);
+  it("starts in the middle of the tier and spreads out as it fills", () => {
+    expect(bucketScores(1, "loved")).toEqual([8.4]);
+    expect(bucketScores(2, "loved")).toEqual([8.9, 7.8]);
+    const s = bucketScores(30, "loved");
+    expect(s[0]).toBeGreaterThan(9.8);
     expect(Math.min(...s)).toBeGreaterThanOrEqual(6.7);
     expect([...s].sort((a, b) => b - a)).toEqual(s);
   });
@@ -37,6 +39,13 @@ describe("scores", () => {
   it("keeps buckets from overlapping", () => {
     expect(Math.min(...bucketScores(50, "loved"))).toBeGreaterThan(Math.max(...bucketScores(50, "fine")));
     expect(Math.min(...bucketScores(50, "fine"))).toBeGreaterThan(Math.max(...bucketScores(50, "disliked")));
+  });
+
+  it("keeps hand-set scores and fills others in around them", () => {
+    expect(bucketScores([9, null, 8], "loved")).toEqual([9, 8.5, 8]);
+    expect(bucketScores([null, 9], "loved")).toEqual([9.5, 9]);
+    expect(bucketScores([10, null], "loved")).toEqual([10, 8.4]);
+    expect(bucketScores([12], "loved")).toEqual([10]); // clamped to the tier
   });
 });
 

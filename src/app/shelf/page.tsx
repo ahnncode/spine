@@ -115,7 +115,7 @@ function Shelf() {
             <p style={{ margin: "0 0 20px", fontSize: 14 }}>Bring your Goodreads history, or rank the last book you finished.</p>
             <div className="stack">
               <Link href="/import" className="btn btn--block">Import from Goodreads</Link>
-              <Link href="/add" className="btn btn--outline btn--block">Rank a book</Link>
+              <Link href="/start" className="btn btn--outline btn--block">Pick books you&rsquo;ve read</Link>
             </div>
           </div>
         )}

@@ -62,9 +62,9 @@ function Sharpen() {
       const swap = winner.sort_key < loser.sort_key;
       const next: Entry[] = entries.map((e) => {
         if (e.id === winner.id)
-          return { ...e, sort_key: swap ? loser.sort_key : winner.sort_key, compare_count: e.compare_count + 1, needs_sort: e.compare_count + 1 < 2 };
+          return { ...e, sort_key: swap ? loser.sort_key : winner.sort_key, compare_count: e.compare_count + 1, needs_sort: e.compare_count + 1 < 2, manual_score: swap ? null : e.manual_score };
         if (e.id === loser.id)
-          return { ...e, sort_key: swap ? winner.sort_key : loser.sort_key, compare_count: e.compare_count + 1, needs_sort: e.compare_count + 1 < 2 };
+          return { ...e, sort_key: swap ? winner.sort_key : loser.sort_key, compare_count: e.compare_count + 1, needs_sort: e.compare_count + 1 < 2, manual_score: swap ? null : e.manual_score };
         return e;
       });
       // After the matchup the winner sits directly above the loser.

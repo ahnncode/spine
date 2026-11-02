@@ -10,12 +10,13 @@ import { ScoreChip } from "@/components/ScoreChip";
 import type { Book } from "@/lib/books";
 import { bucketList, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import {
-  BUCKET_ORDER, BUCKETS, formatScore, type Bucket,
+  BUCKET_ORDER, BUCKETS, formatScore, MANUAL_SCORE_BOOKS, type Bucket,
 } from "@/lib/ranking";
 import {
   answerPlacement, questionsLeft, skipPlacement, startPlacement, tiePlacement,
   type Candidate, type Placement,
 } from "@/lib/placement";
+import { clearQueue, shiftQueue } from "@/lib/queue";
 import { activityDates, readInYear, weeklyStreak } from "@/lib/stats";
 
 export function RankFlow() {
@@ -26,7 +27,7 @@ export function RankFlow() {
   );
 }
 
-type Phase = "loading" | "bucket" | "compare" | "saving" | "done" | "error";
+type Phase = "loading" | "bucket" | "score" | "compare" | "saving" | "done" | "error";
 
 interface Moment {
   text: string;
@@ -98,6 +99,8 @@ function Flow() {
   const [bucket, setBucket] = useState<Bucket | null>(null);
   const [list, setList] = useState<RankedEntry[]>([]);
   const [placement, setPlacement] = useState<Placement | null>(null);
+  const [manual, setManual] = useState<number>(8.4);
+  const [queueLeft, setQueueLeft] = useState<string[]>([]);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -131,10 +134,17 @@ function Flow() {
     [entries, existing, id],
   );
 
-  async function finish(b: Bucket, index: number, sorted: RankedEntry[]) {
+  // Your first few books get a score you set yourself, unless a big import
+  // already gives head-to-heads plenty to work with.
+  const others = entries.filter((e) => e.status === "ranked" && e.book_id !== id);
+  const importedRanked = others.filter((e) => e.source === "goodreads").length;
+  const placedByYou = others.filter((e) => e.source !== "goodreads").length;
+  const scoreByHand = importedRanked <= 3 && placedByYou < MANUAL_SCORE_BOOKS;
+
+  async function finish(b: Bucket, index: number, sorted: RankedEntry[], manualScore: number | null = null) {
     setPhase("saving");
     try {
-      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing });
+      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, manualScore });
       const [fresh, checkinDays] = await Promise.all([fetchShelf(), fetchCheckinDays().catch(() => [])]);
       const ranked = rankEntries(fresh);
       const meIdx = ranked.findIndex((e) => e.book_id === id);
@@ -148,6 +158,7 @@ function Flow() {
         moments: momentsFor(entries, fresh, id, checkinDays),
       });
       setEntries(fresh);
+      setQueueLeft(shiftQueue(id));
       setPhase("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t save your ranking");
@@ -168,7 +179,20 @@ function Flow() {
     const sorted = bucketList(entries, b, id);
     setBucket(b);
     setList(sorted);
+    if (scoreByHand) {
+      const [lo, hi] = BUCKETS[b].range;
+      setManual(Math.round(((lo + hi) / 2) * 10) / 10);
+      setPhase("score");
+      return;
+    }
     step(startPlacement(toCandidates(sorted), genres), b, sorted);
+  }
+
+  function saveManual() {
+    if (!bucket) return;
+    // Sits above every book in the tier you scored lower (ties go just below).
+    const index = list.filter((e) => e.score >= manual).length;
+    finish(bucket, index, list, manual);
   }
 
   function pick(newIsBetter: boolean) {
@@ -243,6 +267,57 @@ function Flow() {
               ))}
             </div>
           </div>
+        )}
+
+        {phase === "score" && book && bucket && (
+          <>
+            <p className="eyebrow" style={{ marginTop: 12 }}>
+              Book {placedByYou + 1} of {MANUAL_SCORE_BOOKS} · setting your scale
+            </p>
+            <h1 className="h1" style={{ fontSize: 34, marginTop: 8, lineHeight: 1.02, letterSpacing: "-0.03em" }}>
+              What would you give it?
+            </h1>
+            <p className="muted" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.45 }}>
+              Your first {MANUAL_SCORE_BOOKS} books set the scale. After that, quick head-to-heads place each new book and score it around these.
+            </p>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 26 }}>
+              <Cover book={book} width={84} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="versus__title">{book.title}</div>
+                <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{BUCKETS[bucket].label}</div>
+              </div>
+              <ScoreChip score={manual} bucket={bucket} size={72} />
+            </div>
+            <label htmlFor="manual-score" className="visually-hidden">Score</label>
+            <input
+              id="manual-score"
+              type="range"
+              min={BUCKETS[bucket].range[0]}
+              max={BUCKETS[bucket].range[1]}
+              step={0.1}
+              value={manual}
+              onChange={(e) => setManual(Math.round(Number(e.target.value) * 10) / 10)}
+              style={{ width: "100%", marginTop: 22, accentColor: "var(--accent)", height: 32 }}
+            />
+            <div className="m muted" style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+              <span>{formatScore(BUCKETS[bucket].range[0])}</span>
+              <span>{formatScore(BUCKETS[bucket].range[1])}</span>
+            </div>
+            {list.length > 0 && (
+              <ol className="mini-list" style={{ listStyle: "none", margin: "18px 0 0" }} aria-label="Your other books in this tier">
+                {list.slice(0, 4).map((e) => (
+                  <li key={e.id} className="mini-row" style={{ padding: "6px 12px" }}>
+                    <Cover book={e.book} width={28} />
+                    <div style={{ flex: 1, minWidth: 0 }} className="book-row__title">{e.book.title}</div>
+                    <ScoreChip score={e.score} bucket={e.bucket} size={34} />
+                  </li>
+                ))}
+              </ol>
+            )}
+            <div className="spacer" style={{ minHeight: 24 }} />
+            <button className="btn btn--block" onClick={saveManual}>Save {formatScore(manual)}</button>
+            <button className="btn btn--ghost btn--block" style={{ marginTop: 6 }} onClick={() => setPhase("bucket")}>Back</button>
+          </>
         )}
 
         {phase === "compare" && book && opp && (
@@ -333,8 +408,21 @@ function Flow() {
               ))}
             </ol>
             <div className="spacer" style={{ minHeight: 24 }} />
-            <Link href="/shelf" className="btn btn--block">See your shelf</Link>
-            <Link href="/add" className="btn btn--ghost btn--block" style={{ marginTop: 6 }}>Rank another</Link>
+            {queueLeft.length > 0 ? (
+              <>
+                <Link href={`/rank/${queueLeft[0]}`} className="btn btn--block">
+                  Next book · {queueLeft.length} to go
+                </Link>
+                <Link href="/shelf" className="btn btn--ghost btn--block" style={{ marginTop: 6 }} onClick={() => clearQueue()}>
+                  Finish later
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/shelf" className="btn btn--block">See your shelf</Link>
+                <Link href="/add" className="btn btn--ghost btn--block" style={{ marginTop: 6 }}>Rank another</Link>
+              </>
+            )}
           </>
         )}
       </main>

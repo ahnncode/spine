@@ -21,6 +21,8 @@ export interface Entry {
   ranked_at: string | null;
   progress_pct: number | null;
   last_checkin_on: string | null;
+  /** A score you set yourself (your first few books); others fill in around it. */
+  manual_score: number | null;
   source: string;
   created_at: string;
   book: Book;
@@ -43,7 +45,7 @@ export interface Profile {
 }
 
 const ENTRY_SELECT =
-  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, source, created_at, book:books(*)";
+  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, manual_score, source, created_at, book:books(*)";
 
 export async function myId(): Promise<string> {
   const { data } = await supabase().auth.getSession();
@@ -83,7 +85,10 @@ export function rankEntries(entries: Entry[]): RankedEntry[] {
     const inBucket = entries
       .filter((e) => e.status === "ranked" && e.bucket === bucket && e.sort_key !== null)
       .sort((a, b) => (b.sort_key as number) - (a.sort_key as number));
-    const scores = bucketScores(inBucket.length, bucket);
+    const scores = bucketScores(
+      inBucket.map((e) => (e.manual_score == null ? null : Number(e.manual_score))),
+      bucket,
+    );
     inBucket.forEach((e, i) =>
       out.push({ ...e, bucket, sort_key: e.sort_key as number, score: scores[i], rank: 0 }),
     );
@@ -173,6 +178,19 @@ export async function addToWant(bookId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Add books you've read but haven't ranked yet (they wait in "To rank"). */
+export async function addToRank(bookIds: string[]): Promise<void> {
+  if (!bookIds.length) return;
+  const uid = await myId();
+  const { error } = await supabase()
+    .from("shelf_entries")
+    .upsert(
+      bookIds.map((book_id) => ({ user_id: uid, book_id, status: "unsorted", source: "app" })),
+      { onConflict: "user_id,book_id", ignoreDuplicates: true },
+    );
+  if (error) throw error;
+}
+
 /** Mark a book as currently reading (from nothing, or from want-to-read). */
 export async function startReading(bookId: string): Promise<void> {
   const uid = await myId();
@@ -244,6 +262,8 @@ export async function placeBook(opts: {
   index: number;
   list: RankedEntry[];
   existing: Entry | null;
+  /** A score set by hand (first few books only). */
+  manualScore?: number | null;
 }): Promise<void> {
   const uid = await myId();
   const { bookId, bucket, index, existing } = opts;
@@ -266,6 +286,8 @@ export async function placeBook(opts: {
     bucket,
     sort_key: key,
     needs_sort: false,
+    // Re-ranking by head-to-head replaces any score set by hand.
+    manual_score: opts.manualScore ?? null,
     finished_on: existing?.finished_on ?? today(),
     started_on: existing?.started_on ?? null,
     ranked_at: wasRanked ? existing?.ranked_at ?? new Date().toISOString() : new Date().toISOString(),
@@ -278,9 +300,11 @@ export async function placeBook(opts: {
 /** Swap two neighbours after a quick matchup (lower one won). */
 export async function recordMatchup(winner: RankedEntry, loser: RankedEntry): Promise<void> {
   const swap = winner.sort_key < loser.sort_key;
+  // If the order flips, any hand-set scores on these two no longer fit; let position decide.
+  const anchor = (e: RankedEntry) => (swap ? null : e.manual_score);
   const updates = [
-    { id: winner.id, sort_key: swap ? loser.sort_key : winner.sort_key, compare_count: winner.compare_count + 1, needs_sort: winner.compare_count + 1 < 2 },
-    { id: loser.id, sort_key: swap ? winner.sort_key : loser.sort_key, compare_count: loser.compare_count + 1, needs_sort: loser.compare_count + 1 < 2 },
+    { id: winner.id, sort_key: swap ? loser.sort_key : winner.sort_key, compare_count: winner.compare_count + 1, needs_sort: winner.compare_count + 1 < 2, manual_score: anchor(winner) },
+    { id: loser.id, sort_key: swap ? winner.sort_key : loser.sort_key, compare_count: loser.compare_count + 1, needs_sort: loser.compare_count + 1 < 2, manual_score: anchor(loser) },
   ];
   for (const u of updates) {
     const { id, ...fields } = u;
