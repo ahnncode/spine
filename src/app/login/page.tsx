@@ -45,7 +45,7 @@ export default function Login() {
         /rate limit/i.test(error.message)
           ? "Too many sign-in emails just now. Wait a few minutes and try again."
           : /captcha/i.test(error.message)
-            ? "The bot check didn’t go through. Try again."
+            ? captchaMessage(error.message)
             : error.message,
       );
     } else setSent(true);
@@ -98,4 +98,12 @@ export default function Login() {
       </main>
     </div>
   );
+}
+
+/** Turn Supabase's CAPTCHA errors into something useful (and say which one). */
+function captchaMessage(raw: string): string {
+  const code = raw.match(/\(([a-z-]+)\)/i)?.[1] ?? "";
+  if (/secret/i.test(code)) return "Sign-in is misconfigured on our side (bot-check secret key). We’re on it.";
+  if (/timeout|duplicate/i.test(code)) return "The bot check expired. Try again.";
+  return `The bot check didn’t go through${code ? ` (${code})` : ""}. Try again.`;
 }
