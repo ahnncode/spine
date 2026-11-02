@@ -33,7 +33,7 @@ function You() {
   const router = useRouter();
   const { profile, reloadProfile } = useProfile();
   const { entries, reload } = useShelf();
-  useEnrichment(entries, reload);
+  const { active: lookingUp } = useEnrichment(entries, reload);
   const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
   const [editing, setEditing] = useState(false);
 
@@ -51,8 +51,9 @@ function You() {
   const [stamp, setStamp] = useState<string | null>(null);
   const openStamp = stamps.find((s) => s.key === stamp);
   const stampBooks = stamp ? ranked.filter((e) => e.book.genres?.includes(stamp)) : [];
-  const pendingGenres = ranked.filter((e) => !e.book.enriched).length;
-  const noGenre = ranked.filter((e) => e.book.enriched && !e.book.genres?.length);
+  const pendingGenres = lookingUp ? ranked.filter((e) => !e.book.enriched).length : 0;
+  // Anything still without a genre once lookups finish can be sorted by hand.
+  const noGenre = ranked.filter((e) => !e.book.genres?.length && (e.book.enriched || !lookingUp));
   const [sorting, setSorting] = useState(false);
   const [picked, setPicked] = useState<Record<string, string>>({});
   async function pickGenre(bookId: string, genre: string) {
