@@ -11,7 +11,7 @@ import { isEarlyAdopter } from "@/lib/badges";
 import { Cover } from "@/components/Cover";
 import { FollowButton } from "@/components/FollowButton";
 import { WantButton } from "@/components/WantButton";
-import { BackIcon, LockIcon, MoreIcon } from "@/components/icons";
+import { ArrowIcon, BackIcon, LockIcon, MoreIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import {
@@ -55,7 +55,6 @@ function Inner() {
   const { profile: me } = useProfile();
   const router = useRouter();
   const [data, setData] = useState<Loaded | null | undefined>(undefined);
-  const [showAll, setShowAll] = useState(false);
   const [menu, setMenu] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -108,6 +107,7 @@ function Inner() {
     .slice(0, 8);
   const stamps = passport(ranked).filter((s) => s.count > 0).length;
   const reading = (data?.theirs ?? []).filter((e) => e.status === "reading");
+  const want = (data?.theirs ?? []).filter((e) => e.status === "want");
   // Your status for each book: ranked/reading ones need no button; want-to-read shows as Saved.
   const myStatus = useMemo(() => new Map((data?.mine ?? []).map((e) => [e.book_id, e.status])), [data]);
   const wantable = (bookId: string) => !myStatus.has(bookId) || myStatus.get(bookId) === "want";
@@ -198,8 +198,6 @@ function Inner() {
                   </>
                 )}
 
-                <BadgeStrip earned={data.badges} />
-
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 18 }}>
                   <div className="stat"><div className="stat__n">{ranked.length}</div><div className="stat__l">ranked</div></div>
                   <div className="stat"><div className="stat__n">{readInYear(ranked, new Date().getFullYear()).length}</div><div className="stat__l">this year</div></div>
@@ -217,6 +215,24 @@ function Inner() {
                     </div>
                   </div>
                 </div>
+
+                {disagree.length > 0 && (
+                  <section className="card" style={{ marginTop: 10 }}>
+                    <h2 className="h2">Where you disagree</h2>
+                    {disagree.map(({ e, mine, diff }) => (
+                      <Link key={e.id} href={`/book/${e.book_id}`} className="book-row" style={{ borderBottom: 0 }}>
+                        <Cover book={e.book} width={34} />
+                        <span className="book-row__body">
+                          <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{e.book.title}</span>
+                          <span className="book-row__sub" style={{ display: "block" }}>
+                            {diff > 0 ? "They liked it more" : "You liked it more"} · you {formatScore(mine.score)}
+                          </span>
+                        </span>
+                        <ScoreChip score={e.score} bucket={e.bucket} size={38} />
+                      </Link>
+                    ))}
+                  </section>
+                )}
 
                 {bothLoved.length > 0 && (
                   <section style={{ marginTop: 20 }}>
@@ -258,51 +274,20 @@ function Inner() {
                   </section>
                 )}
 
-                {disagree.length > 0 && (
-                  <section className="card" style={{ marginTop: 10 }}>
-                    <h2 className="h2">Where you disagree</h2>
-                    {disagree.map(({ e, mine, diff }) => (
-                      <Link key={e.id} href={`/book/${e.book_id}`} className="book-row" style={{ borderBottom: 0 }}>
-                        <Cover book={e.book} width={34} />
-                        <span className="book-row__body">
-                          <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{e.book.title}</span>
-                          <span className="book-row__sub" style={{ display: "block" }}>
-                            {diff > 0 ? "They liked it more" : "You liked it more"} · you {formatScore(mine.score)}
-                          </span>
-                        </span>
-                        <ScoreChip score={e.score} bucket={e.bucket} size={38} />
-                      </Link>
-                    ))}
-                  </section>
-                )}
+                <BadgeStrip earned={data.badges} />
 
-                <h2 className="h2" style={{ marginTop: 20 }}>Their ranking</h2>
-                {ranked.length === 0 ? <p className="muted" style={{ fontSize: 14 }}>Nothing ranked yet.</p> : (
-                  <ol style={{ listStyle: "none", margin: "4px 0 0", padding: 0 }}>
-                    {(showAll ? ranked : ranked.slice(0, 15)).map((e) => {
-                      const mineE = myRanked.get(e.book_id);
-                      return (
-                        <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--line)" }}>
-                          <Link href={`/book/${e.book_id}`} className="book-row" style={{ flex: 1, minWidth: 0, borderBottom: 0 }}>
-                            <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}`}>{e.rank}</span>
-                            <Cover book={e.book} width={44} />
-                            <span className="book-row__body">
-                              <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
-                              <span className="book-row__sub" style={{ display: "block" }}>
-                                {mineE ? `You: ${formatScore(mineE.score)}` : e.book.author}
-                              </span>
-                            </span>
-                            <ScoreChip score={e.score} bucket={e.bucket} />
-                          </Link>
-                          {wantable(e.book_id) && <WantButton bookId={e.book_id} compact initialSaved={myStatus.get(e.book_id) === "want"} />}
-                        </li>
-                      );
-                    })}
-                  </ol>
-                )}
-                {ranked.length > 15 && !showAll && (
-                  <button className="btn btn--quiet btn--block" style={{ marginTop: 12 }} onClick={() => setShowAll(true)}>Show all {ranked.length}</button>
-                )}
+                <Link href={`/u/${data.profile.username}/shelf`} className="card card--ink shelf-cta">
+                  <span className="shelf-cta__covers" aria-hidden="true">
+                    {ranked.slice(0, 3).map((e) => <Cover key={e.id} book={e.book} width={34} />)}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ display: "block", fontWeight: 700 }}>See their whole library</span>
+                    <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>
+                      {ranked.length} ranked{want.length ? ` · ${want.length} want to read` : ""} · search, filter &amp; sort
+                    </span>
+                  </span>
+                  <ArrowIcon size={18} />
+                </Link>
               </>
             )}
           </>

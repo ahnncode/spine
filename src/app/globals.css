@@ -510,3 +510,20 @@ img { display: block; max-width: 100%; }
   display: block; width: 100%; text-align: left; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer;
   background: transparent; border-style: dashed;
 }
+.filter-row { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.filter-row::-webkit-scrollbar { display: none; }
+.filter-chip {
+  flex-shrink: 0; min-height: 36px; padding: 0 14px; border-radius: 18px; font: inherit; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--line-2); background: transparent; color: var(--ink); cursor: pointer; white-space: nowrap;
+}
+.filter-chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.link-btn { background: none; border: 0; padding: 0; font: inherit; color: var(--cobalt-ink); font-weight: 600; cursor: pointer; }
+.sort-select select {
+  appearance: none; -webkit-appearance: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink);
+  background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23111' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid var(--line-2); border-radius: 18px; min-height: 36px; padding: 0 32px 0 14px; cursor: pointer;
+}
+.shelf-cta { display: flex; align-items: center; gap: 14px; margin-top: 20px; text-decoration: none; }
+.shelf-cta__covers { display: flex; flex-shrink: 0; }
+.shelf-cta__covers > * { margin-left: -14px; box-shadow: 0 6px 12px -6px rgba(17,17,17,0.5); }
+.shelf-cta__covers > :first-child { margin-left: 0; }
