@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
 import { Cover } from "@/components/Cover";
-import { CloseIcon } from "@/components/icons";
+import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import type { Book } from "@/lib/books";
 import { bucketList, fetchBook, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
@@ -13,6 +13,7 @@ import {
   answer, BUCKET_ORDER, BUCKETS, formatScore, isDone, maxSteps, midpoint, startSearch,
   type Bucket, type SearchState,
 } from "@/lib/ranking";
+import { activityDates, readInYear, weeklyStreak } from "@/lib/stats";
 
 export function RankFlow() {
   return (
@@ -24,13 +25,58 @@ export function RankFlow() {
 
 type Phase = "loading" | "bucket" | "compare" | "saving" | "done" | "error";
 
+interface Moment {
+  text: string;
+  tone: "hot" | "cobalt" | "plain";
+}
+
 interface Result {
   me: RankedEntry;
   bucketCount: number;
   bucketPos: number;
   above: RankedEntry | null;
   below: RankedEntry | null;
-  thisYear: number;
+  moments: Moment[];
+}
+
+const COUNT_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+/** The little celebrations after a placement, best first. */
+function momentsFor(before: Entry[], after: Entry[], bookId: string): Moment[] {
+  const prev = rankEntries(before);
+  const next = rankEntries(after);
+  const me = next.find((e) => e.book_id === bookId);
+  if (!me) return [];
+  const out: Moment[] = [];
+  const prevMe = prev.find((e) => e.book_id === bookId);
+
+  if (me.rank === 1 && prev[0]?.book_id !== bookId && next.length > 1) {
+    out.push({ text: `New #1 — dethroned ${prev[0]?.book.title ?? "your old favorite"}`, tone: "hot" });
+  } else if (me.rank <= 10 && next.length > 10 && (!prevMe || prevMe.rank > 10)) {
+    const nextTop = new Set(next.slice(0, 10).map((e) => e.book_id));
+    const out10 = prev.slice(0, 10).find((e) => !nextTop.has(e.book_id));
+    out.push({ text: out10 ? `Top 10 — knocked out ${out10.book.title}` : "Straight into your top 10", tone: "hot" });
+  } else if (prevMe && prevMe.rank !== me.rank) {
+    const diff = prevMe.rank - me.rank;
+    out.push({ text: diff > 0 ? `Up ${diff} from #${prevMe.rank}` : `Down ${-diff} from #${prevMe.rank}`, tone: "plain" });
+  }
+
+  if (!prevMe) {
+    const count = next.length;
+    if (COUNT_MILESTONES.includes(count)) out.push({ text: `Your ${ordinal(count)} book ranked`, tone: "cobalt" });
+    const year = new Date().getFullYear();
+    const thisYear = readInYear(next, year).length;
+    if (thisYear > 0) out.push({ text: `Book ${thisYear} of ${year}`, tone: "plain" });
+    const streak = weeklyStreak(activityDates(after));
+    if (streak.weeks >= 2) out.push({ text: `${streak.weeks}-week streak`, tone: "cobalt" });
+  }
+  return out.slice(0, 3);
 }
 
 function Flow() {
@@ -81,18 +127,16 @@ function Flow() {
       const fresh = await fetchShelf();
       const ranked = rankEntries(fresh);
       const meIdx = ranked.findIndex((e) => e.book_id === id);
-      const me = ranked[meIdx];
       const inBucket = ranked.filter((e) => e.bucket === b);
-      const year = String(new Date().getFullYear());
-      setEntries(fresh);
       setResult({
-        me,
+        me: ranked[meIdx],
         bucketCount: inBucket.length,
         bucketPos: inBucket.findIndex((e) => e.book_id === id),
         above: meIdx > 0 ? ranked[meIdx - 1] : null,
         below: meIdx < ranked.length - 1 ? ranked[meIdx + 1] : null,
-        thisYear: fresh.filter((e) => e.status === "ranked" && e.finished_on?.startsWith(year)).length,
+        moments: momentsFor(entries, fresh, id),
       });
+      setEntries(fresh);
       setPhase("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t save your ranking");
@@ -118,6 +162,7 @@ function Flow() {
 
   const total = maxSteps(list.length);
   const opp = phase === "compare" ? list[midpoint(search)] : null;
+  const label = current ? "Re-ranking" : existing?.status === "reading" ? "Finished" : "Just finished";
 
   return (
     <div className="app">
@@ -153,7 +198,7 @@ function Flow() {
 
         {phase === "bucket" && book && (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, paddingTop: 10 }}>
-            <p className="eyebrow" style={{ marginBottom: 18 }}>{current ? "Re-ranking" : "Just finished"}</p>
+            <p className="eyebrow" style={{ marginBottom: 18 }}>{label}</p>
             <Cover book={book} width={168} />
             <h1 className="h1" style={{ fontSize: 32, marginTop: 22, textAlign: "center", letterSpacing: "-0.03em" }}>{book.title}</h1>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 15 }}>{book.author}</p>
@@ -190,7 +235,7 @@ function Flow() {
                   <div className="versus__title">{book.title}</div>
                   <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{book.author}</div>
                 </div>
-                <span className="pill pill--accent">{current ? "Re-ranking" : "Just finished"}</span>
+                <span className="pill pill--accent">{label}</span>
               </button>
               <button key={opp.id} className="versus__card" onClick={() => pick(false)}>
                 <Cover book={opp.book} width={128} />
@@ -203,11 +248,9 @@ function Flow() {
               <div className="versus__or" aria-hidden="true">OR</div>
             </div>
             <div className="spacer" style={{ minHeight: 24 }} />
-            <div style={{ display: "flex", gap: 10 }}>
-              <button className="btn btn--quiet" style={{ flex: 1 }} onClick={() => pick(false)}>
-                Too close to call
-              </button>
-            </div>
+            <button className="btn btn--quiet btn--block" onClick={() => pick(false)}>
+              Too close to call
+            </button>
           </>
         )}
 
@@ -220,16 +263,30 @@ function Flow() {
         {phase === "done" && book && result && (
           <>
             <p className="eyebrow" style={{ marginTop: 8 }}>Placed on your shelf</p>
-            <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: 4 }}>
-              <div className="big-rank">#{result.me.rank}</div>
-              <div style={{ marginBottom: 6 }}>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: 4 }} aria-live="polite">
+              <div className="big-rank reveal-rank">#{result.me.rank}</div>
+              <div className="reveal-chip" style={{ marginBottom: 6 }}>
                 <ScoreChip score={result.me.score} bucket={result.me.bucket} size={68} />
               </div>
             </div>
-            <p style={{ margin: "18px 0 0", fontSize: 17, lineHeight: 1.4 }}>
+            <p className="moment" style={{ margin: "18px 0 0", fontSize: 17, lineHeight: 1.4, animationDelay: "0.25s" }}>
               {sentence(book.title, result)}
             </p>
-            <ol className="mini-list" style={{ listStyle: "none", margin: "20px 0 0" }}>
+            {result.moments.length > 0 && (
+              <div className="moments">
+                {result.moments.map((m, i) => (
+                  <span
+                    key={m.text}
+                    className={`moment moment-pill ${m.tone === "hot" ? "moment-pill--hot" : m.tone === "cobalt" ? "moment-pill--cobalt" : ""}`}
+                    style={{ animationDelay: `${0.7 + i * 0.12}s` }}
+                  >
+                    {m.tone === "hot" ? <SparkIcon size={14} /> : m.tone === "cobalt" ? <BoltIcon size={14} /> : null}
+                    {m.text}
+                  </span>
+                ))}
+              </div>
+            )}
+            <ol className="mini-list" style={{ listStyle: "none", margin: "18px 0 0" }}>
               {[result.above, result.me, result.below].filter((x): x is RankedEntry => Boolean(x)).map((e) => (
                 <li key={e.id} className={`mini-row ${e.book_id === id ? "mini-row--new" : ""}`}>
                   <span className="m muted" style={{ width: 28, fontSize: 13, fontWeight: 700 }}>{e.rank}</span>
@@ -242,13 +299,6 @@ function Flow() {
                 </li>
               ))}
             </ol>
-            {result.thisYear > 0 && (
-              <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                <span className="pill" style={{ fontSize: 13, padding: "7px 12px" }}>
-                  Book {result.thisYear} of {new Date().getFullYear()}
-                </span>
-              </div>
-            )}
             <div className="spacer" style={{ minHeight: 24 }} />
             <Link href="/shelf" className="btn btn--block">See your shelf</Link>
             <Link href="/add" className="btn btn--ghost btn--block" style={{ marginTop: 6 }}>Rank another</Link>

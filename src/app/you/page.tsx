@@ -2,13 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
-import { RequireAuth, useAuth } from "@/components/Auth";
+import { useEffect, useMemo, useState } from "react";
+import { RequireAuth, useProfile } from "@/components/Auth";
+import { Avatar, displayName } from "@/components/Avatar";
 import { Cover } from "@/components/Cover";
-import { ArrowIcon } from "@/components/icons";
+import { ArrowIcon, LockIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { useShelf } from "@/components/useShelf";
-import { rankEntries } from "@/lib/data";
+import { followCounts, rankEntries, updateMyProfile } from "@/lib/data";
+import { activityDates, milestones, passport, readInYear, TASTE_UNLOCK, weeklyStreak } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
 
 export default function YouPage() {
@@ -20,50 +22,137 @@ export default function YouPage() {
 }
 
 function You() {
-  const { session } = useAuth();
   const router = useRouter();
+  const { profile, reloadProfile } = useProfile();
   const { entries } = useShelf();
+  const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    if (profile) followCounts(profile.id).then(setCounts).catch(() => {});
+  }, [profile]);
+
   const ranked = useMemo(() => rankEntries(entries || []), [entries]);
   const year = new Date().getFullYear();
-  const thisYear = ranked.filter((e) => e.finished_on?.startsWith(String(year))).length;
-  const want = (entries || []).filter((e) => e.status === "want").length;
-  const name = session?.user.email?.split("@")[0] ?? "You";
+  const thisYear = readInYear(ranked, year).length;
+  const goal = profile?.yearly_goal ?? null;
+  const streak = useMemo(() => weeklyStreak(activityDates(entries || [])), [entries]);
+  const stamps = useMemo(() => passport(ranked), [ranked]);
+  const earnedStamps = stamps.filter((s) => s.count > 0).length;
+  const ladder = milestones({ ranked: ranked.length, stamps: earnedStamps, streak: streak.weeks });
+  const earned = ladder.filter((m) => m.earned);
+  const next = ladder.filter((m) => !m.earned);
 
   async function signOut() {
     await supabase().auth.signOut();
     router.replace("/");
   }
 
+  const pct = goal ? Math.min(1, thisYear / goal) : 0;
+  const C = 2 * Math.PI * 34;
+
   return (
     <div className="app">
       <main className="screen">
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div className="d score score--top" style={{ width: 60, height: 60, fontSize: 24, fontWeight: 800, fontFamily: "var(--font-display)" }}>
-            {name.charAt(0).toUpperCase()}
+          <Avatar profile={profile} size={60} />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <h1 className="h1" style={{ fontSize: 28, letterSpacing: "-0.04em", display: "flex", alignItems: "center", gap: 8 }}>
+              {displayName(profile)}
+              {profile?.is_private && <LockIcon size={16} aria-label="Private" />}
+            </h1>
+            <div className="muted" style={{ fontSize: 13 }}>
+              @{profile?.username} · {counts ? `${counts.followers} followers · ${counts.following} following` : " "}
+            </div>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <h1 className="h1" style={{ fontSize: 28, letterSpacing: "-0.04em", overflow: "hidden", textOverflow: "ellipsis" }}>{name}</h1>
-            <div className="muted" style={{ fontSize: 13 }}>{ranked.length} ranked · {want} want to read</div>
-          </div>
+          <button className="btn btn--quiet" style={{ minHeight: 40, fontSize: 14, padding: "0 14px" }} onClick={() => setEditing(true)}>
+            Edit
+          </button>
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 20 }}>
-          <div className="card card--ink">
-            <div className="d" style={{ fontSize: 52, fontWeight: 800, letterSpacing: "-0.05em", lineHeight: 1 }}>{thisYear}</div>
-            <div style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>read in {year}</div>
-          </div>
-          <div className="card" style={{ background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff" }}>
-            <div className="d" style={{ fontSize: 52, fontWeight: 800, letterSpacing: "-0.05em", lineHeight: 1 }}>{ranked.length}</div>
-            <div style={{ fontSize: 14, fontWeight: 600, marginTop: 8 }}>books ranked</div>
+          <button className="card card--ink" style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }} onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
+            <svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#2a2a2a" strokeWidth="8" />
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round"
+                strokeDasharray={`${C * pct} ${C}`} transform="rotate(-90 40 40)" />
+              <text x="40" y="47" textAnchor="middle" fill="#fff" fontFamily="var(--font-display)" fontSize="22" fontWeight="800">{thisYear}</text>
+            </svg>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600 }}>{year} {goal ? "goal" : "so far"}</div>
+              <div style={{ fontSize: 12, color: "#c9c8c2" }}>
+                {goal ? (thisYear >= goal ? "Goal reached" : `${goal - thisYear} to go of ${goal}`) : "Tap to set a goal"}
+              </div>
+            </div>
+          </button>
+          <div className="card" style={{ background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10 }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span className="stat-big">{streak.weeks}</span>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>week{streak.weeks === 1 ? "" : "s"}</span>
+            </div>
+            <div className="streak-grid" aria-hidden="true">
+              {streak.recent.map((on, i) => <span key={i} data-on={on} data-now={i === 11} />)}
+            </div>
+            <div style={{ fontSize: 12, color: "#dde1ff" }}>
+              {streak.activeThisWeek ? "Streak safe this week" : streak.weeks ? "Rank or start a book this week to keep it" : "Rank or start a book to begin a streak"}
+            </div>
           </div>
         </div>
+
+        {ranked.length < TASTE_UNLOCK && (
+          <Link href="/add" className="card" style={{ display: "block", marginTop: 10, textDecoration: "none" }}>
+            <div style={{ fontWeight: 600 }}>Taste match unlocks at {TASTE_UNLOCK} ranked</div>
+            <div className="bar" style={{ marginTop: 10 }}><span style={{ width: `${(ranked.length / TASTE_UNLOCK) * 100}%`, background: "var(--cobalt)" }} /></div>
+            <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>{TASTE_UNLOCK - ranked.length} to go — then see who reads like you and get picks for your taste</div>
+          </Link>
+        )}
+
+        <section className="card" style={{ marginTop: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <h2 className="h2">Genre passport</h2>
+            <span className="m muted" style={{ fontSize: 12 }}>{earnedStamps} of {stamps.length} stamps</span>
+          </div>
+          <div className="stamp-grid">
+            {stamps.map((s) =>
+              s.count > 0 ? (
+                <div key={s.key} className="stamp" style={{ background: s.bg, color: s.fg }}>
+                  <span className="m" style={{ fontWeight: 700 }}>{s.count}</span>
+                  <span>{s.label}</span>
+                </div>
+              ) : (
+                <div key={s.key} className="stamp stamp--locked">
+                  <LockIcon size={14} />
+                  <span>{s.label}</span>
+                </div>
+              ),
+            )}
+          </div>
+          {ranked.length > 0 && earnedStamps === 0 && (
+            <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Genres fill in as we look up your books — check back after a visit to your shelf.</p>
+          )}
+        </section>
+
+        <section className="card" style={{ marginTop: 10, paddingTop: 12, paddingBottom: 6 }}>
+          <h2 className="h2">Milestones</h2>
+          {[...next, ...earned.slice().reverse().slice(0, 4)].map((m) => (
+            <div key={m.id} className="milestone" style={{ opacity: m.earned ? 1 : 0.9 }}>
+              <div className="milestone__badge" style={{ background: m.earned ? "var(--accent)" : "var(--well)" }}>
+                {m.earned ? "★" : <span className="m" style={{ fontSize: 11, fontWeight: 700 }}>{Math.round(m.progress * 100)}%</span>}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>{m.label}</div>
+                <div className="muted" style={{ fontSize: 12 }}>{m.earned ? "Earned" : m.detail}</div>
+              </div>
+            </div>
+          ))}
+        </section>
 
         {ranked.length > 0 && (
           <section className="card" style={{ marginTop: 10 }}>
             <h2 className="h2">Your top three</h2>
             <div style={{ display: "flex", gap: 14, marginTop: 14 }}>
               {ranked.slice(0, 3).map((e) => (
-                <Link key={e.id} href={`/rank/${e.book_id}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }} aria-label={`#${e.rank} ${e.book.title}`}>
+                <Link key={e.id} href={`/book/${e.book_id}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }} aria-label={`#${e.rank} ${e.book.title}`}>
                   <Cover book={e.book} width={88} />
                   <div className="m" style={{ fontSize: 12, fontWeight: 700, marginTop: 8 }}>#{e.rank}</div>
                 </Link>
@@ -73,21 +162,89 @@ function You() {
         )}
 
         <div className="stack" style={{ marginTop: 10 }}>
-          <Link href="/import" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
-            <span style={{ fontWeight: 600 }}>Import from Goodreads</span>
-            <ArrowIcon size={18} />
-          </Link>
-          <Link href="/sharpen" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
-            <span style={{ fontWeight: 600 }}>Sharpen your ranking</span>
-            <ArrowIcon size={18} />
-          </Link>
+          {[
+            { href: `/wrap/${year}`, label: `Your ${year} in books` },
+            { href: "/people", label: "Find friends" },
+            { href: "/import", label: "Import from Goodreads" },
+            { href: "/sharpen", label: "Sharpen your ranking" },
+          ].map((l) => (
+            <Link key={l.href} href={l.href} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
+              <span style={{ fontWeight: 600 }}>{l.label}</span>
+              <ArrowIcon size={18} />
+            </Link>
+          ))}
         </div>
 
         <button className="btn btn--ghost btn--block" style={{ marginTop: 18 }} onClick={signOut}>
           Sign out
         </button>
       </main>
+
+      {editing && profile && (
+        <EditProfile
+          initial={{ name: profile.display_name ?? "", goal: profile.yearly_goal, isPrivate: profile.is_private }}
+          onClose={() => setEditing(false)}
+          onSaved={async () => { await reloadProfile(); setEditing(false); }}
+        />
+      )}
       <TabBar />
+    </div>
+  );
+}
+
+function EditProfile({
+  initial, onClose, onSaved,
+}: {
+  initial: { name: string; goal: number | null; isPrivate: boolean };
+  onClose: () => void;
+  onSaved: () => Promise<void>;
+}) {
+  const [name, setName] = useState(initial.name);
+  const [goal, setGoal] = useState(initial.goal ? String(initial.goal) : "");
+  const [isPrivate, setPrivate] = useState(initial.isPrivate);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    try {
+      const g = parseInt(goal, 10);
+      await updateMyProfile({
+        display_name: name.trim() || null,
+        yearly_goal: Number.isFinite(g) && g > 0 ? Math.min(g, 1000) : null,
+        is_private: isPrivate,
+      });
+      await onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn’t save");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Edit profile" onClick={(e) => e.stopPropagation()}>
+        <div className="sheet__grab" />
+        <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Edit profile</h2>
+        <div className="field" style={{ marginTop: 16 }}>
+          <label htmlFor="pname">Name</label>
+          <input id="pname" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+        </div>
+        <div className="field" style={{ marginTop: 14 }}>
+          <label htmlFor="pgoal">Books to read in {new Date().getFullYear()}</label>
+          <input id="pgoal" className="input" inputMode="numeric" value={goal} onChange={(e) => setGoal(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="e.g. 30" />
+        </div>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 16, cursor: "pointer" }}>
+          <input type="checkbox" checked={isPrivate} onChange={(e) => setPrivate(e.target.checked)} style={{ width: 22, height: 22, marginTop: 2, accentColor: "var(--ink)" }} />
+          <span>
+            <span style={{ fontWeight: 600, display: "block" }}>Private shelf</span>
+            <span className="muted" style={{ fontSize: 13 }}>Only you see your shelf and rankings. You won&rsquo;t appear in friends&rsquo; feeds, and your scores aren&rsquo;t used for anyone&rsquo;s community or predicted scores.</span>
+          </span>
+        </label>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn btn--block" style={{ marginTop: 20 }} disabled={busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
+      </div>
     </div>
   );
 }

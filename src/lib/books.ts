@@ -7,11 +7,15 @@ export interface BookInput {
   cover_id?: number | null;
   year?: number | null;
   pages?: number | null;
+  /** Genre keys from src/lib/genres.ts. */
+  genres?: string[];
 }
 
 export interface Book extends BookInput {
   id: string;
   dedupe_key: string;
+  genres: string[];
+  enriched: boolean;
 }
 
 /** Drop a trailing series marker like "(The Expanse, #1)". */

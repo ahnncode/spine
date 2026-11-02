@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PlusIcon, SearchIcon, ShelfIcon, UserIcon } from "./icons";
+import { HomeIcon, PlusIcon, SearchIcon, ShelfIcon, UserIcon } from "./icons";
 
 const TABS = [
-  { href: "/shelf", label: "Shelf", Icon: ShelfIcon },
+  { href: "/feed", label: "Feed", Icon: HomeIcon },
   { href: "/search", label: "Discover", Icon: SearchIcon },
   { href: "/add", label: "Rank a book", Icon: PlusIcon, rank: true },
+  { href: "/shelf", label: "Shelf", Icon: ShelfIcon },
   { href: "/you", label: "You", Icon: UserIcon },
 ];
 

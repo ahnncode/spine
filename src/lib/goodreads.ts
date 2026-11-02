@@ -1,7 +1,7 @@
 import { cleanTitle, dedupeKey, type BookInput } from "./books";
 import type { Bucket } from "./ranking";
 
-export type ImportStatus = "ranked" | "want" | "unsorted";
+export type ImportStatus = "ranked" | "want" | "unsorted" | "reading";
 
 export interface ImportedBook {
   book: BookInput;
@@ -20,6 +20,7 @@ export interface ImportSummary {
   rated: number;
   unrated: number;
   want: number;
+  reading: number;
   loved: number;
   fiveStars: number;
 }
@@ -73,7 +74,8 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
     const stars = toInt(row["My Rating"]) || 0;
     let status: ImportStatus;
     if (shelf === "read") status = stars > 0 ? "ranked" : "unsorted";
-    else status = "want"; // to-read, currently-reading, custom exclusive shelves
+    else if (shelf === "currently-reading") status = "reading";
+    else status = "want"; // to-read and custom exclusive shelves
 
     books.push({
       key,
@@ -88,7 +90,7 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
       bucket: status === "ranked" ? bucketForStars(stars) : null,
       stars: stars > 0 ? stars : null,
       avgRating: parseFloat(row["Average Rating"] || "0") || 0,
-      finishedOn: status === "want" ? null : toDate(row["Date Read"]),
+      finishedOn: status === "ranked" || status === "unsorted" ? toDate(row["Date Read"]) : null,
     });
   }
 
@@ -98,6 +100,7 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
     rated: books.filter((b) => b.status === "ranked").length,
     unrated: books.filter((b) => b.status === "unsorted").length,
     want: books.filter((b) => b.status === "want").length,
+    reading: books.filter((b) => b.status === "reading").length,
     loved: books.filter((b) => b.bucket === "loved").length,
     fiveStars: books.filter((b) => b.stars === 5).length,
   };

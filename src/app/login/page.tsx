@@ -16,7 +16,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (session) router.replace("/shelf");
+    if (session) router.replace("/feed");
   }, [session, router]);
 
   if (!supabaseConfigured) return <SetupNotice />;
@@ -27,7 +27,7 @@ export default function Login() {
     setError(null);
     const { error } = await supabase().auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/shelf` },
+      options: { emailRedirectTo: `${window.location.origin}/feed` },
     });
     setBusy(false);
     if (error) setError(error.message);

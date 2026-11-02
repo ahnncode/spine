@@ -74,3 +74,41 @@ export const BoltIcon = (p: P) => (
     <path d="M13 2 4 14h7l-1 8 9-12h-7z" />
   </Base>
 );
+export const HomeIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
+  </Base>
+);
+export const BellIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z" />
+    <path d="M10 20a2 2 0 0 0 4 0" />
+  </Base>
+);
+export const ScanIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M7 9v6M10 9v6M13 9v6M17 9v6" />
+  </Base>
+);
+export const BookOpenIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M3 5.5C5 4.5 8 4.5 12 6.5c4-2 7-2 9-1v13c-2-1-5-1-9 1-4-2-7-2-9-1z" />
+    <path d="M12 6.5v13" />
+  </Base>
+);
+export const LockIcon = (p: P) => (
+  <Base strokeWidth={2} {...p}>
+    <rect x="5" y="11" width="14" height="10" rx="2" />
+    <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+  </Base>
+);
+export const ShareIcon = (p: P) => (
+  <Base strokeWidth={2} {...p}>
+    <path d="M12 15V3M7 8l5-5 5 5M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+  </Base>
+);
+export const SparkIcon = (p: P) => (
+  <Base strokeWidth={2} {...p}>
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" />
+  </Base>
+);

@@ -73,6 +73,7 @@ describe("goodreads import", () => {
     { Title: "Some Okay Book", Author: "A Writer", "My Rating": "3", "Exclusive Shelf": "read" },
     { Title: "Unrated Read", Author: "B Writer", "My Rating": "0", "Exclusive Shelf": "read" },
     { Title: "Next Up", Author: "C Writer", "My Rating": "0", "Exclusive Shelf": "to-read" },
+    { Title: "On The Go", Author: "D Writer", "My Rating": "0", "Exclusive Shelf": "currently-reading" },
     { Title: "Middlemarch", Author: "George Eliot", "My Rating": "5", "Exclusive Shelf": "read" },
   ];
 
@@ -83,7 +84,8 @@ describe("goodreads import", () => {
 
   it("sorts books into statuses and buckets, skipping duplicates", () => {
     const s = parseGoodreads(rows);
-    expect(s.total).toBe(6);
+    expect(s.total).toBe(7);
+    expect(s.reading).toBe(1);
     expect(s.rated).toBe(4);
     expect(s.unrated).toBe(1);
     expect(s.want).toBe(1);

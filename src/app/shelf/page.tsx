@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
+import { BookActions } from "@/components/BookActions";
 import { Cover } from "@/components/Cover";
 import { ArrowIcon, SearchIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
+import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
-import { rankEntries, removeEntry, type Entry, type RankedEntry } from "@/lib/data";
+import { rankEntries, type Entry, type RankedEntry } from "@/lib/data";
+import { GENRES } from "@/lib/genres";
 
 export default function ShelfPage() {
   return (
@@ -22,28 +25,26 @@ type Tab = "ranked" | "want" | "unsorted";
 
 function Shelf() {
   const { entries, error, reload } = useShelf();
+  useEnrichment(entries, reload);
   const [tab, setTab] = useState<Tab>("ranked");
+  const [genre, setGenre] = useState<string | null>(null);
+  const [year, setYear] = useState<string | null>(null);
   const [sheet, setSheet] = useState<Entry | RankedEntry | null>(null);
-  const [busy, setBusy] = useState(false);
 
   const ranked = useMemo(() => rankEntries(entries || []), [entries]);
   const want = useMemo(
     () => (entries || []).filter((e) => e.status === "want").sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [entries],
   );
+  const reading = useMemo(() => (entries || []).filter((e) => e.status === "reading"), [entries]);
   const unsorted = useMemo(() => (entries || []).filter((e) => e.status === "unsorted"), [entries]);
   const roughCount = ranked.filter((e) => e.needs_sort).length;
 
-  async function remove(e: Entry) {
-    setBusy(true);
-    try {
-      await removeEntry(e.id);
-      await reload();
-      setSheet(null);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const genresPresent = useMemo(() => GENRES.filter((g) => ranked.some((e) => e.book.genres?.includes(g.key))), [ranked]);
+  const thisYear = String(new Date().getFullYear());
+  const shown = ranked.filter(
+    (e) => (!genre || e.book.genres?.includes(genre)) && (!year || e.finished_on?.startsWith(year)),
+  );
 
   const tabs: Array<{ id: Tab; label: string; count: number }> = [
     { id: "ranked", label: "Ranked", count: ranked.length },
@@ -60,6 +61,23 @@ function Shelf() {
             <SearchIcon size={20} />
           </Link>
         </div>
+
+        {reading.length > 0 && (
+          <section aria-label="Reading now">
+            <h2 className="eyebrow" style={{ marginTop: 18 }}>Reading now</h2>
+            <div className="reading-strip">
+              {reading.map((e) => (
+                <div key={e.id} className="reading-card">
+                  <button onClick={() => setSheet(e)} style={{ background: "none", border: 0, padding: 0 }} aria-label={`${e.book.title} options`}>
+                    <Cover book={e.book} width={64} />
+                  </button>
+                  <div className="reading-card__title">{e.book.title}</div>
+                  <Link href={`/rank/${e.book_id}`} className="small-btn">Done? Rank it</Link>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="segmented" role="tablist" aria-label="Shelf" style={{ marginTop: 16 }}>
           {tabs.map((t) => (
@@ -86,6 +104,15 @@ function Shelf() {
 
         {entries && entries.length > 0 && tab === "ranked" && (
           <>
+            {(genresPresent.length > 1 || ranked.some((e) => e.finished_on?.startsWith(thisYear))) && (
+              <div style={{ display: "flex", gap: 8, marginTop: 12, overflowX: "auto", paddingBottom: 2, scrollbarWidth: "none" }}>
+                <Chip on={!genre && !year} onClick={() => { setGenre(null); setYear(null); }}>All time</Chip>
+                <Chip on={year === thisYear} onClick={() => setYear(year === thisYear ? null : thisYear)}>{thisYear}</Chip>
+                {genresPresent.map((g) => (
+                  <Chip key={g.key} on={genre === g.key} onClick={() => setGenre(genre === g.key ? null : g.key)}>{g.label}</Chip>
+                ))}
+              </div>
+            )}
             {roughCount > 1 && (
               <Link href="/sharpen" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 14, textDecoration: "none" }}>
                 <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-display)", fontWeight: 800 }}>
@@ -98,14 +125,14 @@ function Shelf() {
                 <ArrowIcon size={18} />
               </Link>
             )}
-            {ranked.length === 0 ? (
+            {shown.length === 0 ? (
               <div className="empty">
-                <p className="h2">Nothing ranked yet</p>
+                <p className="h2">{ranked.length ? "Nothing here yet" : "Nothing ranked yet"}</p>
                 <Link href="/add" className="btn" style={{ marginTop: 12 }}>Rank a book</Link>
               </div>
             ) : (
               <ol style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
-                {ranked.map((e) => (
+                {shown.map((e) => (
                   <li key={e.id}>
                     <button className="book-row" style={rowButton} onClick={() => setSheet(e)}>
                       <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}`}>{e.rank}</span>
@@ -138,7 +165,7 @@ function Shelf() {
       </main>
 
       {sheet && (
-        <div className="sheet-backdrop" onClick={() => !busy && setSheet(null)}>
+        <div className="sheet-backdrop" onClick={() => setSheet(null)}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label={sheet.book.title} onClick={(ev) => ev.stopPropagation()}>
             <div className="sheet__grab" />
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
@@ -146,22 +173,35 @@ function Shelf() {
               <div style={{ minWidth: 0, flex: 1 }}>
                 <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{sheet.book.title}</h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{sheet.book.author}</p>
+                <Link href={`/book/${sheet.book_id}`} style={{ display: "inline-block", marginTop: 6, fontSize: 14, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
+                  See friends &amp; scores →
+                </Link>
               </div>
               {"score" in sheet && <ScoreChip score={sheet.score} bucket={sheet.bucket} size={52} />}
             </div>
-            <div className="stack" style={{ marginTop: 22 }}>
-              <Link href={`/rank/${sheet.book_id}`} className="btn btn--block">
-                {sheet.status === "ranked" ? "Re-rank" : "I’ve read it — rank it"}
-              </Link>
-              <button className="btn btn--ghost btn--block" disabled={busy} onClick={() => remove(sheet)}>
-                Remove from shelf
-              </button>
+            <div style={{ marginTop: 18 }}>
+              <BookActions bookId={sheet.book_id} entry={sheet} onChange={async () => { await reload(); setSheet(null); }} />
             </div>
           </div>
         </div>
       )}
       <TabBar />
     </div>
+  );
+}
+
+function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={on}
+      style={{
+        flexShrink: 0, minHeight: 36, padding: "0 14px", borderRadius: 18, fontSize: 13, fontWeight: 600,
+        border: on ? 0 : "1px solid var(--line-2)", background: on ? "var(--ink)" : "transparent", color: on ? "#fff" : "var(--ink)",
+      }}
+    >
+      {children}
+    </button>
   );
 }
 
@@ -192,7 +232,7 @@ function PlainList({ items, emptyTitle, onOpen }: { items: Entry[]; emptyTitle: 
               <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
               <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>
             </span>
-            <span className="pill">Rank</span>
+            <span className="pill">{e.status === "want" ? "Options" : "Rank"}</span>
           </button>
         </li>
       ))}

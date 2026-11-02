@@ -20,7 +20,7 @@ export default function Landing() {
   const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && session) router.replace("/shelf");
+    if (!loading && session) router.replace("/feed");
   }, [loading, session, router]);
 
   // Supabase sends people back here with #error=… when a sign-in link fails.
