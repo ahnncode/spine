@@ -16,7 +16,7 @@ import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
-import { deleteMyAccount, followCounts, rankEntries, refreshBadges, setBookGenre, updateMyProfile } from "@/lib/data";
+import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, updateMyProfile } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
@@ -71,6 +71,10 @@ function You() {
     refreshBadges().then(setBadges).catch(() => setBadges((b) => b ?? []));
   }, [profile, shelfSize]);
   const connector = badges?.find((b) => b.key === "connector");
+  const [invites, setInvites] = useState<{ joined: number; qualified: number } | null>(null);
+  useEffect(() => {
+    if (profile) myInvites().then(setInvites).catch(() => {});
+  }, [profile]);
 
   async function signOut() {
     await supabase().auth.signOut();
@@ -182,7 +186,7 @@ function You() {
         <BadgeCase statuses={badges} />
 
         {profile?.username && (
-          <InviteCard username={profile.username} friends={connector?.progress ?? 0} earned={Boolean(connector?.earned)} />
+          <InviteCard username={profile.username} joined={invites?.joined ?? 0} qualified={invites?.qualified ?? connector?.progress ?? 0} earned={Boolean(connector?.earned)} />
         )}
 
         {ranked.length > 0 && (

@@ -887,6 +887,23 @@ export function rememberReferrer(username: string): void {
   } catch {}
 }
 
+/** The inviter remembered in this browser, if any. */
+export function pendingReferrer(): string | null {
+  try {
+    return localStorage.getItem(REF_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/** Friends who joined with your link, and how many have ranked 3 books. */
+export async function myInvites(): Promise<{ joined: number; qualified: number }> {
+  const { data, error } = await supabase().rpc("my_invites");
+  if (error) throw error;
+  const row = ((data as { joined: number; qualified: number }[]) || [])[0];
+  return { joined: row?.joined ?? 0, qualified: row?.qualified ?? 0 };
+}
+
 /** Credit whoever invited you, once. Safe to call more than once. */
 export async function claimPendingReferral(): Promise<void> {
   let ref: string | null = null;

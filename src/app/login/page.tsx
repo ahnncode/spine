@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { peekDestination, SetupNotice, takeDestination, useAuth } from "@/components/Auth";
 import { BackIcon } from "@/components/icons";
 import { Turnstile, TURNSTILE_SITE_KEY, type TurnstileStatus } from "@/components/Turnstile";
+import { pendingReferrer } from "@/lib/data";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
 
 export default function Login() {
@@ -83,7 +84,13 @@ export default function Login() {
     const { error } = await supabase().auth.signInWithOtp({
       email: email.trim(),
       // The email link opens in a new tab, so it carries the destination itself.
-      options: { emailRedirectTo: `${window.location.origin}${peekDestination()}`, captchaToken: token ?? undefined },
+      // The inviter rides along too, so the new account is credited even if
+      // the email opens on another device. (Ignored for existing accounts.)
+      options: {
+        emailRedirectTo: `${window.location.origin}${peekDestination()}`,
+        captchaToken: token ?? undefined,
+        data: pendingReferrer() ? { ref: pendingReferrer() } : undefined,
+      },
     });
     setBusy(false);
     // Bot-check tokens are single-use: get a fresh one for any retry.

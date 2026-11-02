@@ -530,3 +530,4 @@ img { display: block; max-width: 100%; }
 button.stamp { font: inherit; border: 0; cursor: pointer; transition: transform 0.12s; }
 button.stamp:active { transform: scale(0.95); }
 button.stamp--locked { border: 1.5px dashed #bdbcb6; }
+.dots span[data-joined="true"] { background: transparent; box-shadow: inset 0 0 0 2px var(--ink); }

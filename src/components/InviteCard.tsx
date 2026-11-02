@@ -6,7 +6,7 @@ import { ShareIcon } from "@/components/icons";
 import { inviteUrl } from "@/lib/data";
 
 /** Share your invite link; three friends who join and rank earns Connector. */
-export function InviteCard({ username, friends, earned }: { username: string; friends: number; earned: boolean }) {
+export function InviteCard({ username, joined, qualified, earned }: { username: string; joined: number; qualified: number; earned: boolean }) {
   const [copied, setCopied] = useState(false);
   const url = inviteUrl(username);
 
@@ -31,7 +31,8 @@ export function InviteCard({ username, friends, earned }: { username: string; fr
     }
   }
 
-  const n = Math.min(friends, 3);
+  const n = Math.min(qualified, 3);
+  const waiting = Math.max(0, Math.min(joined, 3) - n);
   return (
     <section className="card invite-card" style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center" }}>
       <Medallion badge="connector" earned={earned} progress={n / 3} size={60} />
@@ -41,9 +42,16 @@ export function InviteCard({ username, friends, earned }: { username: string; fr
           {earned ? "Keep sharing — every friend makes your feed better." : "When 3 friends join with your link and rank 3 books each, you earn Connector."}
         </div>
         {!earned && (
-          <div className="dots" style={{ marginTop: 8 }} aria-label={`${n} of 3 friends`}>
-            {[0, 1, 2].map((i) => <span key={i} data-on={i < n} />)}
-          </div>
+          <>
+            <div className="dots" style={{ marginTop: 8 }} aria-label={`${n} of 3 friends`}>
+              {[0, 1, 2].map((i) => <span key={i} data-on={i < n} data-joined={i >= n && i < n + waiting} />)}
+            </div>
+            {joined > 0 && (
+              <div style={{ fontSize: 12, marginTop: 6, fontWeight: 600 }}>
+                {joined} joined{waiting > 0 ? ` · ${waiting === 1 ? "1 still needs" : `${waiting} still need`} to rank 3 books` : ""}
+              </div>
+            )}
+          </>
         )}
       </div>
       <button className="btn" style={{ minHeight: 40, fontSize: 14, padding: "0 14px", flexShrink: 0 }} onClick={share} aria-label="Share your invite link">
