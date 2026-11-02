@@ -39,6 +39,14 @@ export function Cover({ book, width, className }: Props) {
             if ((e.currentTarget as HTMLImageElement).naturalWidth < 10) setFailed(true);
           }}
         />
+      ) : width < 56 ? (
+        // Too small for a readable title: a monogram, like a spine stamp.
+        <div className="cover__gen" aria-hidden="true" style={{ alignItems: "center", justifyContent: "center", padding: 0 }}>
+          <div className="cover__spine" />
+          <span className="d" style={{ fontWeight: 800, fontSize: Math.round(width * 0.5), lineHeight: 1 }}>
+            {book.title.replace(/^(the|a|an)\s+/i, "").charAt(0).toUpperCase()}
+          </span>
+        </div>
       ) : (
         <div className="cover__gen" aria-hidden="true">
           <div className="cover__spine" />

@@ -57,9 +57,16 @@ const PALETTE: Array<[string, string]> = [
 
 /** Stable cover colours for books without cover art. */
 export function coverColors(key: string): { bg: string; fg: string } {
-  let h = 0;
-  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  const [bg, fg] = PALETTE[h % PALETTE.length];
+  // FNV-1a with a final mix so similar titles still spread across the palette.
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  h ^= h >>> 15;
+  h = Math.imul(h, 2246822507);
+  h ^= h >>> 13;
+  const [bg, fg] = PALETTE[(h >>> 0) % PALETTE.length];
   return { bg, fg };
 }
 
