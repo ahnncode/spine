@@ -7,6 +7,7 @@ import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
 import { Cover } from "@/components/Cover";
 import { FollowButton } from "@/components/FollowButton";
+import { WantButton } from "@/components/WantButton";
 import { BackIcon, LockIcon, MoreIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
@@ -88,6 +89,8 @@ function Inner() {
   const disagree = [...shared].sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff)).filter((s) => Math.abs(s.diff) >= 2).slice(0, 3);
   const stamps = passport(ranked).filter((s) => s.count > 0).length;
   const reading = (data?.theirs ?? []).filter((e) => e.status === "reading");
+  // Books already somewhere on your shelf don't need a "want to read" button.
+  const onMyShelf = useMemo(() => new Set((data?.mine ?? []).map((e) => e.book_id)), [data]);
 
   if (data === null) {
     return (
@@ -176,10 +179,13 @@ function Inner() {
                     <h2 className="eyebrow" style={{ marginTop: 20 }}>Reading now</h2>
                     <div className="reading-strip">
                       {reading.map((e) => (
-                        <Link key={e.id} href={`/book/${e.book_id}`} className="reading-card" style={{ textDecoration: "none" }}>
-                          <Cover book={e.book} width={64} />
-                          <div className="reading-card__title">{e.book.title}</div>
-                        </Link>
+                        <div key={e.id} className="reading-card">
+                          <Link href={`/book/${e.book_id}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+                            <Cover book={e.book} width={64} />
+                            <span className="reading-card__title">{e.book.title}</span>
+                          </Link>
+                          {!onMyShelf.has(e.book_id) && <WantButton bookId={e.book_id} />}
+                        </div>
                       ))}
                     </div>
                   </>
@@ -191,8 +197,8 @@ function Inner() {
                     {(showAll ? ranked : ranked.slice(0, 15)).map((e) => {
                       const mineE = myRanked.get(e.book_id);
                       return (
-                        <li key={e.id}>
-                          <Link href={`/book/${e.book_id}`} className="book-row">
+                        <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--line)" }}>
+                          <Link href={`/book/${e.book_id}`} className="book-row" style={{ flex: 1, minWidth: 0, borderBottom: 0 }}>
                             <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}`}>{e.rank}</span>
                             <Cover book={e.book} width={44} />
                             <span className="book-row__body">
@@ -203,6 +209,7 @@ function Inner() {
                             </span>
                             <ScoreChip score={e.score} bucket={e.bucket} />
                           </Link>
+                          {!onMyShelf.has(e.book_id) && <WantButton bookId={e.book_id} compact />}
                         </li>
                       );
                     })}

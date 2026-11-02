@@ -3,7 +3,17 @@
 import { useState } from "react";
 import { follow, unfollow } from "@/lib/data";
 
-export function FollowButton({ userId, initial, onChange }: { userId: string; initial: boolean; onChange?: (following: boolean) => void }) {
+export function FollowButton({
+  userId,
+  initial,
+  onChange,
+  label = { off: "Follow", on: "Following" },
+}: {
+  userId: string;
+  initial: boolean;
+  onChange?: (following: boolean) => void;
+  label?: { off: string; on: string };
+}) {
   const [following, setFollowing] = useState(initial);
   const [busy, setBusy] = useState(false);
 
@@ -23,7 +33,7 @@ export function FollowButton({ userId, initial, onChange }: { userId: string; in
 
   return (
     <button className="follow-btn" aria-pressed={following} disabled={busy} onClick={toggle}>
-      {following ? "Following" : "Follow"}
+      {following ? label.on : label.off}
     </button>
   );
 }

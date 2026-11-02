@@ -5,10 +5,11 @@ import { useEffect, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
 import { EntryThread } from "@/components/EntryThread";
+import { FollowButton } from "@/components/FollowButton";
 import { BackIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import {
-  fetchCheckinsById, fetchNotifications, fetchProfiles, markAllRead,
+  fetchCheckinsById, fetchFollowing, fetchNotifications, fetchProfiles, markAllRead,
   type Checkin, type Notification, type Profile,
 } from "@/lib/data";
 
@@ -32,6 +33,7 @@ interface Loaded {
   items: Notification[];
   people: Map<string, Profile>;
   checkins: Map<string, Checkin>;
+  following: Set<string>;
 }
 
 function Inner() {
@@ -41,14 +43,15 @@ function Inner() {
   useEffect(() => {
     (async () => {
       const items = await fetchNotifications();
-      const [people, checkins] = await Promise.all([
+      const [people, checkins, following] = await Promise.all([
         fetchProfiles([...new Set(items.map((n) => n.actor_id))]),
         fetchCheckinsById(items.filter((n) => n.target_type === "checkin" && n.target_id).map((n) => n.target_id!)),
+        fetchFollowing(),
       ]);
-      setData({ items, people, checkins });
+      setData({ items, people, checkins, following: new Set(following) });
       // Opening the list counts as reading it.
       if (items.some((n) => !n.read_at)) markAllRead().catch(() => {});
-    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map() }));
+    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set() }));
   }, []);
 
   function describe(n: Notification): string {
@@ -102,7 +105,14 @@ function Inner() {
                   {opensThread ? (
                     <button style={rowStyle} onClick={() => setThread(n.target_id)}>{body}</button>
                   ) : n.kind === "follow" && p?.username ? (
-                    <Link href={`/u/${p.username}`} style={rowStyle}>{body}</Link>
+                    <div style={{ ...rowStyle, gap: 10 }}>
+                      <Link href={`/u/${p.username}`} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>{body}</Link>
+                      <FollowButton
+                        userId={n.actor_id}
+                        initial={data.following.has(n.actor_id)}
+                        label={{ off: "Follow back", on: "Following" }}
+                      />
+                    </div>
                   ) : checkin ? (
                     <Link href={`/book/${checkin.book_id}`} style={rowStyle}>{body}</Link>
                   ) : (

@@ -9,6 +9,7 @@ import { Cover } from "@/components/Cover";
 import { EntryThread } from "@/components/EntryThread";
 import { ArrowIcon, BellIcon } from "@/components/icons";
 import { CommentButton, HeartButton, NoteText, TagList, VibePill } from "@/components/Social";
+import { WantButton } from "@/components/WantButton";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { CheckInSheet } from "@/components/CheckInSheet";
@@ -225,22 +226,19 @@ function Feed() {
                     </div>
                   )}
 
-                  {item.kind !== "reading" && (
+                  {(item.kind !== "reading" || !status) && (
                     <div className="actions">
-                      {item.kind === "ranked" ? (
+                      {item.kind === "ranked" && (
                         <>
                           <HeartButton type="entry" id={item.entry.id} initial={data.hearts.get(`entry:${item.entry.id}`)} />
                           <CommentButton count={data.comments.get(item.entry.id) ?? 0} onClick={() => setThread(item.entry.id)} />
                         </>
-                      ) : (
+                      )}
+                      {item.kind === "checkin" && (
                         <HeartButton type="checkin" id={item.checkin.id} initial={data.hearts.get(`checkin:${item.checkin.id}`)} />
                       )}
                       <span style={{ flex: 1 }} />
-                      {!status && (
-                        <Link href={`/book/${bookId}`} className="action-btn" style={{ textDecoration: "none" }}>
-                          Want to read
-                        </Link>
-                      )}
+                      {!status && <WantButton bookId={bookId} onSaved={reload} />}
                     </div>
                   )}
                 </article>
