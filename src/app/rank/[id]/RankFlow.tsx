@@ -8,7 +8,7 @@ import { Cover } from "@/components/Cover";
 import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import type { Book } from "@/lib/books";
-import { bucketList, fetchBook, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
+import { bucketList, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import {
   answer, BUCKET_ORDER, BUCKETS, formatScore, isDone, maxSteps, midpoint, startSearch,
   type Bucket, type SearchState,
@@ -48,7 +48,7 @@ function ordinal(n: number): string {
 }
 
 /** The little celebrations after a placement, best first. */
-function momentsFor(before: Entry[], after: Entry[], bookId: string): Moment[] {
+function momentsFor(before: Entry[], after: Entry[], bookId: string, checkinDays: string[]): Moment[] {
   const prev = rankEntries(before);
   const next = rankEntries(after);
   const me = next.find((e) => e.book_id === bookId);
@@ -73,7 +73,7 @@ function momentsFor(before: Entry[], after: Entry[], bookId: string): Moment[] {
     const year = new Date().getFullYear();
     const thisYear = readInYear(next, year).length;
     if (thisYear > 0) out.push({ text: `Book ${thisYear} of ${year}`, tone: "plain" });
-    const streak = weeklyStreak(activityDates(after));
+    const streak = weeklyStreak(activityDates(after, checkinDays));
     if (streak.weeks >= 2) out.push({ text: `${streak.weeks}-week streak`, tone: "cobalt" });
   }
   return out.slice(0, 3);
@@ -124,7 +124,7 @@ function Flow() {
     setPhase("saving");
     try {
       await placeBook({ bookId: id, bucket: b, index, list: sorted, existing });
-      const fresh = await fetchShelf();
+      const [fresh, checkinDays] = await Promise.all([fetchShelf(), fetchCheckinDays().catch(() => [])]);
       const ranked = rankEntries(fresh);
       const meIdx = ranked.findIndex((e) => e.book_id === id);
       const inBucket = ranked.filter((e) => e.bucket === b);
@@ -134,7 +134,7 @@ function Flow() {
         bucketPos: inBucket.findIndex((e) => e.book_id === id),
         above: meIdx > 0 ? ranked[meIdx - 1] : null,
         below: meIdx < ranked.length - 1 ? ranked[meIdx + 1] : null,
-        moments: momentsFor(entries, fresh, id),
+        moments: momentsFor(entries, fresh, id, checkinDays),
       });
       setEntries(fresh);
       setPhase("done");

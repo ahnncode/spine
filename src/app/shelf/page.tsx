@@ -4,12 +4,14 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
 import { BookActions } from "@/components/BookActions";
+import { CheckInSheet } from "@/components/CheckInSheet";
 import { Cover } from "@/components/Cover";
 import { ArrowIcon, SearchIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
+import { useStreak } from "@/components/useStreak";
 import { rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 
@@ -30,6 +32,8 @@ function Shelf() {
   const [genre, setGenre] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
   const [sheet, setSheet] = useState<Entry | RankedEntry | null>(null);
+  const [checking, setChecking] = useState<Entry | null>(null);
+  const { streak, reloadCheckins } = useStreak(entries);
 
   const ranked = useMemo(() => rankEntries(entries || []), [entries]);
   const want = useMemo(
@@ -64,7 +68,14 @@ function Shelf() {
 
         {reading.length > 0 && (
           <section aria-label="Reading now">
-            <h2 className="eyebrow" style={{ marginTop: 18 }}>Reading now</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 18 }}>
+              <h2 className="eyebrow">Reading now</h2>
+              {streak.weeks > 0 && (
+                <span className="m" style={{ fontSize: 12, fontWeight: 700, color: streak.activeThisWeek ? "var(--cobalt-ink)" : "var(--accent-ink)" }}>
+                  {streak.weeks}-week streak{streak.activeThisWeek ? "" : " · check in to keep it"}
+                </span>
+              )}
+            </div>
             <div className="reading-strip">
               {reading.map((e) => (
                 <div key={e.id} className="reading-card">
@@ -72,7 +83,14 @@ function Shelf() {
                     <Cover book={e.book} width={64} />
                   </button>
                   <div className="reading-card__title">{e.book.title}</div>
-                  <Link href={`/rank/${e.book_id}`} className="small-btn">Done? Rank it</Link>
+                  {e.progress_pct != null && (
+                    <div style={{ width: "100%" }} aria-label={`${e.progress_pct}% read`}>
+                      <div className="bar" style={{ height: 6 }}><span style={{ width: `${e.progress_pct}%`, background: "var(--accent)" }} /></div>
+                      <div className="m muted" style={{ fontSize: 11, marginTop: 4 }}>{e.progress_pct}%</div>
+                    </div>
+                  )}
+                  <button className="small-btn" onClick={() => setChecking(e)}>Check in</button>
+                  <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)" }}>Finished? Rank it</Link>
                 </div>
               ))}
             </div>
@@ -184,6 +202,13 @@ function Shelf() {
             </div>
           </div>
         </div>
+      )}
+      {checking && (
+        <CheckInSheet
+          entry={checking}
+          onClose={() => setChecking(null)}
+          onDone={async () => { await Promise.all([reload(), reloadCheckins()]); setChecking(null); }}
+        />
       )}
       <TabBar />
     </div>

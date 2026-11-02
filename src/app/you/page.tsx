@@ -9,8 +9,9 @@ import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { useShelf } from "@/components/useShelf";
+import { useStreak } from "@/components/useStreak";
 import { deleteMyAccount, followCounts, rankEntries, updateMyProfile } from "@/lib/data";
-import { activityDates, milestones, passport, readInYear, TASTE_UNLOCK, weeklyStreak } from "@/lib/stats";
+import { milestones, passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
 
 export default function YouPage() {
@@ -36,7 +37,7 @@ function You() {
   const year = new Date().getFullYear();
   const thisYear = readInYear(ranked, year).length;
   const goal = profile?.yearly_goal ?? null;
-  const streak = useMemo(() => weeklyStreak(activityDates(entries || [])), [entries]);
+  const { streak } = useStreak(entries);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
   const ladder = milestones({ ranked: ranked.length, stamps: earnedStamps, streak: streak.weeks });
@@ -94,7 +95,7 @@ function You() {
               {streak.recent.map((on, i) => <span key={i} data-on={on} data-now={i === 11} />)}
             </div>
             <div style={{ fontSize: 12, color: "#dde1ff" }}>
-              {streak.activeThisWeek ? "Streak safe this week" : streak.weeks ? "Rank or start a book this week to keep it" : "Rank or start a book to begin a streak"}
+              {streak.activeThisWeek ? "Streak safe this week" : streak.weeks ? "Check in on a book this week to keep it" : "Check in on what you’re reading to start one"}
             </div>
           </div>
         </div>

@@ -37,3 +37,11 @@ describe("milestones", () => {
     expect(m[2].earned).toBe(false);
   });
 });
+
+describe("check-ins keep streaks alive", () => {
+  it("counts a week with only a check-in", async () => {
+    const { activityDates } = await import("./stats");
+    const dates = activityDates([], ["2026-11-03", "2026-10-27", "2026-10-21"]);
+    expect(weeklyStreak(dates, d("2026-11-04")).weeks).toBe(3);
+  });
+});

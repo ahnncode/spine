@@ -18,9 +18,12 @@ function parseDay(iso: string): Date {
   return new Date(iso);
 }
 
-/** Days a reader did something worth counting: started or ranked a book. */
-export function activityDates(entries: Entry[]): Date[] {
-  const out: Date[] = [];
+/**
+ * Days a reader did something worth counting: checked in on a book they're
+ * reading, started one, or ranked one.
+ */
+export function activityDates(entries: Entry[], checkinDays: string[] = []): Date[] {
+  const out: Date[] = checkinDays.map(parseDay);
   for (const e of entries) {
     if (e.source === "goodreads" && e.status === "ranked") continue; // history, not activity
     if (e.ranked_at && e.status === "ranked") out.push(new Date(e.ranked_at));
@@ -112,7 +115,7 @@ export function milestones(opts: { ranked: number; stamps: number; streak: numbe
   return [
     ...ladder("ranked", opts.ranked, RANKED_STEPS, (n) => (n === 1 ? "First rank" : `${n} ranked`), (n) => `Rank ${n} book${n === 1 ? "" : "s"}`),
     ...ladder("stamps", opts.stamps, STAMP_STEPS, (n) => (n === 12 ? "Full passport" : `${n} stamps`), (n) => `Read across ${n} genres`),
-    ...ladder("streak", opts.streak, STREAK_STEPS, (n) => (n === 52 ? "A year straight" : `${n}-week streak`), (n) => `Log something ${n} weeks in a row`),
+    ...ladder("streak", opts.streak, STREAK_STEPS, (n) => (n === 52 ? "A year straight" : `${n}-week streak`), (n) => `Read ${n} weeks in a row`),
   ];
 }
 

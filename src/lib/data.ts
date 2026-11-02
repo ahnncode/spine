@@ -19,6 +19,8 @@ export interface Entry {
   finished_on: string | null;
   started_on: string | null;
   ranked_at: string | null;
+  progress_pct: number | null;
+  last_checkin_on: string | null;
   source: string;
   created_at: string;
   book: Book;
@@ -41,7 +43,7 @@ export interface Profile {
 }
 
 const ENTRY_SELECT =
-  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, source, created_at, book:books(*)";
+  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, source, created_at, book:books(*)";
 
 export async function myId(): Promise<string> {
   const { data } = await supabase().auth.getSession();
@@ -181,6 +183,41 @@ export async function startReading(bookId: string): Promise<void> {
       { onConflict: "user_id,book_id" },
     );
   if (error) throw error;
+}
+
+/**
+ * A reading check-in: "I read some of this today", optionally with progress.
+ * One per book per day (a second one updates the first).
+ */
+export async function checkIn(bookId: string, progressPct: number | null): Promise<void> {
+  const uid = await myId();
+  const day = today();
+  const pct = progressPct == null ? null : Math.max(0, Math.min(100, Math.round(progressPct)));
+  const { error } = await supabase()
+    .from("reading_checkins")
+    .upsert(
+      { user_id: uid, book_id: bookId, checked_on: day, progress_pct: pct },
+      { onConflict: "user_id,book_id,checked_on" },
+    );
+  if (error) throw error;
+  const fields: Record<string, unknown> = { last_checkin_on: day };
+  if (pct != null) fields.progress_pct = pct;
+  const { error: e2 } = await supabase().from("shelf_entries").update(fields).eq("user_id", uid).eq("book_id", bookId);
+  if (e2) throw e2;
+}
+
+/** Days you checked in on any book (the past ~14 months is plenty for streaks). */
+export async function fetchCheckinDays(): Promise<string[]> {
+  const uid = await myId();
+  const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 430).toISOString().slice(0, 10);
+  const { data, error } = await supabase()
+    .from("reading_checkins")
+    .select("checked_on")
+    .eq("user_id", uid)
+    .gte("checked_on", since)
+    .limit(5000);
+  if (error) throw error;
+  return (data || []).map((r) => r.checked_on as string);
 }
 
 export async function moveToWant(entryId: string): Promise<void> {
@@ -509,7 +546,7 @@ export async function fetchFeed(friendIds: string[]): Promise<FeedItem[]> {
     })),
     ...((reading.data as unknown as Entry[]) || []).map((e) => ({
       kind: "reading" as const,
-      at: e.started_on ? `${e.started_on}T12:00:00Z` : e.created_at,
+      at: e.last_checkin_on ? `${e.last_checkin_on}T12:00:00Z` : e.started_on ? `${e.started_on}T12:00:00Z` : e.created_at,
       entry: e,
     })),
   ];

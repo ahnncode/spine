@@ -8,13 +8,14 @@ import { Cover } from "@/components/Cover";
 import { ArrowIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
+import { CheckInSheet } from "@/components/CheckInSheet";
 import { useShelf } from "@/components/useShelf";
+import { useStreak } from "@/components/useStreak";
 import {
   fetchFeed, fetchFollowing, fetchProfiles, rankEntries, tasteMatches,
-  type FeedItem, type Match, type Profile,
+  type Entry, type FeedItem, type Match, type Profile,
 } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
-import { activityDates, weeklyStreak } from "@/lib/stats";
 
 export default function FeedPage() {
   return (
@@ -41,7 +42,8 @@ function ago(iso: string): string {
 
 function Feed() {
   const { profile } = useProfile();
-  const { entries } = useShelf();
+  const { entries, reload } = useShelf();
+  const [checking, setChecking] = useState<Entry | null>(null);
   const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -57,7 +59,7 @@ function Feed() {
 
   const mine = useMemo(() => new Map(rankEntries(entries || []).map((e) => [e.book_id, e])), [entries]);
   const myStatus = useMemo(() => new Map((entries || []).map((e) => [e.book_id, e.status])), [entries]);
-  const streak = useMemo(() => weeklyStreak(activityDates(entries || [])), [entries]);
+  const { streak, reloadCheckins } = useStreak(entries);
   const reading = (entries || []).filter((e) => e.status === "reading");
 
   return (
@@ -71,9 +73,34 @@ function Feed() {
         </div>
 
         {streak.weeks > 0 && !streak.activeThisWeek && (
-          <Link href={reading[0] ? `/rank/${reading[0].book_id}` : "/add"} className="notice" style={{ display: "block", marginTop: 14, textDecoration: "none" }}>
-            <strong>Keep your {streak.weeks}-week streak.</strong> Rank or start a book before Sunday.
-          </Link>
+          reading[0] ? (
+            <button className="notice" style={{ display: "block", width: "100%", textAlign: "left", border: 0, marginTop: 14 }} onClick={() => setChecking(reading[0])}>
+              <strong>Keep your {streak.weeks}-week streak.</strong> Check in on {reading[0].book.title} before Sunday.
+            </button>
+          ) : (
+            <Link href="/add" className="notice" style={{ display: "block", marginTop: 14, textDecoration: "none" }}>
+              <strong>Keep your {streak.weeks}-week streak.</strong> Start or rank a book before Sunday.
+            </Link>
+          )
+        )}
+
+        {reading.length > 0 && (
+          <section aria-label="Your reading" style={{ marginTop: 14 }}>
+            <div className="reading-strip" style={{ marginTop: 0 }}>
+              {reading.map((e) => (
+                <button key={e.id} className="reading-card" style={{ width: 230, flexDirection: "row", alignItems: "center", textAlign: "left" }} onClick={() => setChecking(e)} aria-label={`Check in on ${e.book.title}`}>
+                  <Cover book={e.book} width={40} />
+                  <span style={{ flex: 1, minWidth: 0 }}>
+                    <span className="reading-card__title" style={{ fontSize: 14 }}>{e.book.title}</span>
+                    <span className="bar" style={{ display: "block", height: 5, marginTop: 6 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
+                    <span className="m muted" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
+                      {e.progress_pct != null ? `${e.progress_pct}% · ` : ""}Check in
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
         )}
 
         {error && <p className="error" role="alert">{error}</p>}
@@ -109,7 +136,11 @@ function Feed() {
                     <Avatar profile={p} size={40} link />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <Link href={p?.username ? `/u/${p.username}` : "#"} style={{ fontWeight: 700, textDecoration: "none" }}>{displayName(p)}</Link>{" "}
-                      {item.kind === "ranked" ? "ranked a book" : "started reading"}
+                      {item.kind === "ranked"
+                        ? "ranked a book"
+                        : item.entry.progress_pct != null && item.entry.progress_pct > 0
+                          ? `is ${item.entry.progress_pct}% through`
+                          : "started reading"}
                       <div className="when">{ago(item.at)}</div>
                     </div>
                     {m?.match != null && <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>{m.match}% match</span>}
@@ -154,6 +185,13 @@ function Feed() {
           </div>
         )}
       </main>
+      {checking && (
+        <CheckInSheet
+          entry={checking}
+          onClose={() => setChecking(null)}
+          onDone={async () => { await Promise.all([reload(), reloadCheckins()]); setChecking(null); }}
+        />
+      )}
       <TabBar />
     </div>
   );
