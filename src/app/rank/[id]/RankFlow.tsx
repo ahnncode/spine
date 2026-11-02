@@ -10,9 +10,12 @@ import { ScoreChip } from "@/components/ScoreChip";
 import type { Book } from "@/lib/books";
 import { bucketList, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import {
-  answer, BUCKET_ORDER, BUCKETS, formatScore, isDone, maxSteps, midpoint, startSearch,
-  type Bucket, type SearchState,
+  BUCKET_ORDER, BUCKETS, formatScore, type Bucket,
 } from "@/lib/ranking";
+import {
+  answerPlacement, questionsLeft, skipPlacement, startPlacement, tiePlacement,
+  type Candidate, type Placement,
+} from "@/lib/placement";
 import { activityDates, readInYear, weeklyStreak } from "@/lib/stats";
 
 export function RankFlow() {
@@ -79,6 +82,14 @@ function momentsFor(before: Entry[], after: Entry[], bookId: string, checkinDays
   return out.slice(0, 3);
 }
 
+/** What the placement needs to know about each book already in the tier. */
+function toCandidates(sorted: RankedEntry[]): Candidate[] {
+  return sorted.map((e) => {
+    const when = e.finished_on ? Date.parse(`${e.finished_on}T12:00:00`) : e.ranked_at ? Date.parse(e.ranked_at) : 0;
+    return { id: e.id, rough: e.needs_sort, genres: e.book.genres ?? [], readAt: Number.isFinite(when) ? when : 0, compared: e.compare_count };
+  });
+}
+
 function Flow() {
   const { id } = useParams<{ id: string }>();
   const [phase, setPhase] = useState<Phase>("loading");
@@ -86,7 +97,7 @@ function Flow() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [bucket, setBucket] = useState<Bucket | null>(null);
   const [list, setList] = useState<RankedEntry[]>([]);
-  const [search, setSearch] = useState<SearchState>(startSearch(0));
+  const [placement, setPlacement] = useState<Placement | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,24 +155,36 @@ function Flow() {
     }
   }
 
+  const genres = book?.genres ?? [];
+  const candidates = useMemo(() => toCandidates(list), [list]);
+
+  function step(next: Placement, b: Bucket, sorted: RankedEntry[]) {
+    setPlacement(next);
+    if (next.phase === "done") finish(b, next.result as number, sorted);
+    else setPhase("compare");
+  }
+
   function chooseBucket(b: Bucket) {
     const sorted = bucketList(entries, b, id);
     setBucket(b);
     setList(sorted);
-    const s = startSearch(sorted.length);
-    setSearch(s);
-    if (isDone(s)) finish(b, 0, sorted);
-    else setPhase("compare");
+    step(startPlacement(toCandidates(sorted), genres), b, sorted);
   }
 
   function pick(newIsBetter: boolean) {
-    const next = answer(search, newIsBetter);
-    setSearch(next);
-    if (isDone(next) && bucket) finish(bucket, next.lo, list);
+    if (placement && bucket) step(answerPlacement(placement, candidates, newIsBetter, genres), bucket, list);
+  }
+  function tie() {
+    if (placement && bucket) step(tiePlacement(placement), bucket, list);
+  }
+  function skip() {
+    if (placement && bucket) step(skipPlacement(placement, candidates, genres), bucket, list);
   }
 
-  const total = maxSteps(list.length);
-  const opp = phase === "compare" ? list[midpoint(search)] : null;
+  const steps = placement?.steps ?? 0;
+  const total = steps + (placement ? questionsLeft(placement) : 0);
+  const opp = phase === "compare" && placement?.pivot != null ? list[placement.pivot] : null;
+  const confirming = placement?.phase === "confirm";
   const label = current ? "Re-ranking" : existing?.status === "reading" ? "Finished" : "Just finished";
 
   return (
@@ -172,11 +195,11 @@ function Flow() {
             <CloseIcon size={18} />
           </Link>
           {phase === "compare" || phase === "done" ? (
-            <div className="dots" aria-label={phase === "done" ? "Placed" : `Head-to-head ${search.steps + 1} of up to ${total}`}>
+            <div className="dots" aria-label={phase === "done" ? "Placed" : `Head-to-head ${steps + 1} of about ${total}`}>
               {Array.from({ length: Math.max(total, 1) }, (_, i) => (
                 <span
                   key={i}
-                  data-state={phase === "done" || i < search.steps ? "done" : i === search.steps ? "current" : undefined}
+                  data-state={phase === "done" || i < steps ? "done" : i === steps ? "current" : undefined}
                 />
               ))}
             </div>
@@ -224,10 +247,15 @@ function Flow() {
 
         {phase === "compare" && book && opp && (
           <>
-            <p className="eyebrow" style={{ marginTop: 12 }}>Head-to-head {search.steps + 1}</p>
+            <p className="eyebrow" style={{ marginTop: 12 }}>{confirming ? "One last check" : `Head-to-head ${steps + 1}`}</p>
             <h1 className="h1" style={{ fontSize: 34, marginTop: 8, lineHeight: 1.02, letterSpacing: "-0.03em" }}>
               Which one stuck with you more?
             </h1>
+            {confirming && (
+              <p className="muted" style={{ margin: "8px 0 0", fontSize: 14 }}>
+                Some books nearby came from your import and are only roughly sorted, so here&rsquo;s one you placed yourself.
+              </p>
+            )}
             <div className="versus">
               <button className="versus__card" onClick={() => pick(true)}>
                 <Cover book={book} width={128} />
@@ -248,9 +276,14 @@ function Flow() {
               <div className="versus__or" aria-hidden="true">OR</div>
             </div>
             <div className="spacer" style={{ minHeight: 24 }} />
-            <button className="btn btn--quiet btn--block" onClick={() => pick(false)}>
-              Too close to call
-            </button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button className="btn btn--quiet" style={{ flex: 1 }} onClick={tie}>
+                Too close to call
+              </button>
+              <button className="btn btn--quiet" style={{ flex: 1 }} onClick={skip}>
+                Don&rsquo;t remember it
+              </button>
+            </div>
           </>
         )}
 
