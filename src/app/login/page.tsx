@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { SetupNotice, useAuth } from "@/components/Auth";
+import { peekDestination, SetupNotice, takeDestination, useAuth } from "@/components/Auth";
 import { BackIcon } from "@/components/icons";
 import { Turnstile, TURNSTILE_SITE_KEY } from "@/components/Turnstile";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
@@ -20,7 +20,7 @@ export default function Login() {
   const needsCaptcha = Boolean(TURNSTILE_SITE_KEY);
 
   useEffect(() => {
-    if (session) router.replace("/feed");
+    if (session) router.replace(takeDestination());
   }, [session, router]);
 
   if (!supabaseConfigured) return <SetupNotice />;
@@ -35,7 +35,8 @@ export default function Login() {
     setError(null);
     const { error } = await supabase().auth.signInWithOtp({
       email: email.trim(),
-      options: { emailRedirectTo: `${window.location.origin}/feed`, captchaToken: captcha ?? undefined },
+      // The email link opens in a new tab, so it carries the destination itself.
+      options: { emailRedirectTo: `${window.location.origin}${peekDestination()}`, captchaToken: captcha ?? undefined },
     });
     setBusy(false);
     // Bot-check tokens are single-use: get a fresh one for any retry.

@@ -31,6 +31,38 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+const NEXT_KEY = "spine:next";
+/** Setup and sign-in pages are never worth coming back to. */
+const NOT_A_DESTINATION = /^\/(welcome|start|login)?$/;
+
+/** Remember a page someone was headed to (e.g. a friend's profile) before signing in. */
+function rememberDestination(path: string) {
+  try {
+    if (!NOT_A_DESTINATION.test(path)) sessionStorage.setItem(NEXT_KEY, path);
+  } catch {}
+}
+
+/**
+ * Where to go right after signing in: the remembered page if there is one
+ * (used once, same-site only), otherwise the feed.
+ */
+export function takeDestination(): string {
+  const next = peekDestination();
+  try {
+    sessionStorage.removeItem(NEXT_KEY);
+  } catch {}
+  return next;
+}
+
+/** The same, without using it up (for the sign-in email's link). */
+export function peekDestination(): string {
+  let next: string | null = null;
+  try {
+    next = sessionStorage.getItem(NEXT_KEY);
+  } catch {}
+  return next && /^\/(?![/\\])/.test(next) && !NOT_A_DESTINATION.test(next) ? next : "/feed";
+}
+
 interface ProfileState {
   profile: Profile | null;
   reloadProfile: () => Promise<void>;
@@ -90,22 +122,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (supabaseConfigured && !loading && !session) {
-      // Remember where they were headed (e.g. a friend's profile link) for after sign-in.
-      try { sessionStorage.setItem("spine:next", path); } catch {}
+      rememberDestination(path);
       router.replace("/login");
     }
   }, [loading, session, router, path]);
-
-  useEffect(() => {
-    if (!session) return;
-    let next: string | null = null;
-    try {
-      next = sessionStorage.getItem("spine:next");
-      sessionStorage.removeItem("spine:next");
-    } catch {}
-    // Same-site paths only ("//evil.com" would leave the site).
-    if (next && next !== path && /^\/(?![/\\])/.test(next)) router.replace(next);
-  }, [session, path, router]);
 
   useEffect(() => {
      

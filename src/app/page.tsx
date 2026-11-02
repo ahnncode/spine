@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/components/Auth";
+import { takeDestination, useAuth } from "@/components/Auth";
 import { Cover } from "@/components/Cover";
 import { ScoreChip } from "@/components/ScoreChip";
 
@@ -21,7 +21,7 @@ export default function Landing() {
   const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && session) router.replace("/feed");
+    if (!loading && session) router.replace(takeDestination());
   }, [loading, session, router]);
 
   // Supabase sends people back here with #error=… when a sign-in link fails.

@@ -27,6 +27,12 @@ function Welcome() {
   const [error, setError] = useState<string | null>(null);
 
   const valid = /^[a-z0-9_]{3,20}$/.test(username);
+
+  // Already set up? This page is only for new accounts.
+  const alreadySetUp = Boolean(profile?.username);
+  useEffect(() => {
+    if (alreadySetUp) router.replace("/feed");
+  }, [alreadySetUp, router]);
   const [availability, setAvailability] = useState<{ name: string; free: boolean } | null>(null);
   const taken = availability?.name === username && !availability.free;
 
