@@ -179,6 +179,9 @@ function You() {
         <button className="btn btn--ghost btn--block" style={{ marginTop: 18 }} onClick={signOut}>
           Sign out
         </button>
+        <p className="muted" style={{ textAlign: "center", fontSize: 13, margin: "8px 0 0" }}>
+          <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
+        </p>
       </main>
 
       {editing && profile && (

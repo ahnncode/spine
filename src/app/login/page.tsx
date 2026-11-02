@@ -162,6 +162,9 @@ export default function Login() {
             )}
             {error && <p className="error" role="alert">{error}</p>}
             <div className="spacer" style={{ minHeight: 24 }} />
+            <p className="muted" style={{ fontSize: 13, textAlign: "center", margin: "0 0 12px" }}>
+              By continuing you agree to the <Link href="/terms">Terms</Link> and <Link href="/privacy">Privacy policy</Link>.
+            </p>
             <button className="btn btn--block" disabled={busy || !email.trim()}>
               {waiting ? "Checking you’re not a bot…" : busy ? "Sending…" : "Email me a link"}
             </button>
