@@ -226,7 +226,7 @@ function Feed() {
                     </div>
                   )}
 
-                  {(item.kind !== "reading" || !status) && (
+                  {(item.kind !== "reading" || !status || status === "want") && (
                     <div className="actions">
                       {item.kind === "ranked" && (
                         <>
@@ -238,7 +238,8 @@ function Feed() {
                         <HeartButton type="checkin" id={item.checkin.id} initial={data.hearts.get(`checkin:${item.checkin.id}`)} />
                       )}
                       <span style={{ flex: 1 }} />
-                      {!status && <WantButton bookId={bookId} onSaved={reload} />}
+                      {/* Stays visible as "Saved" once added, instead of vanishing when your shelf updates. */}
+                      {(!status || status === "want") && <WantButton key={`${bookId}-${status ?? "none"}`} bookId={bookId} initialSaved={status === "want"} />}
                     </div>
                   )}
                 </article>

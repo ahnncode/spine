@@ -89,8 +89,9 @@ function Inner() {
   const disagree = [...shared].sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff)).filter((s) => Math.abs(s.diff) >= 2).slice(0, 3);
   const stamps = passport(ranked).filter((s) => s.count > 0).length;
   const reading = (data?.theirs ?? []).filter((e) => e.status === "reading");
-  // Books already somewhere on your shelf don't need a "want to read" button.
-  const onMyShelf = useMemo(() => new Set((data?.mine ?? []).map((e) => e.book_id)), [data]);
+  // Your status for each book: ranked/reading ones need no button; want-to-read shows as Saved.
+  const myStatus = useMemo(() => new Map((data?.mine ?? []).map((e) => [e.book_id, e.status])), [data]);
+  const wantable = (bookId: string) => !myStatus.has(bookId) || myStatus.get(bookId) === "want";
 
   if (data === null) {
     return (
@@ -184,7 +185,7 @@ function Inner() {
                             <Cover book={e.book} width={64} />
                             <span className="reading-card__title">{e.book.title}</span>
                           </Link>
-                          {!onMyShelf.has(e.book_id) && <WantButton bookId={e.book_id} />}
+                          {wantable(e.book_id) && <WantButton bookId={e.book_id} initialSaved={myStatus.get(e.book_id) === "want"} />}
                         </div>
                       ))}
                     </div>
@@ -209,7 +210,7 @@ function Inner() {
                             </span>
                             <ScoreChip score={e.score} bucket={e.bucket} />
                           </Link>
-                          {!onMyShelf.has(e.book_id) && <WantButton bookId={e.book_id} compact />}
+                          {wantable(e.book_id) && <WantButton bookId={e.book_id} compact initialSaved={myStatus.get(e.book_id) === "want"} />}
                         </li>
                       );
                     })}

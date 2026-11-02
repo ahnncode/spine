@@ -5,8 +5,19 @@ import { addToWant } from "@/lib/data";
 import { BookmarkIcon } from "./icons";
 
 /** Save a book to your want-to-read list in one tap, without leaving the page. */
-export function WantButton({ bookId, compact = false, onSaved }: { bookId: string; compact?: boolean; onSaved?: () => void }) {
-  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+export function WantButton({
+  bookId,
+  compact = false,
+  initialSaved = false,
+  onSaved,
+}: {
+  bookId: string;
+  compact?: boolean;
+  /** Already on your want-to-read list. */
+  initialSaved?: boolean;
+  onSaved?: () => void;
+}) {
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">(initialSaved ? "saved" : "idle");
 
   async function save() {
     if (state === "saving" || state === "saved") return;
