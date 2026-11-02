@@ -1,0 +1,2 @@
+# Supabase CLI / GitHub integration config. Migrations in ./migrations run in filename order.
+project_id = "spine"

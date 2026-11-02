@@ -13,7 +13,7 @@ This is the core-loop build: sign-in, Goodreads import, book search, the ranking
 ## Setup
 
 1. **Create a Supabase project** at supabase.com.
-2. **Run the schema.** In the Supabase dashboard, open SQL Editor, paste `supabase/migrations/0001_core.sql`, and run it.
+2. **Run the schema.** In the Supabase dashboard, open SQL Editor, paste `supabase/migrations/20261102170000_core.sql`, and run it.
 3. **Allow sign-in redirects.** Under Authentication → URL Configuration, set the Site URL to your deployed URL and add `http://localhost:3000/**` (and your Netlify URL with `/**`) to Redirect URLs.
 4. **Add your keys.** Copy `.env.example` to `.env.local` and fill in the project URL and anon key from Project Settings → API.
 5. **Run it.**
