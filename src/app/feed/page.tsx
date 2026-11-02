@@ -10,6 +10,7 @@ import { ArrowIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { CheckInSheet } from "@/components/CheckInSheet";
+import { InstallHint } from "@/components/InstallHint";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
@@ -72,6 +73,8 @@ function Feed() {
             <Avatar profile={profile} size={40} />
           </Link>
         </div>
+
+        <InstallHint />
 
         {streak.weeks > 0 && !streak.activeThisWeek && (
           reading[0] ? (

@@ -18,6 +18,8 @@ export const viewport: Viewport = {
   themeColor: "#f7f7f5",
   width: "device-width",
   initialScale: 1,
+  // Draw under the notch and home bar; the CSS pads with the safe-area insets.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

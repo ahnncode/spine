@@ -19,6 +19,8 @@ export default function Login() {
   const [captchaRound, setCaptchaRound] = useState(0);
   const [check, setCheck] = useState<TurnstileStatus>({ state: "loading" });
   const [waiting, setWaiting] = useState(false);
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const needsCaptcha = Boolean(TURNSTILE_SITE_KEY);
   // Lets a submit that beat the bot check wait for it to finish.
   const tokenRef = useRef<string | null>(null);
@@ -46,6 +48,20 @@ export default function Login() {
   }, [session, router]);
 
   if (!supabaseConfigured) return <SetupNotice />;
+
+  // The emailed code works anywhere — including a home-screen app, which an
+  // emailed link can't open on iPhone.
+  async function verify(e: FormEvent) {
+    e.preventDefault();
+    const token = code.replace(/\D/g, "");
+    if (token.length < 6) return;
+    setVerifying(true);
+    setError(null);
+    const { error } = await supabase().auth.verifyOtp({ email: email.trim(), token, type: "email" });
+    setVerifying(false);
+    if (error) setError(/expired|invalid/i.test(error.message) ? "That code didn’t work — it may have expired. Check the newest email, or send a new one." : error.message);
+    // On success the session listener above sends them on.
+  }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -96,10 +112,31 @@ export default function Login() {
           <>
             <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Check your email.</h1>
             <p className="lede">
-              We sent a sign-in link to <strong>{email}</strong>. Open it on this device and you&rsquo;re in.
+              We sent a link and a 6-digit code to <strong>{email}</strong>. Tap the link, or type the code here.
             </p>
-            <button className="btn btn--ghost" style={{ marginTop: 20, alignSelf: "flex-start", paddingLeft: 0 }} onClick={() => setSent(false)}>
-              Use a different email
+            <form onSubmit={verify} style={{ marginTop: 24 }}>
+              <label htmlFor="code" className="visually-hidden">6-digit code</label>
+              <input
+                id="code"
+                className="input m"
+                style={{ width: "100%", fontSize: 28, letterSpacing: "0.4em", textAlign: "center", height: 64 }}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                placeholder="••••••"
+                maxLength={6}
+                value={code}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  setCode(v);
+                }}
+              />
+              {error && <p className="error" role="alert">{error}</p>}
+              <button className="btn btn--block" style={{ marginTop: 14 }} disabled={verifying || code.length < 6}>
+                {verifying ? "Signing in…" : "Sign in with code"}
+              </button>
+            </form>
+            <button className="btn btn--ghost" style={{ marginTop: 12, alignSelf: "flex-start", paddingLeft: 0 }} onClick={() => { setSent(false); setCode(""); setError(null); }}>
+              Use a different email or resend
             </button>
           </>
         ) : (

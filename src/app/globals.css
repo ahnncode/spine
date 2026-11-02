@@ -26,6 +26,9 @@
   --shadow-cover: 0 18px 30px -16px rgba(17, 17, 17, 0.5);
   --col: 560px;
   --tabbar-h: 78px;
+  /* iPhone home indicator / notch (0 elsewhere) */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 * { box-sizing: border-box; }
@@ -64,10 +67,10 @@ img { display: block; max-width: 100%; }
 }
 .screen {
   flex: 1;
-  padding: 20px 20px calc(var(--tabbar-h) + 28px);
+  padding: calc(20px + var(--safe-top)) 20px calc(var(--tabbar-h) + 28px + var(--safe-bottom));
 }
 .screen--flow {
-  padding-bottom: 28px;
+  padding-bottom: calc(28px + var(--safe-bottom));
   display: flex;
   flex-direction: column;
 }
@@ -242,7 +245,7 @@ img { display: block; max-width: 100%; }
 }
 .tabbar__inner {
   max-width: var(--col); margin: 0 auto;
-  height: var(--tabbar-h); padding: 6px 10px 14px;
+  height: calc(var(--tabbar-h) + var(--safe-bottom)); padding: 6px 10px calc(14px + var(--safe-bottom));
   display: flex; align-items: center; justify-content: space-around;
 }
 .tab {
@@ -322,7 +325,8 @@ img { display: block; max-width: 100%; }
 .sheet {
   width: 100%; max-width: var(--col);
   background: var(--ground); border-radius: 26px 26px 0 0;
-  padding: 10px 20px 28px;
+  padding: 10px 20px calc(28px + var(--safe-bottom));
+  max-height: 92dvh; overflow-y: auto;
   animation: sheet-up 0.22s ease-out;
 }
 .sheet__grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 0 auto 14px; }
