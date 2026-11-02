@@ -21,6 +21,16 @@ import {
 import { formatScore } from "@/lib/ranking";
 import { passport, readInYear } from "@/lib/stats";
 
+/** " · today", " · 3d ago" — when they last touched a book they're reading. */
+function since(day: string | null): string {
+  if (!day) return "";
+  const days = Math.round((Date.now() - new Date(`${day}T12:00:00`).getTime()) / 86400000);
+  if (days <= 0) return " · today";
+  if (days === 1) return " · yesterday";
+  if (days < 30) return ` · ${days}d ago`;
+  return "";
+}
+
 export function ProfilePage() {
   return (
     <RequireAuth>
@@ -145,6 +155,33 @@ function Inner() {
               <div className="empty"><LockIcon size={22} /><p className="h2" style={{ marginTop: 8 }}>This shelf is private</p></div>
             ) : (
               <>
+                {reading.length > 0 && (
+                  <>
+                    <h2 className="h2" style={{ marginTop: 20 }}>Reading now</h2>
+                    <div className="reading-strip">
+                      {reading.map((e) => (
+                        <div key={e.id} className="reading-card">
+                          <Link href={`/book/${e.book_id}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", gap: 10 }}>
+                            <Cover book={e.book} width={64} />
+                            <span className="reading-card__title">{e.book.title}</span>
+                          </Link>
+                          <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                            {e.progress_pct != null && (
+                              <span className="reading-card__bar" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
+                            )}
+                            <span className="m muted" style={{ fontSize: 11 }}>
+                              {e.progress_pct != null ? `${e.progress_pct}%` : "Started"}{since(e.last_checkin_on ?? e.started_on)}
+                            </span>
+                          </span>
+                          {wantable(e.book_id) && <WantButton bookId={e.book_id} initialSaved={myStatus.get(e.book_id) === "want"} />}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                <BadgeStrip earned={data.badges} />
+
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 18 }}>
                   <div className="stat"><div className="stat__n">{ranked.length}</div><div className="stat__l">ranked</div></div>
                   <div className="stat"><div className="stat__n">{readInYear(ranked, new Date().getFullYear()).length}</div><div className="stat__l">this year</div></div>
@@ -163,8 +200,6 @@ function Inner() {
                   </div>
                 </div>
 
-                <BadgeStrip earned={data.badges} />
-
                 {disagree.length > 0 && (
                   <section className="card" style={{ marginTop: 10 }}>
                     <h2 className="h2">Where you disagree</h2>
@@ -181,23 +216,6 @@ function Inner() {
                       </Link>
                     ))}
                   </section>
-                )}
-
-                {reading.length > 0 && (
-                  <>
-                    <h2 className="eyebrow" style={{ marginTop: 20 }}>Reading now</h2>
-                    <div className="reading-strip">
-                      {reading.map((e) => (
-                        <div key={e.id} className="reading-card">
-                          <Link href={`/book/${e.book_id}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-                            <Cover book={e.book} width={64} />
-                            <span className="reading-card__title">{e.book.title}</span>
-                          </Link>
-                          {wantable(e.book_id) && <WantButton bookId={e.book_id} initialSaved={myStatus.get(e.book_id) === "want"} />}
-                        </div>
-                      ))}
-                    </div>
-                  </>
                 )}
 
                 <h2 className="h2" style={{ marginTop: 20 }}>Their ranking</h2>

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Medallion } from "@/components/Badge";
 import {
-  BADGE, BADGES, CATEGORY_LABEL, RARITY_LABEL, fraction, progressLabel, sortForCase, type BadgeStatus,
+  BADGE, BADGES, byRarity, CATEGORY_LABEL, RARITY_LABEL, fraction, progressLabel, sortForCase, type BadgeStatus,
 } from "@/lib/badges";
 
 function earnedOn(iso: string): string {
@@ -84,12 +84,12 @@ export function BadgeCase({ statuses }: { statuses: BadgeStatus[] | null }) {
 /** Someone else's earned badges, as a scrolling strip. */
 export function BadgeStrip({ earned }: { earned: { key: string; earned_at: string }[] }) {
   const [open, setOpen] = useState<BadgeStatus | null>(null);
-  const known = earned.filter((b) => BADGE[b.key]);
+  const known = byRarity(earned);
   if (!known.length) return null;
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 20 }}>
-        <h2 className="eyebrow" style={{ margin: 0 }}>Badges</h2>
+        <h2 className="h2" style={{ margin: 0 }}>Badges</h2>
         <span className="m muted" style={{ fontSize: 12 }}>{known.length} of {BADGES.length}</span>
       </div>
       <div className="badge-strip">
@@ -98,6 +98,7 @@ export function BadgeStrip({ earned }: { earned: { key: string; earned_at: strin
             onClick={() => setOpen({ key: b.key, progress: 1, goal: 1, earned: b.earned_at, fresh: false })}>
             <Medallion badge={b.key} earned size={52} />
             <span className="badge-cell__name">{BADGE[b.key].name}</span>
+            <span className="badge-cell__sub" data-rarity={BADGE[b.key].rarity}>{RARITY_LABEL[BADGE[b.key].rarity]}</span>
           </button>
         ))}
       </div>

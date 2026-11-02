@@ -486,3 +486,7 @@ img { display: block; max-width: 100%; }
 .dots span { width: 10px; height: 10px; border-radius: 5px; background: rgba(17,17,17,0.18); }
 .dots span[data-on="true"] { background: var(--ink); }
 @media (prefers-reduced-motion: reduce) { .medal-pop { animation: none; } }
+.badge-cell__sub[data-rarity="legendary"] { color: var(--accent-ink); font-weight: 700; }
+.badge-cell__sub[data-rarity="rare"] { color: var(--cobalt-ink); font-weight: 600; }
+.reading-card__bar { height: 4px; border-radius: 2px; background: var(--well); overflow: hidden; }
+.reading-card__bar span { display: block; height: 100%; background: var(--accent); }

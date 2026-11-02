@@ -85,6 +85,18 @@ export const RARITY_LABEL: Record<Rarity, string> = {
   legendary: "Legendary",
 };
 
+/** Rarest first: legendary badges lead every list. */
+export const RARITY_RANK: Record<Rarity, number> = { legendary: 0, rare: 1, uncommon: 2, common: 3 };
+
+/** Earned badges, rarest first, newest first within a rarity. */
+export function byRarity<T extends { key: string; earned_at?: string | null; earned?: string | null }>(list: T[]): T[] {
+  const at = (x: T) => x.earned_at ?? x.earned ?? "";
+  return list
+    .filter((x) => BADGE[x.key])
+    .slice()
+    .sort((a, b) => RARITY_RANK[BADGE[a.key].rarity] - RARITY_RANK[BADGE[b.key].rarity] || at(b).localeCompare(at(a)));
+}
+
 export interface BadgeStatus {
   key: string;
   progress: number;
@@ -106,7 +118,7 @@ export function fraction(s: Pick<BadgeStatus, "progress" | "goal">): number {
 }
 
 /**
- * Order for the badge case: earned first (newest first), then the ones
+ * Order for the badge case: earned first (rarest, then newest), then the ones
  * you're closest to, then the rest in definition order.
  */
 export function sortForCase(statuses: BadgeStatus[]): BadgeStatus[] {
@@ -115,7 +127,8 @@ export function sortForCase(statuses: BadgeStatus[]): BadgeStatus[] {
     .filter((s) => BADGE[s.key])
     .slice()
     .sort((a, b) => {
-      if (a.earned && b.earned) return b.earned.localeCompare(a.earned);
+      if (a.earned && b.earned)
+        return RARITY_RANK[BADGE[a.key].rarity] - RARITY_RANK[BADGE[b.key].rarity] || b.earned.localeCompare(a.earned);
       if (a.earned) return -1;
       if (b.earned) return 1;
       const fa = fraction(a), fb = fraction(b);
