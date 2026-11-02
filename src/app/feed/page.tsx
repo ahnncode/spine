@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
@@ -66,7 +67,7 @@ function Feed() {
     <div className="app">
       <main className="screen">
         <div className="topbar">
-          <span className="wordmark" style={{ fontSize: 30 }}>spine</span>
+          <Logo size={30} />
           <Link href="/you" aria-label="Your profile" style={{ textDecoration: "none" }}>
             <Avatar profile={profile} size={40} />
           </Link>

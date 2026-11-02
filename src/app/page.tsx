@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Logo } from "@/components/Logo";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/Auth";
@@ -41,7 +42,7 @@ export default function Landing() {
     <div className="app">
       <main className="screen screen--flow">
         <div className="topbar">
-          <span className="wordmark">spine</span>
+          <Logo size={30} />
           <Link href="/login" className="btn btn--quiet" style={{ minHeight: 44, fontSize: 15 }}>
             Sign in
           </Link>

@@ -2,9 +2,16 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/Auth";
 import "./globals.css";
 
+const description = "Rank what you read with quick head-to-heads, and see what your friends can't put down.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://readspine.app"),
   title: "Spine — rank books, not stars",
-  description: "Rank what you read with quick head-to-heads, and see what your friends can't put down.",
+  description,
+  applicationName: "Spine",
+  appleWebApp: { title: "Spine", capable: true, statusBarStyle: "default" },
+  openGraph: { type: "website", siteName: "Spine", url: "/", title: "Spine — rank books, not stars", description },
+  twitter: { card: "summary_large_image", title: "Spine — rank books, not stars", description },
 };
 
 export const viewport: Viewport = {
