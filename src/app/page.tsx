@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/components/Auth";
 import { Cover } from "@/components/Cover";
 import { ScoreChip } from "@/components/ScoreChip";
@@ -17,9 +17,25 @@ export default function Landing() {
   const { session, loading } = useAuth();
   const router = useRouter();
 
+  const [linkError, setLinkError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!loading && session) router.replace("/shelf");
   }, [loading, session, router]);
+
+  // Supabase sends people back here with #error=… when a sign-in link fails.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    if (!params.get("error")) return;
+    const code = params.get("error_code");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLinkError(
+      code === "otp_expired"
+        ? "That sign-in link has expired or was already used. Request a fresh one."
+        : params.get("error_description") || "That sign-in link didn’t work. Request a fresh one.",
+    );
+    history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   return (
     <div className="app">
@@ -30,6 +46,13 @@ export default function Landing() {
             Sign in
           </Link>
         </div>
+
+        {linkError && (
+          <p className="notice" role="alert" style={{ marginTop: 20 }}>
+            {linkError}{" "}
+            <Link href="/login" style={{ fontWeight: 600 }}>Get a new link</Link>
+          </p>
+        )}
 
         <h1 className="h1" style={{ fontSize: 58, lineHeight: 0.92, marginTop: 40 }}>
           Rank books,
