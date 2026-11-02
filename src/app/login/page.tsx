@@ -55,7 +55,7 @@ export default function Login() {
   async function verify(e: FormEvent) {
     e.preventDefault();
     const token = code.replace(/\D/g, "");
-    if (token.length < 6) return;
+    if (token.length < 6) return; // Supabase codes are 6–10 digits, depending on project settings
     setVerifying(true);
     setError(null);
     const { error } = await supabase().auth.verifyOtp({ email: email.trim(), token, type: "email" });
@@ -119,21 +119,21 @@ export default function Login() {
           <>
             <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Check your email.</h1>
             <p className="lede">
-              We sent a link and a 6-digit code to <strong>{email}</strong>. Tap the link, or type the code here.
+              We sent a link and a code to <strong>{email}</strong>. Tap the link, or type the code here.
             </p>
             <form onSubmit={verify} style={{ marginTop: 24 }}>
-              <label htmlFor="code" className="visually-hidden">6-digit code</label>
+              <label htmlFor="code" className="visually-hidden">Sign-in code</label>
               <input
                 id="code"
                 className="input m"
-                style={{ width: "100%", fontSize: 28, letterSpacing: "0.4em", textAlign: "center", height: 64 }}
+                style={{ width: "100%", fontSize: code.length > 6 ? 24 : 28, letterSpacing: code.length > 6 ? "0.25em" : "0.4em", textAlign: "center", height: 64 }}
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 placeholder="••••••"
-                maxLength={6}
+                maxLength={10}
                 value={code}
                 onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  const v = e.target.value.replace(/\D/g, "").slice(0, 10);
                   setCode(v);
                 }}
               />
