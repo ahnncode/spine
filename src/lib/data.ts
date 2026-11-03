@@ -184,6 +184,12 @@ export async function setBookGenre(bookId: string, genre: string): Promise<boole
   return Boolean(data);
 }
 
+/** Save backup cover art for a book (null records that there isn't any). */
+export async function setBookCover(bookId: string, url: string | null): Promise<void> {
+  const { error } = await supabase().rpc("set_book_cover", { p_book: bookId, p_url: url });
+  if (error) throw error;
+}
+
 /** Correct a book's title/author (only if nobody else has it, or you fixed it before). */
 export async function fixBookDetails(bookId: string, title: string, author: string): Promise<boolean> {
   const { data, error } = await supabase().rpc("fix_book_details", { p_book: bookId, p_title: title, p_author: author });

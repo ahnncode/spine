@@ -15,8 +15,9 @@ import { NoteText, TagList, VibePill } from "@/components/Social";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
 import type { Book } from "@/lib/books";
+import { findAppleCover } from "@/lib/applecovers";
 import {
-  fixBookDetails,
+  fixBookDetails, setBookCover,
   fetchCheckins, type Checkin,
   bookStats, fetchBook, fetchFollowing, fetchProfiles, fetchShelf, friendsOnBook, predictedScore,
   rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry,
@@ -60,6 +61,15 @@ function Inner() {
       if (!live) return;
       setBook(b);
       if (!b) return;
+      // No picture anywhere yet? Look once in Apple's catalogue.
+      if (!b.cover_id && !b.cover_url && !b.cover_checked) {
+        findAppleCover(b.title, b.author)
+          .then(async (url) => {
+            await setBookCover(b.id, url);
+            if (url && live) setBook((cur) => (cur ? { ...cur, cover_url: url } : cur));
+          })
+          .catch(() => {});
+      }
       const following = await fetchFollowing();
       const [stats, predicted, friends] = await Promise.all([bookStats(id), predictedScore(id), friendsOnBook(id, following)]);
       const ids = friends.map((f) => f.user_id);

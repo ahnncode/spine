@@ -5,15 +5,16 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseWs = supabaseUrl.replace(/^https:/, "wss:");
 
 // Only the services the app actually talks to: Supabase (accounts and data),
-// Open Library (search and covers, which redirect to archive.org), Google Fonts
+// Open Library (search and covers, which redirect to archive.org), Apple Books
+// (backup cover art), Google Fonts
 // and Cloudflare Turnstile.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https://covers.openlibrary.org https://*.archive.org",
-  `connect-src 'self' ${supabaseUrl} ${supabaseWs} https://openlibrary.org https://challenges.cloudflare.com`,
+  "img-src 'self' data: blob: https://covers.openlibrary.org https://*.archive.org https://*.mzstatic.com",
+  `connect-src 'self' ${supabaseUrl} ${supabaseWs} https://openlibrary.org https://itunes.apple.com https://challenges.cloudflare.com`,
   // Cloudflare Turnstile (bot check on sign-in) runs in a frame.
   "frame-src https://challenges.cloudflare.com",
   "media-src 'self' blob:",

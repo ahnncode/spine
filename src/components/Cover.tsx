@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { coverColors, coverUrl, dedupeKey, type BookInput } from "@/lib/books";
+import { coverCandidates, coverColors, dedupeKey, type BookInput } from "@/lib/books";
 
 interface Props {
   book: BookInput;
@@ -16,8 +16,14 @@ interface Props {
  */
 export function Cover({ book, width, className }: Props) {
   const height = Math.round(width * 1.5);
-  const url = coverUrl(book, width > 90 ? "L" : "M");
-  const [failed, setFailed] = useState(false);
+  const candidates = coverCandidates(book, width > 90 ? "L" : "M");
+  // Index of the image being tried; moves on when one is missing or a placeholder.
+  const sig = candidates.join("|");
+  const [tried, setTried] = useState({ sig, n: 0 });
+  const attempt = tried.sig === sig ? tried.n : 0;
+  const url = candidates[attempt];
+  const failed = attempt >= candidates.length;
+  const fail = () => setTried({ sig, n: attempt + 1 });
   const { bg, fg } = coverColors(dedupeKey(book.title, book.author));
   const showArt = url && !failed;
 
@@ -36,10 +42,11 @@ export function Cover({ book, width, className }: Props) {
           src={url}
           alt=""
           loading="lazy"
-          onError={() => setFailed(true)}
+          key={url}
+          onError={fail}
           onLoad={(e) => {
             // Open Library sometimes returns a 1×1 placeholder.
-            if ((e.currentTarget as HTMLImageElement).naturalWidth < 10) setFailed(true);
+            if ((e.currentTarget as HTMLImageElement).naturalWidth < 10) fail();
           }}
         />
       ) : width < 56 ? (

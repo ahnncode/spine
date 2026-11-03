@@ -5,6 +5,8 @@ export interface BookInput {
   isbn13?: string | null;
   ol_work_key?: string | null;
   cover_id?: number | null;
+  /** Backup cover art (Apple Books) when Open Library has none. */
+  cover_url?: string | null;
   year?: number | null;
   pages?: number | null;
   /** Genre keys from src/lib/genres.ts. */
@@ -16,6 +18,8 @@ export interface Book extends BookInput {
   dedupe_key: string;
   genres: string[];
   enriched: boolean;
+  /** We've looked for backup cover art already. */
+  cover_checked?: boolean;
   /** Who picked this genre by hand, if anyone (they can change it). */
   genre_set_by?: string | null;
 }
@@ -81,10 +85,17 @@ export function coverColors(key: string): { bg: string; fg: string } {
   return { bg, fg };
 }
 
-export function coverUrl(book: Pick<BookInput, "cover_id" | "isbn13">, size: "S" | "M" | "L" = "M"): string | null {
-  if (book.cover_id) return `https://covers.openlibrary.org/b/id/${book.cover_id}-${size}.jpg`;
-  if (book.isbn13) return `https://covers.openlibrary.org/b/isbn/${book.isbn13}-${size}.jpg?default=false`;
-  return null;
+export function coverUrl(book: Pick<BookInput, "cover_id" | "isbn13" | "cover_url">, size: "S" | "M" | "L" = "M"): string | null {
+  return coverCandidates(book, size)[0] ?? null;
+}
+
+/** Every image worth trying for a cover, best first; the next is used if one fails. */
+export function coverCandidates(book: Pick<BookInput, "cover_id" | "isbn13" | "cover_url">, size: "S" | "M" | "L" = "M"): string[] {
+  const out: string[] = [];
+  if (book.cover_id) out.push(`https://covers.openlibrary.org/b/id/${book.cover_id}-${size}.jpg`);
+  if (book.cover_url) out.push(book.cover_url);
+  if (book.isbn13) out.push(`https://covers.openlibrary.org/b/isbn/${book.isbn13}-${size}.jpg?default=false`);
+  return out;
 }
 
 /** Keep catalog fields within the limits the database enforces. */

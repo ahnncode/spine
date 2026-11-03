@@ -11,6 +11,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { NoteText, TagList } from "@/components/Social";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
+import { useCoverBackfill } from "@/components/useCoverBackfill";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
@@ -31,6 +32,7 @@ function Shelf() {
   const { entries, error, reload } = useShelf();
   const { profile } = useProfile();
   useEnrichment(entries, reload);
+  useCoverBackfill(entries, reload);
   const [tab, setTab] = useState<Tab>("ranked");
   const [genre, setGenre] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);

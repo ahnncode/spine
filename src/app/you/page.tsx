@@ -16,6 +16,7 @@ import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
+import { useCoverBackfill } from "@/components/useCoverBackfill";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
@@ -39,6 +40,7 @@ function You() {
   const { profile, reloadProfile } = useProfile();
   const { entries, reload } = useShelf();
   const { active: lookingUp } = useEnrichment(entries, reload);
+  useCoverBackfill(entries, reload);
   const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
   const [editing, setEditing] = useState(false);
   const [picking, setPicking] = useState(false);

@@ -42,3 +42,18 @@ describe("cleanTitle", async () => {
     expect(cleanTitle("On the Calculation of Volume III")).toBe("On the Calculation of Volume III");
   });
 });
+
+describe("Apple cover matching", async () => {
+  const { sameBook, bigArtwork } = await import("./applecovers");
+  it("matches the same book and not lookalikes", () => {
+    expect(sameBook({ title: "Big Swiss", author: "Jen Beagin" }, { trackName: "Big Swiss", artistName: "Jen Beagin" })).toBe(true);
+    expect(sameBook({ title: "On the Calculation of Volume (Book II)", author: "Solvej Balle" }, { trackName: "On the Calculation of Volume (Book II)", artistName: "Solvej Balle & Barbara J. Haveland" })).toBe(true);
+    expect(sameBook({ title: "Frankenstein", author: "Mary Shelley" }, { trackName: "Frankenstein: Or, the Modern Prometheus", artistName: "Mary Shelley" })).toBe(true);
+    expect(sameBook({ title: "Frankenstein", author: "Mary Shelley" }, { trackName: "Frankenstein", artistName: "Dean Koontz" })).toBe(false);
+    expect(sameBook({ title: "On the Calculation of Volume (Book II)", author: "Solvej Balle" }, { trackName: "On the Calculation of Volume (Book V)", artistName: "Solvej Balle" })).toBe(false);
+    expect(sameBook({ title: "Kitten", author: "Jane Doe" }, { trackName: "Kittens Galore", artistName: "Jane Doe" })).toBe(false);
+  });
+  it("asks for a bigger image", () => {
+    expect(bigArtwork("https://is1-ssl.mzstatic.com/image/thumb/P/v4/a/b.jpg/100x100bb.jpg")).toBe("https://is1-ssl.mzstatic.com/image/thumb/P/v4/a/b.jpg/400x600bb.jpg");
+  });
+});
