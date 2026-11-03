@@ -106,7 +106,7 @@ function Start() {
     const q = query.trim();
     if (q.length < 2) return;
     const ctrl = new AbortController();
-    const t = setTimeout(() => searchBooks(q, ctrl.signal).then((r) => setResults(r.slice(0, 9))).catch(() => {}), 300);
+    const t = setTimeout(() => searchBooks(q, ctrl.signal, (r) => !ctrl.signal.aborted && setResults(r.slice(0, 9))).catch(() => {}), 300);
     return () => { clearTimeout(t); ctrl.abort(); };
   }, [query]);
 

@@ -61,17 +61,24 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
     const q = query.trim();
     if (q.length < 2) return;
     const ctrl = new AbortController();
+    // Show the loading bar from the first keystroke, not after the debounce.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearching(true);
+    setError(null);
     const t = setTimeout(async () => {
-      setSearching(true);
-      setError(null);
       try {
-        setResults(await searchBooks(q, ctrl.signal));
+        await searchBooks(q, ctrl.signal, (books, final) => {
+          if (ctrl.signal.aborted) return;
+          setResults(books);
+          if (final) setSearching(false);
+        });
       } catch (e) {
-        if (!ctrl.signal.aborted) setError(e instanceof Error ? e.message : "Search failed");
-      } finally {
-        if (!ctrl.signal.aborted) setSearching(false);
+        if (!ctrl.signal.aborted) {
+          setError(e instanceof Error ? e.message : "Search failed");
+          setSearching(false);
+        }
       }
-    }, 300);
+    }, 250);
     return () => {
       clearTimeout(t);
       ctrl.abort();
@@ -99,6 +106,11 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
 
   // Short queries show the prompt instead of stale results.
   const results = query.trim().length >= 2 ? rawResults : null;
+  // Books already on your shelf show up instantly, before the catalogue answers.
+  const term = query.trim().toLowerCase();
+  const onShelf = term.length >= 2
+    ? (entries || []).filter((e) => `${e.book.title} ${e.book.author ?? ""}`.toLowerCase().includes(term)).slice(0, 3)
+    : [];
   const pickedEntry = picked ? entryFor(picked) : undefined;
 
   return (
@@ -125,7 +137,30 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
           />
         </div>
 
+        <div className="search-progress" data-on={searching && term.length >= 2} aria-hidden="true"><span /></div>
         {error && <p className="error" role="alert">{error}</p>}
+
+        {onShelf.length > 0 && (
+          <section aria-label="On your shelf" style={{ marginTop: 10 }}>
+            <h2 className="eyebrow" style={{ margin: "6px 0 0" }}>On your shelf</h2>
+            <ul style={{ listStyle: "none", margin: "2px 0 0", padding: 0 }}>
+              {onShelf.map((e) => (
+                <li key={e.id}>
+                  <Link href={`/book/${e.book_id}`} className="book-row">
+                    <Cover book={e.book} width={36} />
+                    <span className="book-row__body">
+                      <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{e.book.title}</span>
+                      <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>
+                    </span>
+                    <span className={`pill ${e.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>
+                      {{ ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[e.status]}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {results === null ? (
           mode === "add" ? (
@@ -160,9 +195,21 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
           ) : (
             <Recommendations recs={recs} rankedCount={rankedCount} />
           )
+        ) : results.length === 0 && searching ? (
+          <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }} aria-busy="true" aria-label="Searching">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <li key={i} className="book-row skeleton-row" style={{ animationDelay: `${i * 0.08}s` }}>
+                <span className="skeleton" style={{ width: 44, height: 66, borderRadius: 4 }} />
+                <span style={{ flex: 1 }}>
+                  <span className="skeleton" style={{ display: "block", width: `${70 - i * 7}%`, height: 14 }} />
+                  <span className="skeleton" style={{ display: "block", width: "40%", height: 12, marginTop: 8 }} />
+                </span>
+              </li>
+            ))}
+          </ul>
         ) : results.length === 0 && !searching ? (
           <div className="empty">
-            <p className="h2">No matches</p>
+            <p className="h2">{onShelf.length ? "Nothing else in the catalogue" : "No matches"}</p>
             <p style={{ margin: 0, fontSize: 14 }}>Try the author&rsquo;s last name, or fewer words.</p>
           </div>
         ) : (

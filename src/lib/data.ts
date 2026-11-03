@@ -3,6 +3,7 @@ import type { ImportedBook } from "./goodreads";
 import { startingOrder } from "./goodreads";
 import type { BadgeStatus } from "./badges";
 import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
+import { lookup } from "./openlibrary";
 import { supabase } from "./supabase";
 
 export type Status = "ranked" | "want" | "unsorted" | "reading";
@@ -146,8 +147,16 @@ export async function ensureBook(input: BookInput): Promise<string> {
   const ids = await ensureBooks([input]);
   const id = ids.get(dedupeKey(input.title, input.author));
   if (!id) throw new Error("Couldn't save that book");
-  // A book first added by an import may be missing art or genres this search has.
-  if (input.cover_id || input.genres?.length) await enrichBook(id, input).catch(() => {});
+  if (input.genres?.length) {
+    // A book first added by an import may be missing art or genres this search has.
+    await enrichBook(id, input).catch(() => {});
+  } else {
+    // Quick search results leave out subjects (they're slow to fetch), so fill
+    // in genres with a full lookup in the background.
+    void lookup(input.title, input.author)
+      .then((found) => enrichBook(id, found ? { ...found, cover_id: input.cover_id ?? found.cover_id } : input))
+      .catch(() => {});
+  }
   return id;
 }
 

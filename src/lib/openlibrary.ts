@@ -21,9 +21,14 @@ interface OLEdition {
   isbn?: string[];
 }
 
+// Full detail, for filling in one book (includes subjects for genres).
 const FIELDS =
   "key,title,author_name,first_publish_year,cover_i,isbn,number_of_pages_median,subject," +
   "editions,editions.title,editions.language,editions.cover_i,editions.isbn";
+// Search results: just what the list shows. Leaving out subjects and the full
+// ISBN lists cuts responses from ~300KB to a few KB.
+const QUICK_FIELDS = "key,title,author_name,first_publish_year,cover_i,number_of_pages_median";
+const ENGLISH_FIELDS = `${QUICK_FIELDS},editions,editions.title,editions.language,editions.cover_i,editions.isbn`;
 
 /** Spine is for English readers: prefer English editions' titles and covers. */
 function englishEdition(d: OLDoc): OLEdition | null {
@@ -45,16 +50,13 @@ function toBook(d: OLDoc, isbn13?: string): BookInput {
   };
 }
 
-async function search(params: Record<string, string>, signal?: AbortSignal): Promise<OLDoc[]> {
-  const res = await fetch(`https://openlibrary.org/search.json?${new URLSearchParams({ fields: FIELDS, lang: "en", ...params })}`, { signal });
+async function search(params: Record<string, string>, signal?: AbortSignal, fields = FIELDS): Promise<OLDoc[]> {
+  const res = await fetch(`https://openlibrary.org/search.json?${new URLSearchParams({ fields, lang: "en", ...params })}`, { signal });
   if (!res.ok) throw new Error("Search is unavailable right now");
   return ((await res.json()) as { docs: OLDoc[] }).docs;
 }
 
-export async function searchBooks(query: string, signal?: AbortSignal): Promise<BookInput[]> {
-  const q = query.trim();
-  if (!q) return [];
-  const docs = await search({ q, limit: "30" }, signal);
+function tidy(docs: OLDoc[]): BookInput[] {
   // Catalogue clean-up: books with an English edition first, author-less
   // stubs last, and one result per title + author.
   const score = (d: OLDoc) => (englishEdition(d) || d.editions === undefined ? 0 : 1) + (d.author_name?.length ? 0 : 2);
@@ -70,6 +72,48 @@ export async function searchBooks(query: string, signal?: AbortSignal): Promise<
     if (out.length >= 20) break;
   }
   return out;
+}
+
+const cache = new Map<string, BookInput[]>();
+
+/**
+ * Search in two passes: a quick one that answers in a few hundred
+ * milliseconds, then a slower one with English editions (titles and covers)
+ * that replaces it. `onResults` is called for each; the last call is final.
+ */
+export async function searchBooks(query: string, signal?: AbortSignal, onResults?: (books: BookInput[], final: boolean) => void): Promise<BookInput[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const key = q.toLowerCase();
+  const hit = cache.get(key);
+  if (hit) {
+    onResults?.(hit, true);
+    return hit;
+  }
+  let finalDone = false;
+  const quick = search({ q, limit: "15" }, signal, QUICK_FIELDS)
+    .then((docs) => {
+      if (!finalDone) onResults?.(tidy(docs), false);
+    })
+    .catch(() => {});
+  const english = search({ q, limit: "20" }, signal, ENGLISH_FIELDS).then((docs) => {
+    finalDone = true;
+    const books = tidy(docs);
+    cache.set(key, books);
+    if (cache.size > 50) cache.delete(cache.keys().next().value!);
+    onResults?.(books, true);
+    return books;
+  });
+  try {
+    return await english;
+  } catch (e) {
+    // The English pass failed: keep whatever the quick pass found.
+    await quick;
+    if (signal?.aborted) throw e;
+    const fallback = await search({ q, limit: "15" }, signal, QUICK_FIELDS).then(tidy);
+    onResults?.(fallback, true);
+    return fallback;
+  }
 }
 
 /** Look a scanned barcode up by ISBN. */
