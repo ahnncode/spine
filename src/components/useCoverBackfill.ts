@@ -7,7 +7,7 @@ import { setBookCover, type Entry } from "@/lib/data";
 /** Apple allows about 20 lookups a minute. */
 const GAP_MS = 3200;
 const PER_VISIT = 60;
-const REFRESH_EVERY = 8;
+const REFRESH_EVERY = 1;
 
 /**
  * Books Open Library has no picture for get a one-time look in Apple's book
