@@ -22,7 +22,12 @@ export interface Book extends BookInput {
 
 /** Drop a trailing series marker like "(The Expanse, #1)". */
 export function cleanTitle(title: string): string {
-  return title.replace(/\s*\([^()]*#\s*[\d.]+[^()]*\)\s*$/, "").replace(/\s+/g, " ").trim();
+  return title
+    .replace(/\s*\([^()]*#\s*[\d.]+[^()]*\)\s*$/, "")
+    // "(Harry Potter, Book 3)", "(Wings of Fire Series Vol. 2)" — but not a bare "(Book II)" that is the title.
+    .replace(/\s*\([^()]*[A-Za-z][^()]*,?\s+(book|vol\.?|volume)\s*[\d.]+\)\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function norm(s: string): string {

@@ -1,4 +1,4 @@
-import type { BookInput } from "./books";
+import { cleanTitle, dedupeKey, type BookInput } from "./books";
 import { genresFromSubjects } from "./genres";
 
 interface OLDoc {
@@ -10,17 +10,35 @@ interface OLDoc {
   isbn?: string[];
   number_of_pages_median?: number;
   subject?: string[];
+  /** With lang=en, the best-matching English edition of this work. */
+  editions?: { docs?: OLEdition[] };
 }
 
-const FIELDS = "key,title,author_name,first_publish_year,cover_i,isbn,number_of_pages_median,subject";
+interface OLEdition {
+  title?: string;
+  language?: string[];
+  cover_i?: number;
+  isbn?: string[];
+}
+
+const FIELDS =
+  "key,title,author_name,first_publish_year,cover_i,isbn,number_of_pages_median,subject," +
+  "editions,editions.title,editions.language,editions.cover_i,editions.isbn";
+
+/** Spine is for English readers: prefer English editions' titles and covers. */
+function englishEdition(d: OLDoc): OLEdition | null {
+  const ed = d.editions?.docs?.[0];
+  return ed?.title && ed.language?.includes("eng") ? ed : null;
+}
 
 function toBook(d: OLDoc, isbn13?: string): BookInput {
+  const en = englishEdition(d);
   return {
-    title: d.title,
+    title: cleanTitle(en?.title ?? d.title),
     author: d.author_name?.[0] ?? null,
     ol_work_key: d.key,
-    cover_id: d.cover_i ?? null,
-    isbn13: isbn13 ?? d.isbn?.find((i) => i.length === 13) ?? null,
+    cover_id: en?.cover_i ?? d.cover_i ?? null,
+    isbn13: isbn13 ?? en?.isbn?.find((i) => i.length === 13) ?? d.isbn?.find((i) => i.length === 13) ?? null,
     year: d.first_publish_year ?? null,
     pages: d.number_of_pages_median ?? null,
     genres: genresFromSubjects(d.subject, d.first_publish_year),
@@ -28,7 +46,7 @@ function toBook(d: OLDoc, isbn13?: string): BookInput {
 }
 
 async function search(params: Record<string, string>, signal?: AbortSignal): Promise<OLDoc[]> {
-  const res = await fetch(`https://openlibrary.org/search.json?${new URLSearchParams({ fields: FIELDS, ...params })}`, { signal });
+  const res = await fetch(`https://openlibrary.org/search.json?${new URLSearchParams({ fields: FIELDS, lang: "en", ...params })}`, { signal });
   if (!res.ok) throw new Error("Search is unavailable right now");
   return ((await res.json()) as { docs: OLDoc[] }).docs;
 }
@@ -36,7 +54,22 @@ async function search(params: Record<string, string>, signal?: AbortSignal): Pro
 export async function searchBooks(query: string, signal?: AbortSignal): Promise<BookInput[]> {
   const q = query.trim();
   if (!q) return [];
-  return (await search({ q, limit: "20" }, signal)).map((d) => toBook(d));
+  const docs = await search({ q, limit: "30" }, signal);
+  // Catalogue clean-up: books with an English edition first, author-less
+  // stubs last, and one result per title + author.
+  const score = (d: OLDoc) => (englishEdition(d) || d.editions === undefined ? 0 : 1) + (d.author_name?.length ? 0 : 2);
+  const ranked = docs.map((d, i) => ({ d, i })).sort((a, b) => score(a.d) - score(b.d) || a.i - b.i);
+  const seen = new Set<string>();
+  const out: BookInput[] = [];
+  for (const { d } of ranked) {
+    const book = toBook(d);
+    const key = dedupeKey(book.title, book.author);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(book);
+    if (out.length >= 20) break;
+  }
+  return out;
 }
 
 /** Look a scanned barcode up by ISBN. */

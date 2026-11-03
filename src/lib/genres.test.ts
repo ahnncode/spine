@@ -32,3 +32,13 @@ describe("genresFromSubjects", () => {
     expect(genresFromSubjects([], 2023)).toEqual([]);
   });
 });
+
+describe("cleanTitle", async () => {
+  const { cleanTitle } = await import("./books");
+  it("drops series markers but keeps titles that are volumes", () => {
+    expect(cleanTitle("Harry Potter and the Prisoner of Azkaban (Harry Potter, Book 3)")).toBe("Harry Potter and the Prisoner of Azkaban");
+    expect(cleanTitle("Harry Potter and the Deathly Hallows (Harry Potter #7)")).toBe("Harry Potter and the Deathly Hallows");
+    expect(cleanTitle("On the Calculation of Volume (Book II)")).toBe("On the Calculation of Volume (Book II)");
+    expect(cleanTitle("On the Calculation of Volume III")).toBe("On the Calculation of Volume III");
+  });
+});
