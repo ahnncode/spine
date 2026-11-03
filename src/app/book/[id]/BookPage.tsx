@@ -15,6 +15,7 @@ import { NoteText, TagList, VibePill } from "@/components/Social";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
 import type { Book } from "@/lib/books";
+import { openLibraryHasCover } from "@/components/useCoverBackfill";
 import { findAppleCover } from "@/lib/applecovers";
 import {
   fixBookDetails, setBookCover,
@@ -62,9 +63,10 @@ function Inner() {
       setBook(b);
       if (!b) return;
       // No picture anywhere yet? Look once in Apple's catalogue.
-      if (!b.cover_id && !b.cover_url && !b.cover_checked) {
-        findAppleCover(b.title, b.author)
-          .then(async (url) => {
+      if (!b.cover_url && !b.cover_checked) {
+        (b.cover_id ? openLibraryHasCover(b.cover_id) : Promise.resolve(false))
+          .then(async (hasArt) => {
+            const url = hasArt ? null : await findAppleCover(b.title, b.author);
             await setBookCover(b.id, url);
             if (url && live) setBook((cur) => (cur ? { ...cur, cover_url: url } : cur));
           })

@@ -4,6 +4,19 @@ import { useEffect, useRef } from "react";
 import { findAppleCover } from "@/lib/applecovers";
 import { setBookCover, type Entry } from "@/lib/data";
 
+/**
+ * Whether Open Library really has a picture for this cover ID. Some IDs point
+ * at an empty image; with default=false those come back as errors.
+ */
+export function openLibraryHasCover(coverId: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img.naturalWidth >= 10);
+    img.onerror = () => resolve(false);
+    img.src = `https://covers.openlibrary.org/b/id/${coverId}-S.jpg?default=false`;
+  });
+}
+
 /** Apple allows about 20 lookups a minute. */
 const GAP_MS = 3200;
 const PER_VISIT = 60;
@@ -32,7 +45,7 @@ export function useCoverBackfill(entries: Entry[] | null, onFound: () => void): 
     if (!entries || started.current) return;
     // Wait for Open Library lookups to finish first; they may find a cover.
     const todo = entries
-      .filter((e) => e.book.enriched && !e.book.cover_id && !e.book.cover_url && !e.book.cover_checked)
+      .filter((e) => e.book.enriched && !e.book.cover_url && !e.book.cover_checked)
       .slice(0, PER_VISIT);
     if (!todo.length) return;
     started.current = true;
@@ -41,6 +54,11 @@ export function useCoverBackfill(entries: Entry[] | null, onFound: () => void): 
       let hits = 0;
       for (const e of todo) {
         if (!alive.current) return;
+        // Has a working Open Library picture: nothing to do (and no Apple lookup).
+        if (e.book.cover_id && (await openLibraryHasCover(e.book.cover_id))) {
+          await setBookCover(e.book_id, null).catch(() => {});
+          continue;
+        }
         try {
           const url = await findAppleCover(e.book.title, e.book.author);
           await setBookCover(e.book_id, url);

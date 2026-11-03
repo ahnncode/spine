@@ -92,7 +92,7 @@ export function coverUrl(book: Pick<BookInput, "cover_id" | "isbn13" | "cover_ur
 /** Every image worth trying for a cover, best first; the next is used if one fails. */
 export function coverCandidates(book: Pick<BookInput, "cover_id" | "isbn13" | "cover_url">, size: "S" | "M" | "L" = "M"): string[] {
   const out: string[] = [];
-  if (book.cover_id) out.push(`https://covers.openlibrary.org/b/id/${book.cover_id}-${size}.jpg`);
+  if (book.cover_id) out.push(`https://covers.openlibrary.org/b/id/${book.cover_id}-${size}.jpg?default=false`);
   if (book.cover_url) out.push(book.cover_url);
   if (book.isbn13) out.push(`https://covers.openlibrary.org/b/isbn/${book.isbn13}-${size}.jpg?default=false`);
   return out;
