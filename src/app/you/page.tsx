@@ -58,7 +58,22 @@ function You() {
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
   const [stamp, setStamp] = useState<string | null>(null);
   const openStamp = stamps.find((s) => s.key === stamp);
-  const stampBooks = stamp ? ranked.filter((e) => e.book.genres?.includes(stamp)) : [];
+  const liveStampBooks = stamp ? ranked.filter((e) => e.book.genres?.includes(stamp)) : [];
+  const [fixing, setFixing] = useState<typeof ranked | null>(null);
+  const [fixNote, setFixNote] = useState<Record<string, string>>({});
+  const stampBooks = fixing ?? liveStampBooks;
+  function closeStamp() {
+    setStamp(null);
+    setFixNote({});
+    if (fixing) {
+      setFixing(null);
+      if (Object.keys(picked).length) reload();
+    }
+  }
+  async function fixGenre(bookId: string, genre: string) {
+    const ok = await pickGenre(bookId, genre);
+    setFixNote((n) => ({ ...n, [bookId]: ok ? "Moved" : "Other readers have this book, so its genre can’t be changed here." }));
+  }
   const pendingGenres = lookingUp ? ranked.filter((e) => !e.book.enriched).length : 0;
   // Anything still without a genre once lookups finish can be sorted by hand.
   const noGenre = ranked.filter((e) => !e.book.genres?.length && (e.book.enriched || !lookingUp));
@@ -71,11 +86,12 @@ function You() {
   }
   const [sorting, setSorting] = useState(false);
   const [picked, setPicked] = useState<Record<string, string>>({});
-  async function pickGenre(bookId: string, genre: string) {
+  async function pickGenre(bookId: string, genre: string): Promise<boolean> {
     const before = picked[bookId];
     setPicked((p) => ({ ...p, [bookId]: genre }));
     const ok = await setBookGenre(bookId, genre).catch(() => false);
     if (!ok) setPicked((p) => { const n = { ...p }; if (before) n[bookId] = before; else delete n[bookId]; return n; });
+    return ok;
   }
   const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
@@ -226,6 +242,9 @@ function You() {
               Change genres you picked
             </button>
           ) : null}
+          {ranked.length > 0 && (
+            <p className="muted" style={{ fontSize: 12, margin: "8px 0 0" }}>Wrong genre? Tap a stamp, then Fix genres.</p>
+          )}
         </section>
 
         <BadgeCase statuses={badges} />
@@ -272,20 +291,27 @@ function You() {
       </main>
 
       {openStamp && (
-        <div className="sheet-backdrop" onClick={() => setStamp(null)}>
+        <div className="sheet-backdrop" onClick={closeStamp}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label={`${openStamp.label} books`} onClick={(e) => e.stopPropagation()}>
             <div className="sheet__grab" />
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="stamp" style={{ background: openStamp.count ? openStamp.bg : "var(--well)", color: openStamp.count ? openStamp.fg : "var(--muted)", width: 64, minHeight: 64, flexShrink: 0 }}>
                 <span className="m" style={{ fontWeight: 700, fontSize: 18 }}>{openStamp.count}</span>
               </span>
-              <div style={{ minWidth: 0 }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
                 <h2 className="d" style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em" }}>{openStamp.label}</h2>
                 <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>
                   {openStamp.count ? `${openStamp.count} ranked · best first` : "No stamp yet"}
                 </p>
               </div>
+              {stampBooks.length > 0 && (
+                <button className="btn btn--quiet" style={{ minHeight: 36, fontSize: 13, padding: "0 12px" }}
+                  onClick={() => (fixing ? closeStamp() : setFixing(liveStampBooks))}>
+                  {fixing ? "Done" : "Fix genres"}
+                </button>
+              )}
             </div>
+            {fixing && <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Pick the right genre for any book that doesn&rsquo;t belong here.</p>}
             {stampBooks.length === 0 ? (
               <div style={{ marginTop: 18 }}>
                 <p style={{ margin: 0, fontSize: 15, color: "var(--ink-2)" }}>Rank a {openStamp.label.toLowerCase()} book to earn this stamp.</p>
@@ -295,6 +321,21 @@ function You() {
               <ol style={{ listStyle: "none", margin: "12px 0 0", padding: 0, maxHeight: "60vh", overflowY: "auto" }}>
                 {stampBooks.map((e, i) => (
                   <li key={e.id}>
+                    {fixing ? (
+                      <div className="book-row" style={{ gap: 12, flexWrap: "wrap" }}>
+                        <Cover book={e.book} width={36} />
+                        <span className="book-row__body">
+                          <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{e.book.title}</span>
+                          <span className="book-row__sub" style={{ display: "block" }}>{fixNote[e.book_id] ?? e.book.author}</span>
+                        </span>
+                        <label className="sort-select">
+                          <span className="visually-hidden">Genre for {e.book.title}</span>
+                          <select value={picked[e.book_id] ?? stamp ?? ""} onChange={(ev) => fixGenre(e.book_id, ev.target.value)}>
+                            {GENRES.map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}
+                          </select>
+                        </label>
+                      </div>
+                    ) : (
                     <Link href={`/book/${e.book_id}`} className="book-row">
                       <span className={`book-row__rank ${i < 3 ? "book-row__rank--top" : ""}`}>{i + 1}</span>
                       <Cover book={e.book} width={40} />
@@ -304,6 +345,7 @@ function You() {
                       </span>
                       <ScoreChip score={e.score} bucket={e.bucket} />
                     </Link>
+                    )}
                   </li>
                 ))}
               </ol>
