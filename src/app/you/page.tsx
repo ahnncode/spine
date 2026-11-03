@@ -7,6 +7,8 @@ import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar } from "@/components/Avatar";
 import { EarlyPill, Name } from "@/components/Badge";
 import { AvatarPicker } from "@/components/AvatarPicker";
+import { BookActions } from "@/components/BookActions";
+import { CheckInSheet } from "@/components/CheckInSheet";
 import { BadgeCase } from "@/components/BadgeCase";
 import { InviteCard } from "@/components/InviteCard";
 import { Cover } from "@/components/Cover";
@@ -17,6 +19,7 @@ import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
+import type { Entry } from "@/lib/data";
 import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, updateMyProfile } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
@@ -47,7 +50,10 @@ function You() {
   const year = new Date().getFullYear();
   const thisYear = readInYear(ranked, year).length;
   const goal = profile?.yearly_goal ?? null;
-  const { streak } = useStreak(entries);
+  const { streak, reloadCheckins } = useStreak(entries);
+  const reading = useMemo(() => (entries || []).filter((e) => e.status === "reading"), [entries]);
+  const [checking, setChecking] = useState<Entry | null>(null);
+  const [actions, setActions] = useState<Entry | null>(null);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
   const [stamp, setStamp] = useState<string | null>(null);
@@ -56,15 +62,20 @@ function You() {
   const pendingGenres = lookingUp ? ranked.filter((e) => !e.book.enriched).length : 0;
   // Anything still without a genre once lookups finish can be sorted by hand.
   const noGenre = ranked.filter((e) => !e.book.genres?.length && (e.book.enriched || !lookingUp));
+  const sortedByMe = ranked.filter((e) => e.book.genre_set_by && e.book.genre_set_by === profile?.id && e.book.genres?.length);
+  // The list stays put while the sheet is open, even as picks move books out of "no genre".
+  const [sortList, setSortList] = useState<typeof ranked>([]);
+  function openSorting() {
+    setSortList([...noGenre, ...sortedByMe]);
+    setSorting(true);
+  }
   const [sorting, setSorting] = useState(false);
   const [picked, setPicked] = useState<Record<string, string>>({});
   async function pickGenre(bookId: string, genre: string) {
+    const before = picked[bookId];
     setPicked((p) => ({ ...p, [bookId]: genre }));
-    try {
-      await setBookGenre(bookId, genre);
-    } catch {
-      setPicked((p) => { const n = { ...p }; delete n[bookId]; return n; });
-    }
+    const ok = await setBookGenre(bookId, genre).catch(() => false);
+    if (!ok) setPicked((p) => { const n = { ...p }; if (before) n[bookId] = before; else delete n[bookId]; return n; });
   }
   const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
@@ -119,6 +130,30 @@ function You() {
           <button className="status-line status-line--empty" onClick={() => setEditing(true)}>
             + Add a status — what are you into right now?
           </button>
+        )}
+
+        {reading.length > 0 && (
+          <section aria-label="Reading now">
+            <h2 className="h2" style={{ marginTop: 20 }}>Reading now</h2>
+            <div className="reading-strip">
+              {reading.map((e) => (
+                <div key={e.id} className="reading-card">
+                  <button onClick={() => setActions(e)} style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }} aria-label={`${e.book.title} options`}>
+                    <Cover book={e.book} width={64} />
+                  </button>
+                  <div className="reading-card__title">{e.book.title}</div>
+                  {e.progress_pct != null && (
+                    <div style={{ width: "100%" }} aria-label={`${e.progress_pct}% read`}>
+                      <div className="reading-card__bar"><span style={{ width: `${e.progress_pct}%` }} /></div>
+                      <div className="m muted" style={{ fontSize: 11, marginTop: 4 }}>{e.progress_pct}%</div>
+                    </div>
+                  )}
+                  <button className="small-btn" onClick={() => setChecking(e)}>Check in</button>
+                  <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)" }}>Finished? Rank it</Link>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 20 }}>
@@ -182,11 +217,15 @@ function You() {
           {pendingGenres > 0 && (
             <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Looking up genres for {pendingGenres} book{pendingGenres === 1 ? "" : "s"}… stamps fill in as you browse.</p>
           )}
-          {noGenre.length > 0 && (
-            <button className="link-btn" style={{ marginTop: 10, fontSize: 13 }} onClick={() => setSorting(true)}>
+          {noGenre.length > 0 ? (
+            <button className="link-btn" style={{ marginTop: 10, fontSize: 13, display: "block" }} onClick={openSorting}>
               {noGenre.length} book{noGenre.length === 1 ? "" : "s"} without a genre — sort {noGenre.length === 1 ? "it" : "them"}
             </button>
-          )}
+          ) : sortedByMe.length > 0 ? (
+            <button className="link-btn" style={{ marginTop: 10, fontSize: 13, display: "block" }} onClick={openSorting}>
+              Change genres you picked
+            </button>
+          ) : null}
         </section>
 
         <BadgeCase statuses={badges} />
@@ -278,9 +317,9 @@ function You() {
           <div className="sheet" role="dialog" aria-modal="true" aria-label="Pick genres" onClick={(e) => e.stopPropagation()}>
             <div className="sheet__grab" />
             <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Pick a genre</h2>
-            <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>We couldn&rsquo;t find these in the catalogue. Your pick counts toward your passport.</p>
+            <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>We couldn&rsquo;t find these in the catalogue. Your pick counts toward your passport, and you can change it anytime.</p>
             <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, maxHeight: "60vh", overflowY: "auto" }}>
-              {noGenre.map((e) => (
+              {sortList.map((e) => (
                 <li key={e.id} className="book-row" style={{ gap: 12 }}>
                   <Cover book={e.book} width={36} />
                   <span className="book-row__body">
@@ -289,7 +328,7 @@ function You() {
                   </span>
                   <label className="sort-select">
                     <span className="visually-hidden">Genre for {e.book.title}</span>
-                    <select value={picked[e.book_id] ?? ""} disabled={Boolean(picked[e.book_id])} onChange={(ev) => pickGenre(e.book_id, ev.target.value)}>
+                    <select value={picked[e.book_id] ?? e.book.genres?.[0] ?? ""} onChange={(ev) => pickGenre(e.book_id, ev.target.value)}>
                       <option value="" disabled>Genre</option>
                       {GENRES.map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}
                     </select>
@@ -298,6 +337,32 @@ function You() {
               ))}
             </ul>
             <button className="btn btn--block" style={{ marginTop: 16 }} onClick={() => { setSorting(false); if (Object.keys(picked).length) reload(); }}>Done</button>
+          </div>
+        </div>
+      )}
+
+      {checking && (
+        <CheckInSheet
+          entry={checking}
+          onClose={() => setChecking(null)}
+          onDone={async () => { await Promise.all([reload(), reloadCheckins()]); setChecking(null); }}
+        />
+      )}
+
+      {actions && (
+        <div className="sheet-backdrop" onClick={() => setActions(null)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label={actions.book.title} onClick={(ev) => ev.stopPropagation()}>
+            <div className="sheet__grab" />
+            <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
+              <Cover book={actions.book} width={72} />
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{actions.book.title}</h2>
+                <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{actions.book.author}</p>
+              </div>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <BookActions bookId={actions.book_id} entry={actions} onChange={async () => { await reload(); setActions(null); }} />
+            </div>
           </div>
         </div>
       )}

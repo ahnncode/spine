@@ -16,6 +16,8 @@ export interface Book extends BookInput {
   dedupe_key: string;
   genres: string[];
   enriched: boolean;
+  /** Who picked this genre by hand, if anyone (they can change it). */
+  genre_set_by?: string | null;
 }
 
 /** Drop a trailing series marker like "(The Expanse, #1)". */
