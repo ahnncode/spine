@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar } from "@/components/Avatar";
 import { EarlyPill, Name } from "@/components/Badge";
+import { AvatarPicker } from "@/components/AvatarPicker";
 import { BadgeCase } from "@/components/BadgeCase";
 import { InviteCard } from "@/components/InviteCard";
 import { Cover } from "@/components/Cover";
@@ -36,6 +37,7 @@ function You() {
   const { active: lookingUp } = useEnrichment(entries, reload);
   const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
   const [editing, setEditing] = useState(false);
+  const [picking, setPicking] = useState(false);
 
   useEffect(() => {
     if (profile) followCounts(profile.id).then(setCounts).catch(() => {});
@@ -89,7 +91,10 @@ function You() {
     <div className="app">
       <main className="screen">
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Avatar profile={profile} size={60} />
+          <button className="avatar-edit" onClick={() => setPicking(true)} aria-label="Change profile picture">
+            <Avatar profile={profile} size={60} />
+            <span className="avatar-edit__dot" aria-hidden="true">+</span>
+          </button>
           <div style={{ minWidth: 0, flex: 1 }}>
             <h1 className="h1" style={{ fontSize: 28, letterSpacing: "-0.04em", display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ minWidth: 0 }}><Name profile={profile} markSize={20} /></span>
@@ -295,6 +300,15 @@ function You() {
             <button className="btn btn--block" style={{ marginTop: 16 }} onClick={() => { setSorting(false); if (Object.keys(picked).length) reload(); }}>Done</button>
           </div>
         </div>
+      )}
+
+      {picking && profile && (
+        <AvatarPicker
+          profile={profile}
+          earned={new Set((badges ?? []).filter((b) => b.earned).map((b) => b.key))}
+          onClose={() => setPicking(false)}
+          onSaved={async () => { await reloadProfile(); setPicking(false); }}
+        />
       )}
 
       {editing && profile && (

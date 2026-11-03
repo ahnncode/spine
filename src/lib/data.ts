@@ -51,6 +51,9 @@ export interface Profile {
   created_at?: string | null;
   /** A short status line anyone can see. */
   bio?: string | null;
+  /** Chosen profile picture: an icon on a color (both null = initials). */
+  avatar_icon?: string | null;
+  avatar_color?: string | null;
 }
 
 const ENTRY_SELECT =
@@ -389,7 +392,7 @@ export async function importGoodreads(
 
 /* ------------------------------ Profiles & follows ----------------------- */
 
-const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at, bio";
+const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at, bio, avatar_icon, avatar_color";
 
 export async function fetchMyProfile(): Promise<Profile | null> {
   const uid = await myId();
@@ -407,6 +410,7 @@ export async function updateMyProfile(fields: Partial<Omit<Profile, "id">>): Pro
     .select("id");
   if (error) {
     if (error.code === "23505") throw new Error("That username is taken");
+    if (error.code === "42501" && /unlocks/.test(error.message)) throw new Error(error.message);
     if (error.code === "23514") throw new Error("Usernames are 3–20 lowercase letters, numbers or underscores");
     throw new Error(error.message);
   }
@@ -918,10 +922,11 @@ export async function claimPendingReferral(): Promise<void> {
 }
 
 /** Public: the name to show on an invite page. */
-export async function inviteInfo(username: string): Promise<{ display_name: string | null; username: string } | null> {
+type Inviter = { display_name: string | null; username: string; avatar_icon?: string | null; avatar_color?: string | null };
+export async function inviteInfo(username: string): Promise<Inviter | null> {
   const { data, error } = await supabase().rpc("invite_info", { p_username: username });
   if (error) throw error;
-  return ((data as { display_name: string | null; username: string }[]) || [])[0] ?? null;
+  return ((data as Inviter[]) || [])[0] ?? null;
 }
 
 export function inviteUrl(username: string): string {

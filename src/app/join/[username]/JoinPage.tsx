@@ -13,7 +13,7 @@ import { inviteInfo, rememberReferrer } from "@/lib/data";
 export function JoinPage() {
   const { username } = useParams<{ username: string }>();
   const { session, loading } = useAuth();
-  const [inviter, setInviter] = useState<{ display_name: string | null; username: string } | null | undefined>(undefined);
+  const [inviter, setInviter] = useState<Awaited<ReturnType<typeof inviteInfo>> | undefined>(undefined);
 
   useEffect(() => {
     inviteInfo(username)
@@ -40,7 +40,7 @@ export function JoinPage() {
         ) : (
           <>
             <div style={{ marginTop: 44 }}>
-              {inviter && <Avatar profile={{ id: inviter.username, username: inviter.username, display_name: inviter.display_name, is_private: false, yearly_goal: null }} size={72} />}
+              {inviter && <Avatar profile={{ id: inviter.username, username: inviter.username, display_name: inviter.display_name, avatar_icon: inviter.avatar_icon, avatar_color: inviter.avatar_color }} size={72} />}
             </div>
             <h1 className="h1" style={{ fontSize: 46, lineHeight: 0.95, marginTop: 18 }}>
               {first ? <>{first} wants to compare shelves.</> : <>Rank books, not stars.</>}

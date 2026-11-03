@@ -531,3 +531,25 @@ button.stamp { font: inherit; border: 0; cursor: pointer; transition: transform 
 button.stamp:active { transform: scale(0.95); }
 button.stamp--locked { border: 1.5px dashed #bdbcb6; }
 .dots span[data-joined="true"] { background: transparent; box-shadow: inset 0 0 0 2px var(--ink); }
+.avatar--art { overflow: hidden; }
+.swatch-grid { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 6px; }
+.swatch { aspect-ratio: 1; border-radius: 50%; border: 0; cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(17,17,17,0.08); }
+.swatch[aria-checked="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.pic-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 12px 6px; }
+.pic {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 3px 0;
+  background: none; border: 0; cursor: pointer; font: inherit; color: inherit; border-radius: 14px;
+}
+.pic > :first-child { border-radius: 50%; }
+.pic[aria-checked="true"] > :first-child { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+.pic__lock {
+  position: absolute; top: 36px; left: calc(50% + 12px); width: 20px; height: 20px; border-radius: 10px;
+  background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center;
+}
+.pic__label { font-size: 10.5px; font-weight: 600; line-height: 1.15; text-align: center; color: var(--muted); max-width: 64px; }
+.pic:not([data-locked="true"]) .pic__label { color: var(--ink); }
+.avatar-edit { position: relative; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; }
+.avatar-edit__dot {
+  position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: 11px; background: var(--ink); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; box-shadow: 0 0 0 2px var(--ground);
+}
