@@ -596,9 +596,10 @@ export function feedUser(item: FeedItem): string {
   return item.kind === "checkin" ? item.checkin.user_id : item.entry.user_id;
 }
 
-export async function fetchFeed(friendIds: string[]): Promise<FeedItem[]> {
+export async function fetchFeed(friendIds: string[], opts: { days?: number; limit?: number } = {}): Promise<FeedItem[]> {
   if (!friendIds.length) return [];
-  const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * 60).toISOString();
+  const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * (opts.days ?? 60)).toISOString();
+  const limit = opts.limit ?? 60;
   const [ranked, reading, checkins] = await Promise.all([
     supabase()
       .from("ranked_entries")
@@ -607,7 +608,7 @@ export async function fetchFeed(friendIds: string[]): Promise<FeedItem[]> {
       .not("ranked_at", "is", null)
       .gte("ranked_at", since)
       .order("ranked_at", { ascending: false })
-      .limit(60),
+      .limit(limit),
     supabase()
       .from("shelf_entries")
       .select(ENTRY_SELECT)
@@ -621,7 +622,7 @@ export async function fetchFeed(friendIds: string[]): Promise<FeedItem[]> {
       .in("user_id", friendIds)
       .gte("created_at", since)
       .order("created_at", { ascending: false })
-      .limit(60),
+      .limit(limit),
   ]);
   if (ranked.error) throw ranked.error;
   if (reading.error) throw reading.error;

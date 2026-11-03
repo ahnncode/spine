@@ -56,11 +56,21 @@ function Feed() {
   const [error, setError] = useState<string | null>(null);
   const [thread, setThread] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
+  // "Following" is friends' activity; "You" is everything you've posted.
+  const [scope, setScope] = useState<"following" | "you">("following");
+  const [cache, setCache] = useState<Partial<Record<"following" | "you", Loaded>>>({});
 
   useEffect(() => {
+    if (cache[scope] || (scope === "you" && !profile)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setData(cache[scope] ?? null);
+      return;
+    }
+    setData(null);
+    setError(null);
     (async () => {
-      const ids = await fetchFollowing();
-      const items = await fetchFeed(ids);
+      const ids = scope === "you" ? [profile!.id] : await fetchFollowing();
+      const items = await fetchFeed(ids, scope === "you" ? { days: 3650, limit: 150 } : {});
       const people = [...new Set(items.map(feedUser))];
       const targets: Array<{ type: TargetType; id: string }> = [];
       for (const i of items) {
@@ -73,8 +83,13 @@ function Feed() {
         fetchHearts(targets),
         commentCounts(items.filter((i) => i.kind === "ranked").map((i) => (i.kind === "ranked" ? i.entry.id : ""))),
       ]);
-      setData({ items, profiles, matches, hearts, comments, following: ids.length });
+      const loaded = { items, profiles, matches, hearts, comments, following: ids.length };
+      setCache((c) => ({ ...c, [scope]: loaded }));
+      setData(loaded);
     })().catch((e) => setError(e instanceof Error ? e.message : "Couldn’t load your feed"));
+  }, [scope, profile, cache]);
+
+  useEffect(() => {
     unreadCount().then(setUnread).catch(() => {});
   }, []);
 
@@ -132,10 +147,23 @@ function Feed() {
           </section>
         )}
 
+        <div className="segmented" role="tablist" aria-label="Feed" style={{ marginTop: 16 }}>
+          <button role="tab" aria-selected={scope === "following"} onClick={() => setScope("following")}>Following</button>
+          <button role="tab" aria-selected={scope === "you"} onClick={() => setScope("you")}>You</button>
+        </div>
+
         {error && <p className="error" role="alert">{error}</p>}
         {!data && !error && <div aria-busy="true" style={{ minHeight: 240 }} />}
 
-        {data && data.items.length === 0 && (
+        {data && data.items.length === 0 && scope === "you" && (
+          <div className="empty">
+            <p className="h2">Nothing posted yet</p>
+            <p style={{ margin: "0 0 16px", fontSize: 14 }}>Rank a book or check in on what you&rsquo;re reading, and it shows up here with any hearts and comments.</p>
+            <Link href="/add" className="btn">Rank a book</Link>
+          </div>
+        )}
+
+        {data && data.items.length === 0 && scope === "following" && (
           <div className="card card--ink" style={{ marginTop: 16 }}>
             <p className="d" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05, margin: 0 }}>
               {data.following ? "Quiet in here." : "Reading’s better with friends."}
@@ -162,6 +190,7 @@ function Feed() {
               const myEntry = mine.get(bookId);
               const status = myStatus.get(bookId);
               const key = item.kind === "checkin" ? `c-${item.checkin.id}` : `${item.kind}-${item.entry.id}`;
+              const isMe = uid === profile?.id;
               const verb =
                 item.kind === "ranked"
                   ? "ranked a book"
@@ -179,7 +208,7 @@ function Feed() {
                       {verb}
                       <div className="when">{ago(item.at)}</div>
                     </div>
-                    {m?.match != null && <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>{m.match}% match</span>}
+                    {!isMe && m?.match != null && <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>{m.match}% match</span>}
                   </div>
                   <Link href={`/book/${bookId}`} className="feed-card__book">
                     <Cover book={book} width={item.kind === "ranked" ? 76 : 56} />
@@ -190,8 +219,8 @@ function Feed() {
                         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
                           <ScoreChip score={item.entry.score} bucket={item.entry.bucket} size={40} />
                           <span style={{ fontSize: 13, lineHeight: 1.3 }}>
-                            #{item.entry.overall_rank} on their shelf
-                            {myEntry && (
+                            #{item.entry.overall_rank} on {isMe ? "your" : "their"} shelf
+                            {!isMe && myEntry && (
                               <>
                                 <br />
                                 <span className="muted">
@@ -246,10 +275,12 @@ function Feed() {
                 </article>
               );
             })}
-            <Link href="/people" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
-              <span style={{ fontWeight: 600 }}>Find more people</span>
-              <ArrowIcon size={18} />
-            </Link>
+            {scope === "following" && (
+              <Link href="/people" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
+                <span style={{ fontWeight: 600 }}>Find more people</span>
+                <ArrowIcon size={18} />
+              </Link>
+            )}
           </div>
         )}
       </main>
