@@ -10,7 +10,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { isImported } from "@/lib/goodreads";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import type { Book } from "@/lib/books";
-import { bucketList, countHeadToHeads, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, type Entry, type RankedEntry } from "@/lib/data";
+import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, type Entry, type RankedEntry } from "@/lib/data";
 import { BADGE } from "@/lib/badges";
 import { Medallion } from "@/components/Badge";
 import {
@@ -210,10 +210,16 @@ function Flow() {
   }
 
   function pick(newIsBetter: boolean) {
-    if (placement && bucket) step(answerPlacement(placement, candidates, newIsBetter, genres), bucket, list);
+    if (!placement || !bucket) return;
+    const other = placement.pivot != null ? list[placement.pivot] : null;
+    if (other) logMatchup(newIsBetter ? id : other.book_id, newIsBetter ? other.book_id : id);
+    step(answerPlacement(placement, candidates, newIsBetter, genres), bucket, list);
   }
   function tie() {
-    if (placement && bucket) step(tiePlacement(placement), bucket, list);
+    if (!placement || !bucket) return;
+    const other = placement.pivot != null ? list[placement.pivot] : null;
+    if (other) logMatchup(id, other.book_id, { tie: true });
+    step(tiePlacement(placement), bucket, list);
   }
   function skip() {
     if (placement && bucket) step(skipPlacement(placement, candidates, genres), bucket, list);

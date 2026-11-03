@@ -7,7 +7,7 @@ import { Cover } from "@/components/Cover";
 import { CloseIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { useShelf } from "@/components/useShelf";
-import { countHeadToHeads, rankEntries, recordMatchup, type Entry, type RankedEntry } from "@/lib/data";
+import { countHeadToHeads, logMatchup, rankEntries, recordMatchup, type Entry, type RankedEntry } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
 
 const ROUNDS = 10;
@@ -60,6 +60,7 @@ function Sharpen() {
     try {
       await recordMatchup(winner, loser);
       countHeadToHeads(1);
+      logMatchup(winner.book_id, loser.book_id, { context: "sharpen" });
       const swap = winner.sort_key < loser.sort_key;
       const next: Entry[] = entries.map((e) => {
         if (e.id === winner.id)

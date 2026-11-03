@@ -924,6 +924,15 @@ export async function fetchBadges(userId: string): Promise<{ key: string; earned
   return ((data as { badge: string; earned_at: string }[]) || []).map((r) => ({ key: r.badge, earned_at: r.earned_at }));
 }
 
+/** Remember a head-to-head answer for the year-end Wrap. Fire and forget. */
+export function logMatchup(winnerBook: string, loserBook: string, opts: { tie?: boolean; context?: "placement" | "sharpen" } = {}): void {
+  if (winnerBook === loserBook) return;
+  void supabase()
+    .from("matchups")
+    .insert({ winner_book: winnerBook, loser_book: loserBook, tie: opts.tie ?? false, context: opts.context ?? "placement" })
+    .then(() => {}, () => {});
+}
+
 /** Count head-to-heads you answered (for the Decisive badge). Fire and forget. */
 export function countHeadToHeads(n: number): void {
   if (n <= 0) return;
