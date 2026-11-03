@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar } from "@/components/Avatar";
+import { Avatar, displayName } from "@/components/Avatar";
 import { EarlyPill, Name } from "@/components/Badge";
+import { Blurb } from "@/components/Blurb";
 import { BadgeStrip } from "@/components/BadgeCase";
 import { isEarlyAdopter } from "@/lib/badges";
 import { Cover } from "@/components/Cover";
@@ -153,7 +154,7 @@ function Inner() {
                 )}
               </div>
             </div>
-            {!data.blocked && data.profile.bio && <p className="blurb">{data.profile.bio}</p>}
+            {!data.blocked && data.profile.bio && <Blurb text={data.profile.bio} name={displayName(data.profile)} />}
             {notice && <p className="notice" role="status" style={{ marginTop: 12 }}>{notice}</p>}
 
             {data.blocked ? (

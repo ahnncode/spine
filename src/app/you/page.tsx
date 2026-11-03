@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar } from "@/components/Avatar";
+import { Avatar, displayName } from "@/components/Avatar";
+import { Blurb } from "@/components/Blurb";
 import { EarlyPill, Name } from "@/components/Badge";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { BookActions } from "@/components/BookActions";
@@ -138,9 +139,7 @@ function You() {
         </div>
 
         {profile?.bio ? (
-          <button className="blurb blurb--editable" onClick={() => setEditing(true)} aria-label={`Your blurb: ${profile.bio}. Edit`}>
-            {profile.bio}
-          </button>
+          <Blurb text={profile.bio} name={displayName(profile)} onEdit={() => setEditing(true)} />
         ) : (
           <button className="blurb blurb--empty" onClick={() => setEditing(true)}>
             + Add a blurb — a line or two about you as a reader
