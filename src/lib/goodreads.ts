@@ -3,11 +3,19 @@ import type { Bucket } from "./ranking";
 
 export type ImportStatus = "ranked" | "want" | "unsorted" | "reading";
 
+export type ImportSource = "goodreads" | "storygraph";
+
+/** Shelf entries that came from another app (their history, not in-app activity). */
+export const IMPORT_SOURCES: readonly string[] = ["goodreads", "storygraph"];
+export const isImported = (source: string | null | undefined) => IMPORT_SOURCES.includes(source ?? "");
+
 export interface ImportedBook {
+  source: ImportSource;
   book: BookInput;
   key: string;
   status: ImportStatus;
   bucket: Bucket | null;
+  /** Your rating, 1–5 (StoryGraph allows quarter stars). */
   stars: number | null;
   /** Goodreads community average, used to break ties between equal stars. */
   avgRating: number;
@@ -36,29 +44,29 @@ export function looksLikeGoodreads(fields: string[]): boolean {
 }
 
 /** Goodreads wraps ISBNs as ="9780...". */
-function cleanIsbn(raw: string | undefined): string | null {
+export function cleanIsbn(raw: string | undefined): string | null {
   const digits = (raw || "").replace(/[^0-9X]/gi, "");
   return digits.length === 13 ? digits : null;
 }
 
-function toInt(raw: string | undefined): number | null {
+export function toInt(raw: string | undefined): number | null {
   const n = parseInt((raw || "").trim(), 10);
   return Number.isFinite(n) ? n : null;
 }
 
 /** "2023/10/28" → "2023-10-28". */
-function toDate(raw: string | undefined): string | null {
+export function toDate(raw: string | undefined): string | null {
   const m = (raw || "").trim().match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
   if (!m) return null;
   return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
 }
 
 /** Goodreads reviews come with <br/> and a little HTML; keep the words. */
-function cleanReview(raw: string | undefined): string | null {
+export function cleanReview(raw: string | undefined): string | null {
   const text = (raw || "")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&nbsp;/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
   return text ? text.slice(0, 2000) : null;
@@ -91,6 +99,7 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
     else status = "want"; // to-read and custom exclusive shelves
 
     books.push({
+      source: "goodreads",
       key,
       book: {
         title,
@@ -108,6 +117,10 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
     });
   }
 
+  return summarize(books);
+}
+
+export function summarize(books: ImportedBook[]): ImportSummary {
   return {
     books,
     total: books.length,
@@ -116,7 +129,7 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
     want: books.filter((b) => b.status === "want").length,
     reading: books.filter((b) => b.status === "reading").length,
     loved: books.filter((b) => b.bucket === "loved").length,
-    fiveStars: books.filter((b) => b.stars === 5).length,
+    fiveStars: books.filter((b) => (b.stars ?? 0) >= 5).length,
   };
 }
 

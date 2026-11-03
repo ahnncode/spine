@@ -146,7 +146,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                 <p className="h2">Rank a book in a few taps</p>
                 <p style={{ margin: 0, fontSize: 14 }}>
                   Search above, <Link href="/scan" style={{ fontWeight: 600 }}>scan a barcode</Link>, or{" "}
-                  <Link href="/import" style={{ fontWeight: 600 }}>bring in your Goodreads shelf</Link>.
+                  <Link href="/import" style={{ fontWeight: 600 }}>bring in your Goodreads or StoryGraph shelf</Link>.
                 </p>
               </div>
             </>

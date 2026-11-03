@@ -148,7 +148,7 @@ function Start() {
         <Link href="/import" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 22, textDecoration: "none" }}>
           <span className="icon-btn" style={{ background: "#2a2a2a", color: "#fff", borderRadius: 12 }}><FileIcon /></span>
           <span style={{ flex: 1 }}>
-            <span style={{ display: "block", fontWeight: 600 }}>Coming from Goodreads?</span>
+            <span style={{ display: "block", fontWeight: 600 }}>Coming from Goodreads or StoryGraph?</span>
             <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>Bring your whole library in one upload</span>
           </span>
           <ArrowIcon size={18} />

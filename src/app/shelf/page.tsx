@@ -125,9 +125,9 @@ function Shelf() {
         {entries && entries.length === 0 && (
           <div className="empty">
             <p className="h2">Your shelf is empty</p>
-            <p style={{ margin: "0 0 20px", fontSize: 14 }}>Bring your Goodreads history, or rank the last book you finished.</p>
+            <p style={{ margin: "0 0 20px", fontSize: 14 }}>Bring your Goodreads or StoryGraph history, or rank the last book you finished.</p>
             <div className="stack">
-              <Link href="/import" className="btn btn--block">Import from Goodreads</Link>
+              <Link href="/import" className="btn btn--block">Import your library</Link>
               <Link href="/start" className="btn btn--outline btn--block">Pick books you&rsquo;ve read</Link>
             </div>
           </div>

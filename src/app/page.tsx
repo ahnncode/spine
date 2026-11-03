@@ -86,7 +86,7 @@ export default function Landing() {
           Start your shelf
         </Link>
         <p className="muted" style={{ textAlign: "center", fontSize: 14, margin: "14px 0 0" }}>
-          Coming from Goodreads? Bring your whole library in one upload.
+          Coming from Goodreads or StoryGraph? Bring your whole library in one upload.
         </p>
         <p className="muted" style={{ textAlign: "center", fontSize: 13, margin: "20px 0 0" }}>
           <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>

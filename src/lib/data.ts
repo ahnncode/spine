@@ -383,13 +383,13 @@ export async function importGoodreads(
       bucket: b.bucket,
       sort_key: b.status === "ranked" ? keyFor.get(b.key) ?? 0 : null,
       needs_sort: b.status === "ranked",
-      stars: b.stars,
+      stars: b.stars ? Math.max(1, Math.min(5, Math.round(b.stars))) : null,
       finished_on: b.finishedOn,
       started_on: b.status === "reading" ? today() : null,
       // Date read stands in for when it was ranked, so imports don't flood friends' feeds.
       ranked_at: b.status === "ranked" ? (b.finishedOn ? `${b.finishedOn}T12:00:00Z` : "2000-01-01T00:00:00Z") : null,
       note: b.review,
-      source: "goodreads",
+      source: b.source,
     }));
 
   for (let i = 0; i < rows.length; i += 200) {

@@ -54,7 +54,7 @@ export function JoinPage() {
               {[
                 { badge: "first_chapter", text: "Rank your first book in about a minute" },
                 { badge: "reading_twin", text: "See your taste match with friends" },
-                { badge: "moving_in", text: "Coming from Goodreads? Bring your library" },
+                { badge: "moving_in", text: "Coming from Goodreads or StoryGraph? Bring your library" },
               ].map((r) => (
                 <li key={r.badge} style={{ display: "flex", alignItems: "center", gap: 14 }}>
                   <Medallion badge={r.badge} earned size={44} />

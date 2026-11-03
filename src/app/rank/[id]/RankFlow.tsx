@@ -7,6 +7,7 @@ import { RequireAuth } from "@/components/Auth";
 import { Cover } from "@/components/Cover";
 import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
+import { isImported } from "@/lib/goodreads";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import type { Book } from "@/lib/books";
 import { bucketList, countHeadToHeads, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, type Entry, type RankedEntry } from "@/lib/data";
@@ -142,8 +143,8 @@ function Flow() {
   // Your first few books get a score you set yourself, unless a big import
   // already gives head-to-heads plenty to work with.
   const others = entries.filter((e) => e.status === "ranked" && e.book_id !== id);
-  const importedRanked = others.filter((e) => e.source === "goodreads").length;
-  const placedByYou = others.filter((e) => e.source !== "goodreads").length;
+  const importedRanked = others.filter((e) => isImported(e.source)).length;
+  const placedByYou = others.filter((e) => !isImported(e.source)).length;
   const scoreByHand = importedRanked <= 3 && placedByYou < MANUAL_SCORE_BOOKS;
 
   async function finish(b: Bucket, index: number, sorted: RankedEntry[], manualScore: number | null = null) {

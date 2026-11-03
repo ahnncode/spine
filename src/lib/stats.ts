@@ -1,5 +1,6 @@
 import type { Entry, RankedEntry } from "./data";
 import { GENRES } from "./genres";
+import { isImported } from "./goodreads";
 
 /* ------------------------------ Weekly streak ---------------------------- */
 
@@ -25,7 +26,7 @@ function parseDay(iso: string): Date {
 export function activityDates(entries: Entry[], checkinDays: string[] = []): Date[] {
   const out: Date[] = checkinDays.map(parseDay);
   for (const e of entries) {
-    if (e.source === "goodreads" && e.status === "ranked") continue; // history, not activity
+    if (isImported(e.source) && e.status === "ranked") continue; // history, not activity
     if (e.ranked_at && e.status === "ranked") out.push(new Date(e.ranked_at));
     if (e.started_on) out.push(parseDay(e.started_on));
   }

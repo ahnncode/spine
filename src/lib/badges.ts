@@ -21,7 +21,7 @@ export interface BadgeDef {
 
 export const BADGES: BadgeDef[] = [
   { key: "first_chapter", name: "First Chapter", how: "Rank your first book", category: "start", rarity: "common", glyph: "book", unit: "book" },
-  { key: "moving_in", name: "Moving In", how: "Import your Goodreads library", category: "start", rarity: "common", glyph: "box" },
+  { key: "moving_in", name: "Moving In", how: "Import your Goodreads or StoryGraph library", category: "start", rarity: "common", glyph: "box" },
   { key: "wishlist", name: "Wishlist", how: "Save 5 books to want to read", category: "start", rarity: "common", glyph: "bookmark", unit: "book" },
   { key: "shelf_starter", name: "Shelf Starter", how: "Rank 10 books", category: "start", rarity: "common", glyph: "shelf", unit: "book" },
   { key: "early_adopter", name: "Early Adopter", how: "Joined Spine in its first year", category: "start", rarity: "legendary", glyph: "seal" },

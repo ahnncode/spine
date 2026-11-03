@@ -272,7 +272,7 @@ function You() {
             ...(profile?.username ? [{ href: `/u/${profile.username}/shelf`, label: "Your whole library" }] : []),
             { href: `/wrap/${year}`, label: `Your ${year} in books` },
             { href: "/people", label: "Find friends" },
-            { href: "/import", label: "Import from Goodreads" },
+            { href: "/import", label: "Import from Goodreads or StoryGraph" },
             { href: "/sharpen", label: "Sharpen your ranking" },
           ].map((l) => (
             <Link key={l.href} href={l.href} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>

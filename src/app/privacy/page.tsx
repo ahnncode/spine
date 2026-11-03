@@ -23,7 +23,7 @@ export default function Privacy() {
         <li><strong>Your email address</strong>, to sign you in. We never show it to other readers.</li>
         <li><strong>Your profile:</strong> username, display name, yearly reading goal, and whether your shelf is private.</li>
         <li><strong>Your shelf:</strong> the books you add, how you rank and score them, quick tags, notes and reviews (and whether they contain spoilers), the dates you started and finished, and reading check-ins with your progress, vibe and notes.</li>
-        <li><strong>What you import:</strong> if you upload a Goodreads export, we read it in your browser and save the books, star ratings, shelves, dates read and reviews from it. We don’t keep the file itself.</li>
+        <li><strong>What you import:</strong> if you upload a Goodreads or StoryGraph export, we read it in your browser and save the books, star ratings, shelves, dates read and reviews from it. We don’t keep the file itself.</li>
         <li><strong>Social activity:</strong> who you follow, hearts, comments, people you block, and reports you file.</li>
       </ul>
       <h3>Things we collect automatically</h3>

@@ -8,6 +8,7 @@ import { ArrowIcon, BackIcon, FileIcon } from "@/components/icons";
 import { useShelf } from "@/components/useShelf";
 import { importGoodreads } from "@/lib/data";
 import { looksLikeGoodreads, parseGoodreads, type ImportSummary } from "@/lib/goodreads";
+import { looksLikeStoryGraph, parseStoryGraph } from "@/lib/storygraph";
 
 export default function ImportPage() {
   return (
@@ -37,11 +38,16 @@ function Importer() {
       header: true,
       skipEmptyLines: true,
       complete: (res) => {
-        if (!looksLikeGoodreads(res.meta.fields || [])) {
-          setError("That doesn’t look like a Goodreads export. It should be the CSV from Goodreads’ Export Library.");
+        const fields = res.meta.fields || [];
+        const s = looksLikeGoodreads(fields)
+          ? parseGoodreads(res.data)
+          : looksLikeStoryGraph(fields)
+            ? parseStoryGraph(res.data)
+            : null;
+        if (!s) {
+          setError("That doesn’t look like a Goodreads or StoryGraph export. Use the CSV from Goodreads’ Export Library or StoryGraph’s Export StoryGraph Library.");
           return;
         }
-        const s = parseGoodreads(res.data);
         if (s.total === 0) {
           setError("We couldn’t find any books in that file.");
           return;
@@ -127,7 +133,7 @@ function Importer() {
           <>
             <h1 className="h1 h1--xl" style={{ marginTop: 30 }}>Bring your whole shelf.</h1>
             <p className="lede">
-              We&rsquo;ll turn your Goodreads stars into a starting ranking, then sharpen it with quick head-to-heads.
+              We&rsquo;ll turn your Goodreads or StoryGraph stars into a starting ranking, then sharpen it with quick head-to-heads.
             </p>
 
             {phase === "pick" && (
@@ -147,14 +153,14 @@ function Importer() {
                   <span className="icon-btn" style={{ background: "var(--cobalt-soft)", color: "var(--cobalt-ink)", borderRadius: 12 }}>
                     <FileIcon />
                   </span>
-                  <strong style={{ fontSize: 15 }}>Upload your Goodreads export</strong>
+                  <strong style={{ fontSize: 15 }}>Upload your Goodreads or StoryGraph export</strong>
                   <span className="muted" style={{ fontSize: 13 }}>The .csv file · tap or drop it here</span>
                   <input
                     ref={inputRef}
                     type="file"
                     accept=".csv,text/csv"
                     className="visually-hidden"
-                    aria-label="Goodreads export file"
+                    aria-label="Goodreads or StoryGraph export file"
                     onChange={(e) => e.target.files?.[0] && readFile(e.target.files[0])}
                   />
                 </div>
@@ -165,6 +171,15 @@ function Importer() {
                   <p style={{ margin: 0, lineHeight: 1.45 }}>
                     On Goodreads, open My Books → Import and export → Export Library. It can take a few minutes to
                     generate; then download the file and upload it here.
+                  </p>
+                </details>
+                <details style={{ marginTop: 4, fontSize: 14, color: "var(--ink-2)" }}>
+                  <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--ink)", minHeight: 44, display: "flex", alignItems: "center" }}>
+                    Where&rsquo;s my StoryGraph export?
+                  </summary>
+                  <p style={{ margin: 0, lineHeight: 1.45 }}>
+                    On StoryGraph, open your profile menu → Manage Account → Export StoryGraph Library. Download the
+                    .csv file and upload it here. Quarter stars carry over, so your starting ranking is extra precise.
                   </p>
                 </details>
               </>
