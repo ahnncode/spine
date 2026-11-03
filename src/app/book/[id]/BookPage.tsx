@@ -16,6 +16,7 @@ import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
 import type { Book } from "@/lib/books";
 import {
+  fixBookDetails,
   fetchCheckins, type Checkin,
   bookStats, fetchBook, fetchFollowing, fetchProfiles, fetchShelf, friendsOnBook, predictedScore,
   rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry,
@@ -48,6 +49,7 @@ function Inner() {
   const [thread, setThread] = useState<string | null>(null);
   const [diary, setDiary] = useState<Checkin[]>([]);
   const [editing, setEditing] = useState(false);
+  const [fixing, setFixing] = useState(false);
 
   const loadShelf = useCallback(async () => setEntries(await fetchShelf()), []);
 
@@ -109,6 +111,11 @@ function Inner() {
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
               {[book.author, book.year, book.pages ? `${book.pages} pages` : null].filter(Boolean).join(" · ")}
             </p>
+            {mine && (
+              <button className="link-btn" style={{ fontSize: 12, marginTop: 6, color: "var(--muted)", fontWeight: 500 }} onClick={() => setFixing(true)}>
+                Title or author wrong? Fix it
+              </button>
+            )}
             {book.genres?.length > 0 && (
               <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
                 {book.genres.map((g) => GENRE_BY_KEY[g] && (
@@ -251,7 +258,54 @@ function Inner() {
         )}
       </main>
       {thread && <EntryThread entryId={thread} onClose={() => setThread(null)} />}
+      {fixing && book && (
+        <FixDetails book={book} onClose={() => setFixing(false)} onSaved={(title, author) => { setBook({ ...book, title, author }); setFixing(false); }} />
+      )}
       <TabBar />
+    </div>
+  );
+}
+
+function FixDetails({ book, onClose, onSaved }: { book: Book; onClose: () => void; onSaved: (title: string, author: string | null) => void }) {
+  const [title, setTitle] = useState(book.title);
+  const [author, setAuthor] = useState(book.author ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    setBusy(true);
+    setError(null);
+    try {
+      const ok = await fixBookDetails(book.id, title, author);
+      if (!ok) {
+        setError("Other readers have this book too, so its details can’t be changed here.");
+        setBusy(false);
+        return;
+      }
+      onSaved(title.trim(), author.trim() || null);
+    } catch {
+      setError("Couldn’t save that. Try again.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
+      <div className="sheet" role="dialog" aria-modal="true" aria-label="Fix book details" onClick={(e) => e.stopPropagation()}>
+        <div className="sheet__grab" />
+        <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Fix book details</h2>
+        <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>Book info comes from Open Library, which sometimes has typos.</p>
+        <div className="field" style={{ marginTop: 16 }}>
+          <label htmlFor="fix-title">Title</label>
+          <input id="fix-title" className="input" value={title} maxLength={500} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div className="field" style={{ marginTop: 14 }}>
+          <label htmlFor="fix-author">Author</label>
+          <input id="fix-author" className="input" value={author} maxLength={300} onChange={(e) => setAuthor(e.target.value)} />
+        </div>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn btn--block" style={{ marginTop: 18 }} disabled={busy || !title.trim()} onClick={save}>{busy ? "Saving…" : "Save"}</button>
+      </div>
     </div>
   );
 }

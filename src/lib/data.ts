@@ -184,6 +184,13 @@ export async function setBookGenre(bookId: string, genre: string): Promise<boole
   return Boolean(data);
 }
 
+/** Correct a book's title/author (only if nobody else has it, or you fixed it before). */
+export async function fixBookDetails(bookId: string, title: string, author: string): Promise<boolean> {
+  const { data, error } = await supabase().rpc("fix_book_details", { p_book: bookId, p_title: title, p_author: author });
+  if (error) throw error;
+  return Boolean(data);
+}
+
 /* ------------------------------ Shelf writes ----------------------------- */
 
 export async function addToWant(bookId: string): Promise<void> {
