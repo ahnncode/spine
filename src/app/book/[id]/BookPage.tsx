@@ -4,8 +4,10 @@ import { MentionText } from "@/components/Mentions";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { RequireAuth } from "@/components/Auth";
-import { Avatar } from "@/components/Avatar";
+import { RequireAuth, useProfile } from "@/components/Auth";
+import { ReadAlongStart } from "@/components/ReadAlongStart";
+import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
+import { Avatar, displayName } from "@/components/Avatar";
 import { Name } from "@/components/Badge";
 import { BookActions } from "@/components/BookActions";
 import { Cover } from "@/components/Cover";
@@ -53,6 +55,10 @@ function Inner() {
   const [diary, setDiary] = useState<Checkin[]>([]);
   const [editing, setEditing] = useState(false);
   const [fixing, setFixing] = useState(false);
+  const [starting, setStarting] = useState(false);
+  const { profile: me } = useProfile();
+  const { list: readAlongs, people: raPeople } = useReadAlongs();
+  const readAlong = book ? activeFor(readAlongs, book.id, me?.id) : undefined;
 
   const loadShelf = useCallback(async () => setEntries(await fetchShelf()), []);
 
@@ -137,6 +143,26 @@ function Inner() {
                   </span>
                 ))}
               </div>
+            )}
+
+            {readAlong ? (
+              <Link href={`/together/${readAlong.id}`} className="card ra-banner">
+                <span className="avatar-stack">
+                  {readAlong.members.filter((m) => m.state === "joined" && m.user_id !== me?.id).slice(0, 3).map((m) => (
+                    <Avatar key={m.user_id} profile={raPeople.get(m.user_id)} size={30} />
+                  ))}
+                </span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: "block", fontWeight: 700, fontSize: 15 }}>
+                    Reading with {readAlong.members.filter((m) => m.state === "joined" && m.user_id !== me?.id).map((m) => displayName(raPeople.get(m.user_id)).split(" ")[0]).join(", ") || "friends"}
+                  </span>
+                  <span className="muted" style={{ fontSize: 13 }}>Progress, discussion and the verdict →</span>
+                </span>
+              </Link>
+            ) : (
+              <button className="btn btn--quiet btn--block" style={{ marginTop: 14 }} onClick={() => setStarting(true)}>
+                Read with friends
+              </button>
             )}
 
             {myRanked ? (
@@ -274,6 +300,7 @@ function Inner() {
       {fixing && book && (
         <FixDetails book={book} onClose={() => setFixing(false)} onSaved={(title, author) => { setBook({ ...book, title, author }); setFixing(false); }} />
       )}
+      {starting && book && <ReadAlongStart book={book} onClose={() => setStarting(false)} />}
       <TabBar />
     </div>
   );

@@ -5,7 +5,7 @@ export type Rarity = "common" | "uncommon" | "rare" | "legendary";
 export type Glyph =
   | "book" | "box" | "bookmark" | "shelf" | "seal" | "worm" | "hundred" | "card" | "brick" | "pages" | "mountain"
   | "flame" | "leaf" | "infinity" | "sun" | "target" | "calendar" | "compass" | "globe" | "hourglass" | "quill"
-  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link";
+  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club";
 
 export interface BadgeDef {
   key: string;
@@ -55,6 +55,7 @@ export const BADGES: BadgeDef[] = [
   { key: "good_company", name: "Good Company", how: "Follow 10 readers", category: "social", rarity: "common", glyph: "people", unit: "reader" },
   { key: "conversation_starter", name: "Conversation Starter", how: "Get 10 comments on your rankings", category: "social", rarity: "uncommon", glyph: "chat", unit: "comment" },
   { key: "connector", name: "Connector", how: "Invite 3 friends who each rank 3 books", category: "social", rarity: "rare", glyph: "link", unit: "friend" },
+  { key: "book_club", name: "Book Club", how: "Finish a read-along with friends", category: "social", rarity: "uncommon", glyph: "club" },
 ];
 
 export const BADGE: Record<string, BadgeDef> = Object.fromEntries(BADGES.map((b) => [b.key, b]));

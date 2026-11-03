@@ -690,7 +690,7 @@ export async function saveThoughts(
 
 /* ------------------------------ Hearts & comments ------------------------ */
 
-export type TargetType = "entry" | "checkin";
+export type TargetType = "entry" | "checkin" | "read_along";
 export interface HeartState {
   count: number;
   mine: boolean;
@@ -789,7 +789,9 @@ export async function fetchScoredEntry(id: string): Promise<ScoredEntry | null> 
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke";
+  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along";
+  /** For read-along notifications: invite, joined, message or verdict. */
+  detail?: string | null;
   /** For badge notifications: which badge. */
   badge?: string | null;
   target_type: TargetType | null;
@@ -802,7 +804,7 @@ export async function fetchNotifications(): Promise<Notification[]> {
   const uid = await myId();
   const { data, error } = await supabase()
     .from("notifications")
-    .select("id, actor_id, kind, badge, target_type, target_id, created_at, read_at")
+    .select("id, actor_id, kind, badge, detail, target_type, target_id, created_at, read_at")
     .eq("user_id", uid)
     .order("created_at", { ascending: false })
     .limit(100);
@@ -967,4 +969,136 @@ export async function inviteInfo(username: string): Promise<Inviter | null> {
 export function inviteUrl(username: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "https://readspine.app";
   return `${origin}/join/${username}`;
+}
+
+/* ------------------------------ Read-alongs ------------------------------ */
+
+export type MemberState = "invited" | "joined" | "declined" | "left";
+
+export interface ReadAlong {
+  id: string;
+  book_id: string;
+  created_by: string;
+  target_date: string | null;
+  previous_id: string | null;
+  revealed_at: string | null;
+  created_at: string;
+  book: Book;
+  members: { user_id: string; state: MemberState; joined_at: string | null }[];
+}
+
+export interface ReadAlongProgress {
+  user_id: string;
+  state: MemberState;
+  shelf_status: Entry["status"] | null;
+  progress_pct: number | null;
+  last_checkin_on: string | null;
+  /** Hidden (null) until everyone has ranked, except your own. */
+  score: number | null;
+  ranked: boolean;
+}
+
+export interface ReadAlongMessage {
+  id: string;
+  read_along_id: string;
+  user_id: string;
+  body: string;
+  progress_pct: number;
+  created_at: string;
+}
+
+const READ_ALONG_SELECT =
+  "id, book_id, created_by, target_date, previous_id, revealed_at, created_at, book:books(*), members:read_along_members(user_id, state, joined_at)";
+
+export async function createReadAlong(bookId: string, userIds: string[], target: string | null, previous: string | null): Promise<string> {
+  const { data, error } = await supabase().rpc("create_read_along", {
+    p_book: bookId, p_users: userIds, p_target: target, p_previous: previous,
+  });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+export async function fetchReadAlong(id: string): Promise<ReadAlong | null> {
+  const { data, error } = await supabase().from("read_alongs").select(READ_ALONG_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data as unknown as ReadAlong | null;
+}
+
+/** Read-alongs you're in or invited to, newest first. */
+export async function fetchMyReadAlongs(): Promise<ReadAlong[]> {
+  const uid = await myId();
+  const { data: mine, error: e1 } = await supabase()
+    .from("read_along_members")
+    .select("read_along_id")
+    .eq("user_id", uid)
+    .in("state", ["invited", "joined"]);
+  if (e1) throw e1;
+  const ids = (mine ?? []).map((m) => m.read_along_id as string);
+  if (!ids.length) return [];
+  const { data, error } = await supabase().from("read_alongs").select(READ_ALONG_SELECT).in("id", ids).order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data as unknown as ReadAlong[]) || [];
+}
+
+export async function readAlongProgress(id: string): Promise<ReadAlongProgress[]> {
+  const { data, error } = await supabase().rpc("read_along_progress", { p_id: id });
+  if (error) throw error;
+  return ((data as ReadAlongProgress[]) || []).map((r) => ({ ...r, score: r.score == null ? null : Number(r.score) }));
+}
+
+export async function fetchReadAlongMessages(id: string): Promise<ReadAlongMessage[]> {
+  const { data, error } = await supabase()
+    .from("read_along_messages")
+    .select("id, read_along_id, user_id, body, progress_pct, created_at")
+    .eq("read_along_id", id)
+    .order("created_at", { ascending: true })
+    .limit(500);
+  if (error) throw error;
+  return (data as ReadAlongMessage[]) || [];
+}
+
+export async function postReadAlongMessage(id: string, body: string): Promise<ReadAlongMessage> {
+  const { data, error } = await supabase()
+    .from("read_along_messages")
+    .insert({ read_along_id: id, body: body.trim() })
+    .select("id, read_along_id, user_id, body, progress_pct, created_at")
+    .single();
+  if (error) throw new Error(error.message);
+  return data as ReadAlongMessage;
+}
+
+export async function deleteReadAlongMessage(messageId: string): Promise<void> {
+  const { error } = await supabase().from("read_along_messages").delete().eq("id", messageId);
+  if (error) throw error;
+}
+
+export async function respondReadAlong(id: string, join: boolean): Promise<void> {
+  const { error } = await supabase().rpc("respond_read_along", { p_id: id, p_join: join });
+  if (error) throw error;
+}
+
+export async function leaveReadAlong(id: string): Promise<void> {
+  const { error } = await supabase().rpc("leave_read_along", { p_id: id });
+  if (error) throw error;
+}
+
+export async function inviteToReadAlong(id: string, userIds: string[]): Promise<number> {
+  const { data, error } = await supabase().rpc("invite_to_read_along", { p_id: id, p_users: userIds });
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
+
+export interface FeedReadAlong {
+  id: string;
+  book_id: string;
+  members: string[];
+  created_at: string;
+  revealed_at: string | null;
+}
+
+/** Read-alongs friends started or finished recently (for the feed). */
+export async function feedReadAlongs(): Promise<FeedReadAlong[]> {
+  const { data, error } = await supabase().rpc("feed_read_alongs", { p_days: 60 });
+  if (error) return [];
+  return (data as FeedReadAlong[]) || [];
 }

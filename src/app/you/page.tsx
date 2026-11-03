@@ -1,5 +1,7 @@
 "use client";
 
+import { ReadAlongStack } from "@/components/ReadAlongStack";
+import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -55,6 +57,7 @@ function You() {
   const goal = profile?.yearly_goal ?? null;
   const { streak, reloadCheckins } = useStreak(entries);
   const reading = useMemo(() => (entries || []).filter((e) => e.status === "reading"), [entries]);
+  const { list: readAlongs, people: raPeople } = useReadAlongs();
   const [checking, setChecking] = useState<Entry | null>(null);
   const [actions, setActions] = useState<Entry | null>(null);
   const stamps = useMemo(() => passport(ranked), [ranked]);
@@ -158,6 +161,10 @@ function You() {
                     <Cover book={e.book} width={64} />
                   </button>
                   <div className="reading-card__title">{e.book.title}</div>
+                  {(() => {
+                    const ra = activeFor(readAlongs, e.book_id, profile?.id);
+                    return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
+                  })()}
                   {e.progress_pct != null && (
                     <div style={{ width: "100%" }} aria-label={`${e.progress_pct}% read`}>
                       <div className="reading-card__bar"><span style={{ width: `${e.progress_pct}%` }} /></div>
@@ -246,6 +253,34 @@ function You() {
             <p className="muted" style={{ fontSize: 12, margin: "8px 0 0" }}>Wrong genre? Tap a stamp, then Fix genres.</p>
           )}
         </section>
+
+        {readAlongs.length > 0 && (
+          <section className="card" style={{ marginTop: 10 }}>
+            <h2 className="h2">Reading together</h2>
+            {readAlongs.slice(0, 6).map((ra) => {
+              const mineState = ra.members.find((m) => m.user_id === profile?.id)?.state;
+              const others = ra.members.filter((m) => m.state === "joined" && m.user_id !== profile?.id);
+              return (
+                <Link key={ra.id} href={`/together/${ra.id}`} className="book-row" style={{ borderBottom: 0 }}>
+                  <Cover book={ra.book} width={36} />
+                  <span className="book-row__body">
+                    <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{ra.book.title}</span>
+                    <span className="book-row__sub" style={{ display: "block" }}>
+                      {mineState === "invited"
+                        ? "You’re invited"
+                        : ra.revealed_at
+                          ? "Finished · see the verdict"
+                          : `With ${others.map((m) => displayName(raPeople.get(m.user_id)).split(" ")[0]).join(", ") || "friends"}`}
+                    </span>
+                  </span>
+                  <span className="avatar-stack">
+                    {others.slice(0, 3).map((m) => <Avatar key={m.user_id} profile={raPeople.get(m.user_id)} size={26} />)}
+                  </span>
+                </Link>
+              );
+            })}
+          </section>
+        )}
 
         <BadgeCase statuses={badges} />
 

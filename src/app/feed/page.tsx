@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
-import { Avatar } from "@/components/Avatar";
+import { Avatar, displayName } from "@/components/Avatar";
 import { Name } from "@/components/Badge";
 import { Cover } from "@/components/Cover";
 import { EntryThread } from "@/components/EntryThread";
@@ -19,9 +19,10 @@ import { InstallHint } from "@/components/InstallHint";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
-  commentCounts, feedUser, fetchFeed, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches, unreadCount,
+  commentCounts, feedReadAlongs, feedUser, fetchBooks, fetchFeed, type FeedReadAlong, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches, unreadCount,
   type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType,
 } from "@/lib/data";
+import type { Book } from "@/lib/books";
 import { formatScore } from "@/lib/ranking";
 
 export default function FeedPage() {
@@ -39,6 +40,8 @@ interface Loaded {
   hearts: Map<string, HeartState>;
   comments: Map<string, number>;
   following: number;
+  together: FeedReadAlong[];
+  books: Map<string, Book>;
 }
 
 function ago(iso: string): string {
@@ -71,8 +74,12 @@ function Feed() {
     setError(null);
     (async () => {
       const ids = scope === "you" ? [profile!.id] : await fetchFollowing();
-      const items = await fetchFeed(ids, scope === "you" ? { days: 3650, limit: 150 } : {});
-      const people = [...new Set(items.map(feedUser))];
+      const [items, togetherAll] = await Promise.all([
+        fetchFeed(ids, scope === "you" ? { days: 3650, limit: 150 } : {}),
+        feedReadAlongs(),
+      ]);
+      const together = scope === "you" ? togetherAll.filter((t) => t.members.includes(profile!.id)) : togetherAll;
+      const people = [...new Set([...items.map(feedUser), ...together.flatMap((t) => t.members)])];
       const targets: Array<{ type: TargetType; id: string }> = [];
       for (const i of items) {
         if (i.kind === "ranked") targets.push({ type: "entry", id: i.entry.id });
@@ -84,7 +91,8 @@ function Feed() {
         fetchHearts(targets),
         commentCounts(items.filter((i) => i.kind === "ranked").map((i) => (i.kind === "ranked" ? i.entry.id : ""))),
       ]);
-      const loaded = { items, profiles, matches, hearts, comments, following: ids.length };
+      const books = new Map((await fetchBooks([...new Set(together.map((t) => t.book_id))]).catch(() => [])).map((b) => [b.id, b]));
+      const loaded = { items, profiles, matches, hearts, comments, following: ids.length, together, books };
       setCache((c) => ({ ...c, [scope]: loaded }));
       setData(loaded);
     })().catch((e) => setError(e instanceof Error ? e.message : "Couldn’t load your feed"));
@@ -156,7 +164,7 @@ function Feed() {
         {error && <p className="error" role="alert">{error}</p>}
         {!data && !error && <div aria-busy="true" style={{ minHeight: 240 }} />}
 
-        {data && data.items.length === 0 && scope === "you" && (
+        {data && data.items.length === 0 && data.together.length === 0 && scope === "you" && (
           <div className="empty">
             <p className="h2">Nothing posted yet</p>
             <p style={{ margin: "0 0 16px", fontSize: 14 }}>Rank a book or check in on what you&rsquo;re reading, and it shows up here with any hearts and comments.</p>
@@ -164,7 +172,7 @@ function Feed() {
           </div>
         )}
 
-        {data && data.items.length === 0 && scope === "following" && (
+        {data && data.items.length === 0 && data.together.length === 0 && scope === "following" && (
           <div className="card card--ink" style={{ marginTop: 16 }}>
             <p className="d" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05, margin: 0 }}>
               {data.following ? "Quiet in here." : "Reading’s better with friends."}
@@ -180,9 +188,14 @@ function Feed() {
           </div>
         )}
 
-        {data && data.items.length > 0 && (
+        {data && (data.items.length > 0 || data.together.length > 0) && (
           <div className="feed">
-            {data.items.map((item) => {
+            {[
+              ...data.items.map((item) => ({ at: item.at, item, together: null as FeedReadAlong | null })),
+              ...data.together.map((t) => ({ at: t.revealed_at ?? t.created_at, item: null as FeedItem | null, together: t })),
+            ].sort((a, b) => b.at.localeCompare(a.at)).map(({ item: row, together: t }) => {
+              if (t) return <TogetherCard key={`t-${t.id}`} t={t} book={data.books.get(t.book_id)} people={data.profiles} me={profile?.id} />;
+              const item = row!;
               const uid = feedUser(item);
               const p = data.profiles.get(uid);
               const m = data.matches.get(uid);
@@ -301,5 +314,43 @@ function Feed() {
       )}
       <TabBar />
     </div>
+  );
+}
+
+function names(ids: string[], people: Map<string, Profile>, me?: string): string {
+  const n = ids.map((id) => (id === me ? "You" : displayName(people.get(id)).split(" ")[0]));
+  if (n.length <= 2) return n.join(" and ");
+  return `${n.slice(0, -1).join(", ")} and ${n[n.length - 1]}`;
+}
+
+/** "Paul, Maya and Pete are reading X together" / "...finished X together". */
+function TogetherCard({ t, book, people, me }: { t: FeedReadAlong; book?: Book; people: Map<string, Profile>; me?: string }) {
+  if (!book) return null;
+  const inIt = Boolean(me && t.members.includes(me));
+  const who = names(t.members, people, me);
+  const plural = t.members.length > 1 || t.members[0] === me;
+  const line = t.revealed_at ? `finished ${book.title} together` : `${plural ? "are" : "is"} reading ${book.title} together`;
+  return (
+    <article className="feed-card">
+      <div className="feed-card__head">
+        <span className="avatar-stack">
+          {t.members.slice(0, 4).map((u) => <Avatar key={u} profile={people.get(u)} size={32} />)}
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ fontWeight: 700 }}>{who}</span> {line}
+          <div className="when">{ago(t.revealed_at ?? t.created_at)}</div>
+        </div>
+      </div>
+      <Link href={inIt ? `/together/${t.id}` : `/book/${t.book_id}`} className="feed-card__book">
+        <Cover book={book} width={56} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="feed-card__title">{book.title}</div>
+          <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{book.author}</div>
+          <div style={{ fontSize: 13, marginTop: 8, color: "var(--cobalt-ink)", fontWeight: 600 }}>
+            {inIt ? (t.revealed_at ? "See the verdict →" : "Open the read-along →") : "See the book →"}
+          </div>
+        </div>
+      </Link>
+    </article>
   );
 }

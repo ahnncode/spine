@@ -3,10 +3,10 @@ import { describe, expect, it } from "vitest";
 import { BADGE, BADGES, isEarlyAdopter, progressLabel, sortForCase } from "./badges";
 
 describe("badges", () => {
-  it("has the same 30 keys as the database", () => {
-    const sql = readFileSync("supabase/migrations/20261102250000_badges_referrals.sql", "utf8");
+  it("has the same keys as the database", () => {
+    const sql = readFileSync("supabase/migrations/20261103230000_read_alongs.sql", "utf8");
     const keys = [...sql.matchAll(/\('([a-z_]+)',\s+[a-z_0-9:]+/g)].map((m) => m[1]);
-    expect(BADGES).toHaveLength(30);
+    expect(BADGES).toHaveLength(31);
     expect(new Set(keys)).toEqual(new Set(BADGES.map((b) => b.key)));
   });
 

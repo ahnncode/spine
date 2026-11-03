@@ -1,5 +1,7 @@
 "use client";
 
+import { ReadAlongStack } from "@/components/ReadAlongStack";
+import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
@@ -31,6 +33,7 @@ type Tab = "ranked" | "want" | "unsorted";
 function Shelf() {
   const { entries, error, reload } = useShelf();
   const { profile } = useProfile();
+  const { list: readAlongs, people: raPeople } = useReadAlongs();
   useEnrichment(entries, reload);
   useCoverBackfill(entries, reload);
   const [tab, setTab] = useState<Tab>("ranked");
@@ -96,6 +99,10 @@ function Shelf() {
                     <Cover book={e.book} width={64} />
                   </button>
                   <div className="reading-card__title">{e.book.title}</div>
+                  {(() => {
+                    const ra = activeFor(readAlongs, e.book_id, profile?.id);
+                    return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
+                  })()}
                   {e.progress_pct != null && (
                     <div style={{ width: "100%" }} aria-label={`${e.progress_pct}% read`}>
                       <div className="bar" style={{ height: 6 }}><span style={{ width: `${e.progress_pct}%`, background: "var(--accent)" }} /></div>

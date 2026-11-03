@@ -12,7 +12,7 @@ import { BackIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import {
   fetchCheckinsById, fetchFollowing, fetchNotifications, fetchProfiles, markAllRead,
-  type Checkin, type Notification, type Profile,
+  fetchMyReadAlongs, type Checkin, type Notification, type Profile, type ReadAlong,
 } from "@/lib/data";
 
 export default function NotificationsPage() {
@@ -36,6 +36,7 @@ interface Loaded {
   people: Map<string, Profile>;
   checkins: Map<string, Checkin>;
   following: Set<string>;
+  readAlongs: Map<string, ReadAlong>;
 }
 
 function Inner() {
@@ -45,20 +46,30 @@ function Inner() {
   useEffect(() => {
     (async () => {
       const items = await fetchNotifications();
-      const [people, checkins, following] = await Promise.all([
+      const [people, checkins, following, readAlongs] = await Promise.all([
         fetchProfiles([...new Set(items.map((n) => n.actor_id))]),
         fetchCheckinsById(items.filter((n) => n.target_type === "checkin" && n.target_id).map((n) => n.target_id!)),
         fetchFollowing(),
+        items.some((n) => n.kind === "read_along") ? fetchMyReadAlongs().catch(() => []) : Promise.resolve([] as ReadAlong[]),
       ]);
-      setData({ items, people, checkins, following: new Set(following) });
+      setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])) });
       // Opening the list counts as reading it.
       if (items.some((n) => !n.read_at)) markAllRead().catch(() => {});
-    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set() }));
+    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set(), readAlongs: new Map() }));
   }, []);
 
   function describe(n: Notification): string {
     if (n.kind === "follow") return "started following you";
     if (n.kind === "poke") return "poked you — how’s your reading going?";
+    if (n.kind === "read_along") {
+      const title = data?.readAlongs.get(n.target_id ?? "")?.book.title;
+      const on = title ? ` ${title}` : " a book";
+      if (n.detail === "invite") return `invited you to read${on} together`;
+      if (n.detail === "joined") return `joined your read-along of${on}`;
+      if (n.detail === "message") return `posted in your read-along of${on}`;
+      if (n.detail === "verdict") return `finished${on} — the verdict is in`;
+      return `updated your read-along of${on}`;
+    }
     if (n.kind === "mention") {
       if (n.target_type === "checkin") {
         const c = data?.checkins.get(n.target_id ?? "");
@@ -123,7 +134,9 @@ function Inner() {
               };
               return (
                 <li key={n.id}>
-                  {badge ? (
+                  {n.kind === "read_along" && n.target_id ? (
+                    <Link href={`/together/${n.target_id}`} style={rowStyle}>{body}</Link>
+                  ) : badge ? (
                     <Link href="/you#badges" style={rowStyle}>{body}</Link>
                   ) : opensThread ? (
                     <button style={rowStyle} onClick={() => setThread(n.target_id)}>{body}</button>
