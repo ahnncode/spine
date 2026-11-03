@@ -1,5 +1,6 @@
 "use client";
 
+import { MentionText } from "@/components/Mentions";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -255,7 +256,7 @@ function Inner() {
                           {c.progress_pct != null && <span className="m" style={{ fontSize: 13, fontWeight: 700 }}>{c.progress_pct}%</span>}
                           <VibePill vibe={c.vibe} />
                         </div>
-                        {c.note && <p className="note" style={{ fontSize: 14 }}>{c.note}</p>}
+                        {c.note && <p className="note" style={{ fontSize: 14 }}><MentionText text={c.note} /></p>}
                       </div>
                     </li>
                   ))}

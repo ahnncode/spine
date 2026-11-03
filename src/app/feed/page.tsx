@@ -1,5 +1,6 @@
 "use client";
 
+import { MentionText } from "@/components/Mentions";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
@@ -244,7 +245,7 @@ function Feed() {
                       <TagList tags={item.entry.tags} max={3} />
                       {item.entry.note && (
                         <button style={{ background: "none", border: 0, padding: 0, textAlign: "left" }} onClick={() => setThread(item.entry.id)} aria-label="Read the full note and comments">
-                          <NoteText note={item.entry.note} spoiler={item.entry.note_spoiler} clamp={4} />
+                          <NoteText note={item.entry.note} spoiler={item.entry.note_spoiler} clamp={4} links={false} />
                         </button>
                       )}
                     </div>
@@ -252,7 +253,7 @@ function Feed() {
                   {item.kind === "checkin" && (item.checkin.note || item.checkin.vibe) && (
                     <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start" }}>
                       <VibePill vibe={item.checkin.vibe} />
-                      {item.checkin.note && <p className="note">{item.checkin.note}</p>}
+                      {item.checkin.note && <p className="note"><MentionText text={item.checkin.note} /></p>}
                     </div>
                   )}
 

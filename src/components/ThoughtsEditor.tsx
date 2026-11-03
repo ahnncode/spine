@@ -1,5 +1,6 @@
 "use client";
 
+import { useMentionPicker } from "@/components/Mentions";
 import { useState } from "react";
 import { saveThoughts, type Entry } from "@/lib/data";
 import { NOTE_MAX, REVIEW_TAGS } from "@/lib/thoughts";
@@ -23,6 +24,7 @@ export function ThoughtsEditor({
   const [finished, setFinished] = useState(entry.finished_on ?? "");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
+  const mention = useMentionPicker<HTMLTextAreaElement>(note, (v) => { setNote(v); setSaved(false); });
   const [error, setError] = useState<string | null>(null);
 
   const today = new Date();
@@ -62,11 +64,13 @@ export function ThoughtsEditor({
         id={`note-${entry.id}`}
         className="textarea"
         style={{ marginTop: 12 }}
-        placeholder="What stuck with you?"
+        placeholder="What stuck with you? Type @ to mention a friend"
         maxLength={NOTE_MAX}
         value={note}
         onChange={(e) => { setNote(e.target.value); setSaved(false); }}
+        {...mention.fieldProps}
       />
+      {mention.picker}
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 10 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer", minHeight: 44 }}>
           <input type="checkbox" checked={spoiler} onChange={(e) => { setSpoiler(e.target.checked); setSaved(false); }} style={{ width: 20, height: 20, accentColor: "var(--ink)" }} />

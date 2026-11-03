@@ -11,6 +11,7 @@ import { BadgeStrip } from "@/components/BadgeCase";
 import { isEarlyAdopter } from "@/lib/badges";
 import { Cover } from "@/components/Cover";
 import { FollowButton } from "@/components/FollowButton";
+import { PokeButton } from "@/components/PokeButton";
 import { WantButton } from "@/components/WantButton";
 import { ArrowIcon, BackIcon, LockIcon, MoreIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
@@ -155,6 +156,14 @@ function Inner() {
               </div>
             </div>
             {!data.blocked && data.profile.bio && <Blurb text={data.profile.bio} name={displayName(data.profile)} />}
+            {!data.blocked && data.following && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
+                <PokeButton userId={data.profile.id} name={displayName(data.profile)} />
+                <span className="muted" style={{ fontSize: 12, lineHeight: 1.3 }}>
+                  {reading.length ? `See how ${displayName(data.profile).split(" ")[0]} is doing with ${reading[0].book.title}` : "Give them a nudge to pick up a book"} · once a day
+                </span>
+              </div>
+            )}
             {notice && <p className="notice" role="status" style={{ marginTop: 12 }}>{notice}</p>}
 
             {data.blocked ? (

@@ -127,3 +127,11 @@ export const MoreIcon = (p: P) => (
     <path d="M5 12h.01M12 12h.01M19 12h.01" />
   </Base>
 );
+export const PokeIcon = (p: P) => (
+  <Base {...p}>
+    <path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11" />
+    <path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2" />
+    <path d="M15 11a1.5 1.5 0 0 1 3 0v3.5A6.5 6.5 0 0 1 11.5 21h-.6a5 5 0 0 1-4-2l-2.6-3.6a1.5 1.5 0 0 1 2.3-1.9L9 15.5" />
+    <path d="M4.5 4.5 3 3M7 3.2 6.6 1.5M3.2 7 1.5 6.6" />
+  </Base>
+);

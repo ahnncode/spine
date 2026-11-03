@@ -1,5 +1,6 @@
 "use client";
 
+import { useMentionPicker } from "@/components/Mentions";
 import Link from "next/link";
 import { useState } from "react";
 import { checkIn, type Entry } from "@/lib/data";
@@ -17,6 +18,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   const [page, setPage] = useState<string>(pages && entry.progress_pct != null ? String(Math.round((entry.progress_pct / 100) * pages)) : "");
   const [touched, setTouched] = useState(false);
   const [note, setNote] = useState("");
+  const mention = useMentionPicker<HTMLInputElement>(note, setNote);
   const [vibe, setVibe] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,11 +95,13 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           id="checkin-note"
           className="input"
           style={{ width: "100%", marginTop: 10 }}
-          placeholder="A quick thought (optional)"
+          placeholder="A quick thought (optional) · @ to mention"
           maxLength={CHECKIN_NOTE_MAX}
           value={note}
           onChange={(e) => setNote(e.target.value)}
+          {...mention.fieldProps}
         />
+        {mention.picker}
 
         {error && <p className="error" role="alert">{error}</p>}
         <div className="stack" style={{ marginTop: 20 }}>

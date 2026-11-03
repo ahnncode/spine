@@ -58,6 +58,14 @@ function Inner() {
 
   function describe(n: Notification): string {
     if (n.kind === "follow") return "started following you";
+    if (n.kind === "poke") return "poked you — how’s your reading going?";
+    if (n.kind === "mention") {
+      if (n.target_type === "checkin") {
+        const c = data?.checkins.get(n.target_id ?? "");
+        return c ? `mentioned you in a check-in on ${c.book.title}` : "mentioned you in a check-in";
+      }
+      return "mentioned you";
+    }
     if (n.kind === "comment") return "commented on your ranking";
     if (n.target_type === "checkin") {
       const c = data?.checkins.get(n.target_id ?? "");
@@ -78,7 +86,7 @@ function Inner() {
         {data && data.items.length === 0 && (
           <div className="empty">
             <p className="h2">Nothing yet</p>
-            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments, new followers and badges show up here.</p>
+            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments, mentions, pokes, new followers and badges show up here.</p>
           </div>
         )}
         {data && data.items.length > 0 && (
@@ -119,6 +127,11 @@ function Inner() {
                     <Link href="/you#badges" style={rowStyle}>{body}</Link>
                   ) : opensThread ? (
                     <button style={rowStyle} onClick={() => setThread(n.target_id)}>{body}</button>
+                  ) : n.kind === "poke" ? (
+                    <div style={{ ...rowStyle, gap: 10 }}>
+                      <Link href={p?.username ? `/u/${p.username}` : "#"} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>{body}</Link>
+                      <Link href="/you" className="follow-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>Check in</Link>
+                    </div>
                   ) : n.kind === "follow" && p?.username ? (
                     <div style={{ ...rowStyle, gap: 10 }}>
                       <Link href={`/u/${p.username}`} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>{body}</Link>

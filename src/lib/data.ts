@@ -789,7 +789,7 @@ export async function fetchScoredEntry(id: string): Promise<ScoredEntry | null> 
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow" | "badge";
+  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke";
   /** For badge notifications: which badge. */
   badge?: string | null;
   target_type: TargetType | null;
@@ -864,6 +864,27 @@ export async function report(targetType: "comment" | "entry" | "checkin" | "prof
     .from("reports")
     .insert({ target_type: targetType, target_id: targetId, reason: reason?.trim().slice(0, 500) || null });
   if (error) throw error;
+}
+
+/* -------------------------------- Pokes ---------------------------------- */
+
+/** Nudge someone you follow about their reading (once a day each). */
+export async function poke(userId: string): Promise<"ok" | "already" | "not_allowed"> {
+  const { data, error } = await supabase().rpc("poke", { p_user: userId });
+  if (error) throw error;
+  return data as "ok" | "already" | "not_allowed";
+}
+
+/** Whether you've already poked them today (days are UTC, like the database). */
+export async function pokedToday(userId: string): Promise<boolean> {
+  const { data, error } = await supabase()
+    .from("pokes")
+    .select("day")
+    .eq("to_id", userId)
+    .eq("day", new Date().toISOString().slice(0, 10))
+    .limit(1);
+  if (error) return false;
+  return Boolean(data?.length);
 }
 
 /* -------------------------------- Badges --------------------------------- */

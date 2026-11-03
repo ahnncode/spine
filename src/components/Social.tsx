@@ -1,5 +1,6 @@
 "use client";
 
+import { MentionText } from "@/components/Mentions";
 import { useState } from "react";
 import { setHeart, type HeartState, type TargetType } from "@/lib/data";
 import { TAG_LABEL, VIBE_LABEL } from "@/lib/thoughts";
@@ -43,7 +44,7 @@ export function CommentButton({ count, onClick }: { count: number; onClick: () =
 }
 
 /** A note, blurred behind a tap when it's marked as a spoiler (unless it's yours). */
-export function NoteText({ note, spoiler, mine = false, clamp }: { note: string; spoiler: boolean; mine?: boolean; clamp?: number }) {
+export function NoteText({ note, spoiler, mine = false, clamp, links = true }: { note: string; spoiler: boolean; mine?: boolean; clamp?: number; links?: boolean }) {
   const [shown, setShown] = useState(!spoiler || mine);
   const style = clamp
     ? { display: "-webkit-box", WebkitLineClamp: clamp, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }
@@ -52,7 +53,7 @@ export function NoteText({ note, spoiler, mine = false, clamp }: { note: string;
     return (
       <div>
         {spoiler && <span className="tag-pill" style={{ display: "inline-block", marginBottom: 6 }}>Spoilers</span>}
-        <p className="note" style={style}>{note}</p>
+        <p className="note" style={style}><MentionText text={note} links={links} /></p>
       </div>
     );
   }

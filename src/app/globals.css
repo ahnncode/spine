@@ -569,3 +569,22 @@ button.stamp--locked { border: 1.5px dashed #bdbcb6; }
 .cover__title, .reading-card__title, .cover-strip__title, .book-row__title, .badge-cell__name, .pic__label {
   overflow-wrap: anywhere; hyphens: auto;
 }
+.mention { color: var(--cobalt-ink); font-weight: 600; text-decoration: none; }
+.mention-list {
+  list-style: none; margin: 6px 0 0; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  box-shadow: 0 10px 24px -14px rgba(17,17,17,0.35);
+}
+.mention-list button {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 8px; border: 0; border-radius: 10px;
+  background: none; font: inherit; font-size: 14px; color: var(--ink); text-align: left; cursor: pointer;
+}
+.mention-list button:hover, .mention-list button:focus-visible { background: var(--well); }
+.poke-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 12px; border-radius: 12px; border: 0;
+  background: var(--accent-soft); color: var(--accent-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+}
+.poke-btn:disabled { cursor: default; }
+.poke-btn[data-state="sent"] { animation: poke-wiggle 0.5s ease; }
+.poke-btn[data-state="done"] { background: var(--well); color: var(--muted); }
+@keyframes poke-wiggle { 0%, 100% { transform: none; } 25% { transform: rotate(-6deg); } 75% { transform: rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .poke-btn[data-state="sent"] { animation: none; } }

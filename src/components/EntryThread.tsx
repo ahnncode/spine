@@ -1,5 +1,6 @@
 "use client";
 
+import { MentionText, useMentionPicker } from "@/components/Mentions";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
@@ -34,6 +35,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
   const [hearts, setHearts] = useState<HeartState | undefined>(undefined);
   const [me, setMe] = useState<string>("");
   const [text, setText] = useState("");
+  const mention = useMentionPicker<HTMLTextAreaElement>(text, setText);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
@@ -129,7 +131,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
                     <Avatar profile={p} size={32} link />
                     <div className="comment__body">
                       <span><strong><Name profile={p} /></strong> <span className="muted" style={{ fontSize: 12 }}>{ago(c.created_at)}</span></span>
-                      <p>{c.body}</p>
+                      <p><MentionText text={c.body} /></p>
                     </div>
                     <div style={{ position: "relative" }}>
                       <button className="icon-btn" style={{ width: 36, height: 36, background: "transparent" }} aria-label="Comment options" aria-expanded={menuFor === c.id} onClick={() => setMenuFor(menuFor === c.id ? null : c.id)}>
@@ -146,6 +148,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
                 );
               })}
             </div>
+            {mention.picker}
             <form onSubmit={send} style={{ display: "flex", gap: 8, marginTop: 12, alignItems: "flex-end" }}>
               <label htmlFor={`c-${entryId}`} className="visually-hidden">Add a comment</label>
               <textarea
@@ -156,6 +159,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
                 maxLength={COMMENT_MAX}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                {...mention.fieldProps}
               />
               <button className="btn" style={{ minHeight: 44 }} disabled={busy || !text.trim()}>Post</button>
             </form>
