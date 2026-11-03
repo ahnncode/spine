@@ -36,9 +36,15 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
 
   const byKey = useMemo(() => {
     const m = new Map<string, Entry>();
-    for (const e of entries || []) m.set(e.book.dedupe_key, e);
+    for (const e of entries || []) {
+      m.set(e.book.dedupe_key, e);
+      // Same work, even if its title was saved a little differently (series tags, editions).
+      if (e.book.ol_work_key) m.set(`w:${e.book.ol_work_key}`, e);
+    }
     return m;
   }, [entries]);
+  const entryFor = (b: BookInput) =>
+    byKey.get(dedupeKey(b.title, b.author)) ?? (b.ol_work_key ? byKey.get(`w:${b.ol_work_key}`) : undefined);
   const rankedCount = (entries || []).filter((e) => e.status === "ranked").length;
   const reading = (entries || []).filter((e) => e.status === "reading");
 
@@ -76,7 +82,8 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
     setBusy(true);
     setError(null);
     try {
-      const id = await ensureBook(book);
+      // A book already on your shelf keeps its id, so nothing gets duplicated.
+      const id = entryFor(book)?.book_id ?? (await ensureBook(book));
       if (what === "rank") return router.push(`/rank/${id}`);
       if (what === "page") return router.push(`/book/${id}`);
       if (what === "reading") await startReading(id);
@@ -92,7 +99,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
 
   // Short queries show the prompt instead of stale results.
   const results = query.trim().length >= 2 ? rawResults : null;
-  const pickedEntry = picked ? byKey.get(dedupeKey(picked.title, picked.author)) : undefined;
+  const pickedEntry = picked ? entryFor(picked) : undefined;
 
   return (
     <div className="app">
@@ -161,7 +168,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
         ) : (
           <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }} aria-busy={searching}>
             {results.map((b) => {
-              const entry = byKey.get(dedupeKey(b.title, b.author));
+              const entry = entryFor(b);
               return (
                 <li key={(b.ol_work_key || "") + b.title}>
                   <button

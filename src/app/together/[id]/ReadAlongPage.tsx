@@ -193,7 +193,7 @@ function Inner() {
             {myState === "invited" && (
               <div className="card card--ink" style={{ marginTop: 18 }}>
                 <p style={{ margin: 0, fontWeight: 600 }}>
-                  {displayName(data.people.get(data.ra.created_by))} invited you to read this together.
+                  {displayName(data.ra.created_by ? data.people.get(data.ra.created_by) : undefined)} invited you to read this together.
                 </p>
                 <p style={{ margin: "6px 0 0", fontSize: 13, color: "#c9c8c2" }}>
                   Joining puts it in your Reading now. Check in as you go; the discussion hides anything past where you are.
@@ -280,7 +280,7 @@ function Inner() {
                   {!myRow?.ranked && (
                     <Link href={`/rank/${data.ra.book_id}`} className="btn btn--quiet ra-action">Rank it</Link>
                   )}
-                  {joined.length + invited.length < 8 && (
+                  {joined.length + invited.length < 8 && !data.ra.revealed_at && (
                     <button className="btn btn--quiet ra-action" onClick={() => setInviting(true)}>Invite</button>
                   )}
                 </div>

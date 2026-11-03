@@ -142,7 +142,7 @@ function Inner() {
                 <div className="muted" style={{ fontSize: 13 }}>@{data.profile.username} · {data.counts.followers} followers</div>
                 {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
               </div>
-              {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} />}
+              {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} onChange={(following) => setData((d) => (d ? { ...d, following } : d))} />}
               <div style={{ position: "relative" }}>
                 <button className="icon-btn" aria-label="More options" aria-expanded={menu} onClick={() => setMenu(!menu)}>
                   <MoreIcon size={20} />

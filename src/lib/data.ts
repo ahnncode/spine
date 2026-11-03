@@ -125,8 +125,9 @@ export async function ensureBooks(inputs: BookInput[]): Promise<Map<string, stri
   }
   const list = [...rows.values()];
   const ids = new Map<string, string>();
-  for (let i = 0; i < list.length; i += 200) {
-    const chunk = list.slice(i, i + 200);
+  // Chunks of 80 keep the lookup URL well under server limits, even with long titles.
+  for (let i = 0; i < list.length; i += 80) {
+    const chunk = list.slice(i, i + 80);
     const { error } = await supabase()
       .from("books")
       .upsert(chunk, { onConflict: "dedupe_key", ignoreDuplicates: true, defaultToNull: false });
@@ -226,6 +227,9 @@ export async function addToRank(bookIds: string[]): Promise<void> {
 /** Mark a book as currently reading (from nothing, or from want-to-read). */
 export async function startReading(bookId: string): Promise<void> {
   const uid = await myId();
+  // Never turn a ranked book back into "reading" — that would drop its ranking.
+  const { data: current } = await supabase().from("shelf_entries").select("status").eq("user_id", uid).eq("book_id", bookId).maybeSingle();
+  if (current?.status === "ranked" || current?.status === "reading") return;
   const { error } = await supabase()
     .from("shelf_entries")
     .upsert(
@@ -978,7 +982,8 @@ export type MemberState = "invited" | "joined" | "declined" | "left";
 export interface ReadAlong {
   id: string;
   book_id: string;
-  created_by: string;
+  /** Null if the person who started it has since deleted their account. */
+  created_by: string | null;
   target_date: string | null;
   previous_id: string | null;
   revealed_at: string | null;

@@ -111,12 +111,16 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   const path = usePathname();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileFailed, setProfileFailed] = useState(false);
 
   const reloadProfile = useCallback(async () => {
     try {
       setProfile(await fetchMyProfile());
-    } finally {
+      setProfileFailed(false);
       setProfileLoaded(true);
+    } catch {
+      // A network blip isn't "no profile": don't bounce people to Welcome.
+      setProfileFailed(true);
     }
   }, []);
 
@@ -128,7 +132,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }, [loading, session, router, path]);
 
   useEffect(() => {
-     
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- loading the profile for this session
     if (session) reloadProfile();
   }, [session, reloadProfile]);
 
@@ -138,6 +142,17 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   }, [needsWelcome, router]);
 
   if (!supabaseConfigured) return <SetupNotice />;
+  if (profileFailed && !profileLoaded) {
+    return (
+      <div className="app">
+        <main className="screen screen--flow">
+          <h1 className="h1" style={{ marginTop: 40 }}>Can&rsquo;t reach Spine</h1>
+          <p className="lede">Check your connection and try again.</p>
+          <button className="btn btn--block" style={{ marginTop: 20 }} onClick={() => reloadProfile()}>Try again</button>
+        </main>
+      </div>
+    );
+  }
   if (loading || !session || !profileLoaded || needsWelcome) return <Loading />;
   return <ProfileContext.Provider value={{ profile, reloadProfile }}>{children}</ProfileContext.Provider>;
 }
