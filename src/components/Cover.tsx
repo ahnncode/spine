@@ -21,7 +21,10 @@ export function Cover({ book, width, className }: Props) {
   const { bg, fg } = coverColors(dedupeKey(book.title, book.author));
   const showArt = url && !failed;
 
-  const titleSize = Math.max(7, Math.round(width * 0.16));
+  // Shrink the title so its longest word fits the cover instead of being cut off.
+  const longestWord = Math.max(1, ...book.title.split(/\s+/).map((w) => w.length));
+  const fitSize = (width * 0.74) / (longestWord * 0.6);
+  const titleSize = Math.max(6, Math.round(Math.min(width * 0.16, fitSize)));
   const authorSize = Math.max(5, Math.round(width * 0.06));
   const lines = width < 60 ? 4 : 5;
 

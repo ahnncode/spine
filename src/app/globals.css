@@ -564,3 +564,8 @@ button.stamp--locked { border: 1.5px dashed #bdbcb6; }
   position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px; border-radius: 11px; background: var(--ink); color: #fff;
   display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; box-shadow: 0 0 0 2px var(--ground);
 }
+
+/* Long single words (Frankenstein, Middlemarch) break instead of being clipped. */
+.cover__title, .reading-card__title, .cover-strip__title, .book-row__title, .badge-cell__name, .pic__label {
+  overflow-wrap: anywhere; hyphens: auto;
+}
