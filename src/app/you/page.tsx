@@ -138,13 +138,12 @@ function You() {
         </div>
 
         {profile?.bio ? (
-          <button className="status-line" style={{ display: "block", width: "100%", textAlign: "left", color: "inherit", font: "inherit", fontSize: 15, cursor: "pointer" }}
-            onClick={() => setEditing(true)} aria-label={`Your status: ${profile.bio}. Edit`}>
+          <button className="blurb blurb--editable" onClick={() => setEditing(true)} aria-label={`Your blurb: ${profile.bio}. Edit`}>
             {profile.bio}
           </button>
         ) : (
-          <button className="status-line status-line--empty" onClick={() => setEditing(true)}>
-            + Add a status — what are you into right now?
+          <button className="blurb blurb--empty" onClick={() => setEditing(true)}>
+            + Add a blurb — a line or two about you as a reader
           </button>
         )}
 
@@ -491,12 +490,12 @@ function EditProfile({
         </div>
         <div className="field" style={{ marginTop: 14 }}>
           <label htmlFor="pbio" style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Status</span>
+            <span>Blurb</span>
             <span className="m muted" style={{ fontWeight: 400 }}>{bio.length}/160</span>
           </label>
-          <textarea id="pbio" className="input" rows={2} value={bio} maxLength={160} onChange={(e) => setBio(e.target.value)}
-            placeholder="Deep in a Russian novel phase. Send short books." style={{ resize: "none", paddingTop: 12, lineHeight: 1.4, height: "auto" }} />
-          <span className="muted" style={{ fontSize: 12 }}>Everyone can see this, even if your shelf is private.</span>
+          <textarea id="pbio" className="input" rows={3} value={bio} maxLength={160} onChange={(e) => setBio(e.target.value)}
+            placeholder="Sci-fi lifer slowly converting to literary fiction. Will read anything with a map in the front." style={{ resize: "none", paddingTop: 12, lineHeight: 1.4, height: "auto" }} />
+          <span className="muted" style={{ fontSize: 12 }}>Shows under your name. Everyone can see it, even if your shelf is private.</span>
         </div>
         <div className="field" style={{ marginTop: 14 }}>
           <label htmlFor="pgoal">Books to read in {new Date().getFullYear()}</label>

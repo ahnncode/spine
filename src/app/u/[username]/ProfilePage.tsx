@@ -153,7 +153,7 @@ function Inner() {
                 )}
               </div>
             </div>
-            {!data.blocked && data.profile.bio && <p className="status-line">{data.profile.bio}</p>}
+            {!data.blocked && data.profile.bio && <p className="blurb">{data.profile.bio}</p>}
             {notice && <p className="notice" role="status" style={{ marginTop: 12 }}>{notice}</p>}
 
             {data.blocked ? (
