@@ -135,3 +135,10 @@ export const PokeIcon = (p: P) => (
     <path d="M4.5 4.5 3 3M7 3.2 6.6 1.5M3.2 7 1.5 6.6" />
   </Base>
 );
+export const AddFriendIcon = (p: P) => (
+  <Base {...p}>
+    <circle cx="9.5" cy="8" r="3.5" />
+    <path d="M3 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6" />
+    <path d="M19 8v6M16 11h6" />
+  </Base>
+);

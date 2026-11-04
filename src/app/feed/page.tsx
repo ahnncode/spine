@@ -9,7 +9,7 @@ import { Avatar, displayName } from "@/components/Avatar";
 import { Name } from "@/components/Badge";
 import { Cover } from "@/components/Cover";
 import { EntryThread } from "@/components/EntryThread";
-import { ArrowIcon, BellIcon } from "@/components/icons";
+import { ArrowIcon, BellIcon, AddFriendIcon } from "@/components/icons";
 import { CommentButton, HeartButton, NoteText, TagList, VibePill } from "@/components/Social";
 import { WantButton } from "@/components/WantButton";
 import { ScoreChip } from "@/components/ScoreChip";
@@ -113,6 +113,9 @@ function Feed() {
         <div className="topbar">
           <Logo size={30} />
           <div style={{ display: "flex", gap: 8 }}>
+            <Link href="/people" className="icon-btn" aria-label="Find friends">
+              <AddFriendIcon size={21} />
+            </Link>
             <Link href="/notifications" className="icon-btn" style={{ position: "relative" }} aria-label={unread ? `Notifications, ${unread} new` : "Notifications"}>
               <BellIcon size={20} />
               {unread > 0 && <span className="unread-dot" />}

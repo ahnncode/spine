@@ -11,7 +11,7 @@ import { formatScore } from "@/lib/ranking";
 import { TASTE_UNLOCK } from "@/lib/stats";
 import { RequireAuth } from "./Auth";
 import { Cover } from "./Cover";
-import { ArrowIcon, BookmarkIcon, BookOpenIcon, ScanIcon, SearchIcon } from "./icons";
+import { AddFriendIcon, ArrowIcon, BookmarkIcon, BookOpenIcon, ScanIcon, SearchIcon } from "./icons";
 import { TabBar } from "./TabBar";
 import { useShelf } from "./useShelf";
 
@@ -60,7 +60,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
 
   useEffect(() => {
     const q = query.trim();
-    if (q.length < 2) return;
+    if (q.length < 2 || q.startsWith("@")) return;
     const ctrl = new AbortController();
     // Show the loading bar from the first keystroke, not after the debounce.
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -106,7 +106,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   }
 
   // Short queries show the prompt instead of stale results.
-  const results = query.trim().length >= 2 ? rawResults : null;
+  const results = query.trim().length >= 2 && !query.trim().startsWith("@") ? rawResults : null;
   // Books already on your shelf show up instantly, before the catalogue answers.
   const term = query.trim().toLowerCase();
   const onShelf = term.length >= 2
@@ -119,9 +119,16 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
       <main className="screen">
         <div className="topbar">
           <h1 className="h1">{mode === "add" ? "What did you finish?" : "Discover"}</h1>
-          <Link href="/scan" className="icon-btn" aria-label="Scan a barcode">
-            <ScanIcon size={20} />
-          </Link>
+          <div style={{ display: "flex", gap: 8 }}>
+            {mode === "discover" && (
+              <Link href="/people" className="icon-btn" aria-label="Find friends">
+                <AddFriendIcon size={21} />
+              </Link>
+            )}
+            <Link href="/scan" className="icon-btn" aria-label="Scan a barcode">
+              <ScanIcon size={20} />
+            </Link>
+          </div>
         </div>
         <div className="search-box">
           <SearchIcon size={20} />
@@ -131,13 +138,21 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             ref={inputRef}
             className="input"
             type="search"
-            placeholder="Title or author"
+            placeholder={mode === "discover" ? "Title, author, or @friend" : "Title or author"}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoComplete="off"
           />
         </div>
 
+        {/* "@sam" is a person, not a book: send it to people search. */}
+        {query.trim().startsWith("@") && query.trim().length >= 2 && (
+          <Link href={`/people?q=${encodeURIComponent(query.trim().slice(1))}`} className="card" style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none", marginTop: 12, padding: "14px 16px" }}>
+            <AddFriendIcon size={20} />
+            <span style={{ flex: 1, fontWeight: 600 }}>Find people named {query.trim()}</span>
+            <ArrowIcon size={18} />
+          </Link>
+        )}
         <div className="search-progress" data-on={searching && term.length >= 2} aria-hidden="true"><span /></div>
         {error && <p className="error" role="alert">{error}</p>}
 

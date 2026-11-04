@@ -26,6 +26,13 @@ function People() {
   const [similar, setSimilar] = useState<Array<{ profile: Profile; match: number; overlap: number }> | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Arriving from Discover with "@name": start with that search.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL
+    if (q) setQuery(q);
+  }, []);
+
   useEffect(() => {
     fetchFollowing().then((ids) => setFollowing(new Set(ids))).catch(() => setFollowing(new Set()));
     similarReaders(15)
