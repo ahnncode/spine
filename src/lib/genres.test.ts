@@ -57,3 +57,13 @@ describe("Apple cover matching", async () => {
     expect(bigArtwork("https://is1-ssl.mzstatic.com/image/thumb/P/v4/a/b.jpg/100x100bb.jpg")).toBe("https://is1-ssl.mzstatic.com/image/thumb/P/v4/a/b.jpg/400x600bb.jpg");
   });
 });
+
+describe("search ranking", async () => {
+  const { rankScore } = await import("./openlibrary");
+  const doc = (title: string, author: string, readers: number, editions = 10) => ({ key: title, title, author_name: [author], readinglog_count: readers, edition_count: editions });
+  it("puts the well-known book first, but not unrelated popular ones", () => {
+    const docs = [doc("Circe", "Miguel Ramos Carrión", 13, 2), doc("Circe", "Madeline Miller", 1125, 40), doc("Macbeth", "William Shakespeare", 9000, 900)];
+    const order = docs.map((d, i) => ({ d, s: rankScore(d, "circe", i) })).sort((a, b) => b.s - a.s).map((x) => x.d.author_name[0]);
+    expect(order).toEqual(["Madeline Miller", "Miguel Ramos Carrión", "William Shakespeare"]);
+  });
+});

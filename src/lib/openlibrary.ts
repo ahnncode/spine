@@ -13,6 +13,9 @@ interface OLDoc {
   isbn?: string[];
   number_of_pages_median?: number;
   subject?: string[];
+  /** Popularity on Open Library: readers who logged it, and how many editions exist. */
+  readinglog_count?: number;
+  edition_count?: number;
   /** With lang=en, the best-matching English edition of this work. */
   editions?: { docs?: OLEdition[] };
 }
@@ -30,7 +33,8 @@ const FIELDS =
   "editions,editions.title,editions.language,editions.cover_i,editions.isbn";
 // Search results: just what the list shows. Leaving out subjects and the full
 // ISBN lists cuts responses from ~300KB to a few KB.
-const QUICK_FIELDS = "key,title,author_name,author_alternative_name,first_publish_year,cover_i,number_of_pages_median";
+const QUICK_FIELDS =
+  "key,title,author_name,author_alternative_name,first_publish_year,cover_i,number_of_pages_median,readinglog_count,edition_count";
 const ENGLISH_FIELDS = `${QUICK_FIELDS},editions,editions.title,editions.language,editions.cover_i,editions.isbn`;
 
 /** Spine is for English readers: prefer English editions' titles and covers. */
@@ -80,11 +84,35 @@ async function search(params: Record<string, string>, signal?: AbortSignal, fiel
   return ((await res.json()) as { docs: OLDoc[] }).docs;
 }
 
-function tidy(docs: OLDoc[]): BookInput[] {
-  // Catalogue clean-up: books with an English edition first, author-less
-  // stubs last, and one result per title + author.
-  const score = (d: OLDoc) => (englishEdition(d) || d.editions === undefined ? 0 : 1) + (d.author_name?.length ? 0 : 2);
-  const ranked = docs.map((d, i) => ({ d, i })).sort((a, b) => score(a.d) - score(b.d) || a.i - b.i);
+const STOP_WORDS = new Set(["the", "a", "an", "of", "and", "to", "in", "on", "by"]);
+
+function norm(s: string): string {
+  return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Order results the way a reader expects: well-known books first. Open
+ * Library's own relevance still counts a little, an exact title match gets a
+ * nudge, and stubs (no author, no English edition) sink.
+ */
+export function rankScore(d: OLDoc, query: string, position: number): number {
+  const q = norm(query);
+  const title = norm(englishEdition(d)?.title ?? d.title);
+  const popularity = Math.log10(1 + (d.readinglog_count ?? 0)) + 0.3 * Math.log10(1 + (d.edition_count ?? 0));
+  const match = title === q ? 0.6 : title.startsWith(`${q} `) ? 0.3 : 0;
+  // Popular books that only matched on some description or subject (search
+  // "project hail mary", get Macbeth) don't get to jump the line.
+  const words = new Set(`${title} ${norm((d.author_name ?? []).join(" "))}`.split(" "));
+  const missing = q.split(" ").filter((w) => w.length > 1 && !STOP_WORDS.has(w) && !words.has(w)).length;
+  const stub = (d.author_name?.length ? 0 : 3) + (d.editions !== undefined && !englishEdition(d) ? 1 : 0);
+  return popularity + match - 0.05 * position - stub - (missing ? 2 + missing : 0);
+}
+
+function tidy(docs: OLDoc[], query: string): BookInput[] {
+  const ranked = docs
+    .map((d, i) => ({ d, score: rankScore(d, query, i) }))
+    .sort((a, b) => b.score - a.score);
+  // One result per title + author.
   const seen = new Set<string>();
   const out: BookInput[] = [];
   for (const { d } of ranked) {
@@ -115,14 +143,14 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
     return hit;
   }
   let finalDone = false;
-  const quick = search({ q, limit: "15" }, signal, QUICK_FIELDS)
+  const quick = search({ q, limit: "20" }, signal, QUICK_FIELDS)
     .then((docs) => {
-      if (!finalDone) onResults?.(tidy(docs), false);
+      if (!finalDone) onResults?.(tidy(docs, q), false);
     })
     .catch(() => {});
-  const english = search({ q, limit: "20" }, signal, ENGLISH_FIELDS).then((docs) => {
+  const english = search({ q, limit: "25" }, signal, ENGLISH_FIELDS).then((docs) => {
     finalDone = true;
-    const books = tidy(docs);
+    const books = tidy(docs, q);
     cache.set(key, books);
     if (cache.size > 50) cache.delete(cache.keys().next().value!);
     onResults?.(books, true);
@@ -134,7 +162,7 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
     // The English pass failed: keep whatever the quick pass found.
     await quick;
     if (signal?.aborted) throw e;
-    const fallback = await search({ q, limit: "15" }, signal, QUICK_FIELDS).then(tidy);
+    const fallback = await search({ q, limit: "15" }, signal, QUICK_FIELDS).then((docs) => tidy(docs, q));
     onResults?.(fallback, true);
     return fallback;
   }
