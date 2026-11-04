@@ -1,4 +1,4 @@
-# Spine
+# ReadRead
 
 Rank books, not stars. Every book you finish goes head-to-head with ones you've read, and lands on an honest, ranked shelf with a score that means something.
 

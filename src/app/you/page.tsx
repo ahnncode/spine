@@ -296,7 +296,7 @@ function You() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
               <h2 className="h2">Your top three</h2>
               {ranked.length >= 3 && (
-                <ShareCardButton query="kind=top" label="Share top 10" filename="spine-top-10" className="btn btn--quiet" style={{ minHeight: 36, fontSize: 13, padding: "0 12px" }} />
+                <ShareCardButton query="kind=top" label="Share top 10" filename="readread-top-10" className="btn btn--quiet" style={{ minHeight: 36, fontSize: 13, padding: "0 12px" }} />
               )}
             </div>
             <div style={{ display: "flex", gap: 14, marginTop: 14 }}>

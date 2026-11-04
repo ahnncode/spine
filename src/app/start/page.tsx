@@ -142,7 +142,7 @@ function Start() {
   return (
     <div className="app">
       <main className="screen screen--flow" style={{ paddingBottom: 120 }}>
-        <span className="wordmark">spine</span>
+        <span className="wordmark">readread</span>
         <h1 className="h1 h1--xl" style={{ marginTop: 28 }}>Let&rsquo;s build your shelf.</h1>
 
         <Link href="/import" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 22, textDecoration: "none" }}>

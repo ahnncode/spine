@@ -25,7 +25,7 @@ export function PublicProfileView({ username, profile }: { username: string; pro
     return (
       <PublicShell back={back} pitch="Rank every book you read with quick head-to-heads, follow friends, and find readers with your taste.">
         <div className="empty">
-          <p className="h2">@{username} is on Spine</p>
+          <p className="h2">@{username} is on ReadRead</p>
           <p style={{ margin: 0, fontSize: 14 }}>Join to see their shelf and how your taste compares.</p>
         </div>
       </PublicShell>
@@ -41,7 +41,7 @@ export function PublicProfileView({ username, profile }: { username: string; pro
         dangerouslySetInnerHTML={{ __html: jsonLd({
           "@context": "https://schema.org",
           "@type": "ProfilePage",
-          url: `https://readspine.app/u/${profile.username}`,
+          url: `https://readread.app/u/${profile.username}`,
           mainEntity: { "@type": "Person", name, alternateName: `@${profile.username}`, ...(profile.bio ? { description: profile.bio } : {}) },
         }) }}
       />

@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Lets people add Spine to their home screen like an app. */
+/** Lets people add ReadRead to their home screen like an app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Spine — rank books, not stars",
-    short_name: "Spine",
+    name: "ReadRead — rank books, not stars",
+    short_name: "ReadRead",
     description: "Rank what you read with quick head-to-heads, and see what your friends can't put down.",
     start_url: "/feed",
     display: "standalone",

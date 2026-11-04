@@ -24,7 +24,7 @@ export const BADGES: BadgeDef[] = [
   { key: "moving_in", name: "Moving In", how: "Import your Goodreads or StoryGraph library", category: "start", rarity: "common", glyph: "box" },
   { key: "wishlist", name: "Wishlist", how: "Save 5 books to want to read", category: "start", rarity: "common", glyph: "bookmark", unit: "book" },
   { key: "shelf_starter", name: "Shelf Starter", how: "Rank 10 books", category: "start", rarity: "common", glyph: "shelf", unit: "book" },
-  { key: "early_adopter", name: "Early Adopter", how: "Joined Spine in its first year", category: "start", rarity: "legendary", glyph: "seal" },
+  { key: "early_adopter", name: "Early Adopter", how: "Joined ReadRead in its first year", category: "start", rarity: "legendary", glyph: "seal" },
 
   { key: "bookworm", name: "Bookworm", how: "Rank 50 books", category: "depth", rarity: "uncommon", glyph: "worm", unit: "book" },
   { key: "century", name: "Century", how: "Rank 100 books", category: "depth", rarity: "rare", glyph: "hundred", unit: "book" },
@@ -138,7 +138,7 @@ export function sortForCase(statuses: BadgeStatus[]): BadgeStatus[] {
     });
 }
 
-/** Spine's first year: anyone who joined before this is an early adopter. */
+/** ReadRead's first year: anyone who joined before this is an early adopter. */
 export const EARLY_ADOPTER_BEFORE = "2027-01-01T05:00:00Z";
 
 export function isEarlyAdopter(createdAt: string | null | undefined): boolean {

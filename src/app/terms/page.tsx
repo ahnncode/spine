@@ -3,25 +3,25 @@ import Link from "next/link";
 import { LegalPage } from "@/components/LegalPage";
 import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Terms — Spine" };
+export const metadata: Metadata = { title: "Terms — ReadRead" };
 
 export default function Terms() {
   return (
     <LegalPage
       title="Terms"
-      intro="These are the rules for using Spine. By creating an account or using readspine.app, you agree to them. They’re written to be read, so please do."
+      intro="These are the rules for using ReadRead. By creating an account or using readread.app, you agree to them. They’re written to be read, so please do."
     >
       <h2>The basics</h2>
       <ul>
-        <li>Spine is run by {LEGAL.operator} (“we”). You can reach us at <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.</li>
-        <li>You must be at least {LEGAL.minimumAge} to use Spine. If you’re under the age of majority where you live, a parent or guardian must agree to these terms.</li>
-        <li>Keep access to your email account secure. Anyone who can get your sign-in emails can get into your Spine account.</li>
+        <li>ReadRead is run by {LEGAL.operator} (“we”). You can reach us at <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.</li>
+        <li>You must be at least {LEGAL.minimumAge} to use ReadRead. If you’re under the age of majority where you live, a parent or guardian must agree to these terms.</li>
+        <li>Keep access to your email account secure. Anyone who can get your sign-in emails can get into your ReadRead account.</li>
         <li>Our <Link href="/privacy">privacy policy</Link> explains how we handle your data.</li>
       </ul>
 
       <h2>Your content</h2>
       <p>
-        Your rankings, notes, reviews, check-ins and comments are yours. To run Spine, you give us a worldwide, non-exclusive,
+        Your rankings, notes, reviews, check-ins and comments are yours. To run ReadRead, you give us a worldwide, non-exclusive,
         royalty-free license to store, display and process them: showing them on your shelf, in friends’ feeds, on book pages,
         and in community scores and recommendations, according to your privacy settings. The license ends when you delete the
         content or your account, except where others have already interacted with it (for example, comments other people left on your posts are removed with it).
@@ -29,7 +29,7 @@ export default function Terms() {
       <p>You’re responsible for what you post, and you confirm you have the right to post it.</p>
 
       <h2>Be decent</h2>
-      <p>Don’t use Spine to:</p>
+      <p>Don’t use ReadRead to:</p>
       <ul>
         <li>Harass, threaten, bully or demean anyone, or post hateful content.</li>
         <li>Post anything illegal, sexual content involving minors, or other people’s private information.</li>
@@ -42,8 +42,8 @@ export default function Terms() {
 
       <h2>Copyright complaints</h2>
       <p>
-        If you believe something on Spine infringes your copyright, email <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a> with
-        the work, where it appears on Spine, your contact details, and a statement that you’re the owner or authorized to act for them. We’ll respond promptly.
+        If you believe something on ReadRead infringes your copyright, email <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a> with
+        the work, where it appears on ReadRead, your contact details, and a statement that you’re the owner or authorized to act for them. We’ll respond promptly.
       </p>
 
       <h2>Book information</h2>
@@ -52,19 +52,19 @@ export default function Terms() {
       <h2>Ending things</h2>
       <p>
         You can delete your account any time from You → Edit. We may suspend or end accounts that break these terms or put others
-        at risk. We may also change or stop parts of Spine; if we shut Spine down, we’ll give reasonable notice where we can.
+        at risk. We may also change or stop parts of ReadRead; if we shut ReadRead down, we’ll give reasonable notice where we can.
       </p>
 
       <h2>No warranties</h2>
       <p>
-        Spine is provided “as is” and “as available.” We work to keep it running and your data safe, but we don’t promise it will
+        ReadRead is provided “as is” and “as available.” We work to keep it running and your data safe, but we don’t promise it will
         always be available, error-free or secure, or that scores and recommendations will suit you.
       </p>
 
       <h2>Limits on liability</h2>
       <p>
         To the extent the law allows, we aren’t liable for indirect, incidental, special or consequential damages, or for lost
-        data or content, arising from your use of Spine. Our total liability for any claim about Spine is limited to the greater
+        data or content, arising from your use of ReadRead. Our total liability for any claim about ReadRead is limited to the greater
         of what you paid us in the past 12 months or $50. Some places don’t allow these limits, so they may not apply to you.
       </p>
 
@@ -72,7 +72,7 @@ export default function Terms() {
       <p>These terms are governed by the laws of the State of {LEGAL.governingState}, USA, except where the law where you live says otherwise.</p>
 
       <h2>Changes</h2>
-      <p>If we change these terms, we’ll update the date above. For significant changes, we’ll also let you know in the app or by email before they take effect. If you keep using Spine after that, the new terms apply.</p>
+      <p>If we change these terms, we’ll update the date above. For significant changes, we’ll also let you know in the app or by email before they take effect. If you keep using ReadRead after that, the new terms apply.</p>
     </LegalPage>
   );
 }

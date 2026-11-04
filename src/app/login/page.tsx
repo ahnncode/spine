@@ -193,7 +193,7 @@ function captchaMessage(raw: string): string {
 /** Why the bot check hasn't produced a pass, in words someone can act on. */
 function stuckMessage(st: TurnstileStatus): string {
   if (st.state === "blocked") {
-    return "Your browser blocked our bot check (often an ad or privacy blocker, or an in-app browser). Try turning the blocker off for readspine.app, or open the site in Safari or Chrome.";
+    return "Your browser blocked our bot check (often an ad or privacy blocker, or an in-app browser). Try turning the blocker off for readread.app, or open the site in Safari or Chrome.";
   }
   if (st.state === "error") {
     // Cloudflare's 110xxx/400xxx codes are setup problems on our side; others are usually the browser or network.

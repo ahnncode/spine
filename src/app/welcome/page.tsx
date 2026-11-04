@@ -75,7 +75,7 @@ function Welcome() {
   return (
     <div className="app">
       <form className="screen screen--flow" onSubmit={submit}>
-        <span className="wordmark">spine</span>
+        <span className="wordmark">readread</span>
         <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Welcome in.</h1>
         <p className="lede">Pick how friends find you. You can change this later.</p>
 

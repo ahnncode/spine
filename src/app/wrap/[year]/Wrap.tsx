@@ -57,7 +57,7 @@ function Inner() {
   const top = books.slice(0, 10);
 
   async function share() {
-    const text = `My ${year} in books on Spine: ${books.length} read${top[0] ? `, and my #1 was ${top[0].book.title}` : ""}.`;
+    const text = `My ${year} in books on ReadRead: ${books.length} read${top[0] ? `, and my #1 was ${top[0].book.title}` : ""}.`;
     const url = `${window.location.origin}/u/${profile?.username ?? ""}`;
     try {
       if (navigator.share) await navigator.share({ title: `${year} in books`, text, url });

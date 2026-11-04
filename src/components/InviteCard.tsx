@@ -11,7 +11,7 @@ export function InviteCard({ username, joined, qualified, earned }: { username: 
   const url = inviteUrl(username);
 
   async function share() {
-    const text = "I’m ranking my books on Spine — come compare taste with me.";
+    const text = "I’m ranking my books on ReadRead — come compare taste with me.";
     try {
       if (navigator.share) {
         // One string, not text + url: iOS treats those as two items, so

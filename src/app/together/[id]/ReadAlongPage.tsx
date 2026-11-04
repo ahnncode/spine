@@ -227,7 +227,7 @@ function Inner() {
                 <ShareCardButton
                   query={`kind=verdict&id=${data.ra.id}`}
                   label="Share the verdict"
-                  filename="spine-verdict"
+                  filename="readread-verdict"
                   className="btn btn--block"
                   style={{ marginTop: 14, background: "var(--accent)", color: "var(--ink)" }}
                 />

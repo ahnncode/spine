@@ -93,4 +93,4 @@ export async function getSitemapEntries(): Promise<{ kind: "profile" | "book"; k
   return (await rpc<{ kind: "profile" | "book"; key: string; updated: string }[]>("public_sitemap", {})) ?? [];
 }
 
-export const SITE_URL = "https://readspine.app";
+export const SITE_URL = "https://readread.app";

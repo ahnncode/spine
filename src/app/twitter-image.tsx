@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
 
-export const alt = "Spine — rank books, not stars";
+export const alt = "ReadRead — rank books, not stars";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -38,7 +38,7 @@ function Mark({ s }: { s: number }) {
   );
 }
 
-/** The link preview people see when readspine.app is shared. */
+/** The link preview people see when readread.app is shared. */
 export default function Image() {
   return new ImageResponse(
     (
@@ -46,7 +46,7 @@ export default function Image() {
         <div style={{ display: "flex", flexDirection: "column", flex: 1, height: "100%" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <Mark s={56} />
-            <div style={{ fontFamily: "Bricolage", fontWeight: 800, fontSize: 44, letterSpacing: "-0.05em" }}>spine</div>
+            <div style={{ fontFamily: "Bricolage", fontWeight: 800, fontSize: 44, letterSpacing: "-0.05em" }}>readread</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", marginTop: "auto", fontFamily: "Bricolage", fontWeight: 800, fontSize: 96, lineHeight: 0.92, letterSpacing: "-0.05em" }}>
             <span>Rank books,</span>
@@ -55,7 +55,7 @@ export default function Image() {
           <div style={{ display: "flex", marginTop: 26, fontSize: 26, lineHeight: 1.35, color: "#3D3D3A" }}>
             Head-to-head rankings, honest scores, and what your friends can’t put down.
           </div>
-          <div style={{ display: "flex", marginTop: "auto", fontFamily: "GeistMono", fontSize: 20, color: "#5E5E5A" }}>readspine.app</div>
+          <div style={{ display: "flex", marginTop: "auto", fontFamily: "GeistMono", fontSize: 20, color: "#5E5E5A" }}>readread.app</div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", width: 400, background: "#FFFFFF", border: "1px solid #E4E3DE", borderRadius: 28, padding: 10, gap: 4 }}>

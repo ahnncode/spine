@@ -23,7 +23,7 @@ export function Logo({ size = 28 }: { size?: number }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: size * 0.3 }}>
       <Mark size={size} />
-      <span className="wordmark" style={{ fontSize: size }}>spine</span>
+      <span className="wordmark" style={{ fontSize: size }}>readread</span>
     </span>
   );
 }

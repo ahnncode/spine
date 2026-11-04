@@ -8,7 +8,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro: st
   return (
     <div className="app">
       <main className="screen screen--flow legal">
-        <Link href="/" aria-label="Spine home" style={{ textDecoration: "none" }}>
+        <Link href="/" aria-label="ReadRead home" style={{ textDecoration: "none" }}>
           <Logo size={26} />
         </Link>
         <h1 className="h1" style={{ marginTop: 28 }}>{title}</h1>

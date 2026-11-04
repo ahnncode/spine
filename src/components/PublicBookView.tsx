@@ -35,7 +35,7 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
           "@context": "https://schema.org",
           "@type": "Book",
           name: book.title,
-          url: `https://readspine.app/book/${book.id}`,
+          url: `https://readread.app/book/${book.id}`,
           ...(book.author ? { author: { "@type": "Person", name: book.author } } : {}),
           ...(book.isbn13 ? { isbn: book.isbn13 } : {}),
           ...(book.pages ? { numberOfPages: book.pages } : {}),
@@ -67,7 +67,7 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
           <>
             <ScoreChip score={book.avg_score} bucket={bucketFor(book.avg_score)} size={64} />
             <div>
-              <div style={{ fontWeight: 700 }}>Spine score {formatScore(book.avg_score)}</div>
+              <div style={{ fontWeight: 700 }}>ReadRead score {formatScore(book.avg_score)}</div>
               <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
                 From {book.readers} reader{book.readers === 1 ? "" : "s"} · {lovedPct}% loved it
               </div>
@@ -76,14 +76,14 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
         ) : (
           <div>
             <div style={{ fontWeight: 700 }}>No rankings yet</div>
-            <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>Be the first to rank it on Spine.</div>
+            <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>Be the first to rank it on ReadRead.</div>
           </div>
         )}
       </section>
 
       {book.public_readers.length > 0 && (
         <section style={{ marginTop: 20 }}>
-          <h2 className="h2">Readers on Spine</h2>
+          <h2 className="h2">Readers on ReadRead</h2>
           <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
             {book.public_readers.map((r) => (
               <li key={r.username}>

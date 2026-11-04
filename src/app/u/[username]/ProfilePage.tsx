@@ -229,7 +229,7 @@ function Inner() {
                     <ShareCardButton
                       query={`kind=twins&u=${data.profile.username}`}
                       label="Share"
-                      filename={`spine-taste-${data.profile.username}`}
+                      filename={`readread-taste-${data.profile.username}`}
                       className="btn"
                       style={{ marginLeft: "auto", minHeight: 36, fontSize: 13, padding: "0 12px", background: "#fff", color: "var(--cobalt-ink)" }}
                     />

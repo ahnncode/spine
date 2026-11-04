@@ -46,7 +46,7 @@ export function JoinPage() {
               {first ? <>{first} wants to compare shelves.</> : <>Rank books, not stars.</>}
             </h1>
             <p className="lede" style={{ fontSize: 17 }}>
-              Spine turns every book you finish into a quick head-to-head, so you end up with an honest ranked shelf
+              ReadRead turns every book you finish into a quick head-to-head, so you end up with an honest ranked shelf
               {first ? <> — and a taste match with {first}.</> : "."}
             </p>
 
@@ -66,14 +66,14 @@ export function JoinPage() {
             <div className="spacer" style={{ minHeight: 32 }} />
             {signedIn ? (
               <>
-                <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 12px" }}>You&rsquo;re already on Spine.</p>
+                <p className="muted" style={{ fontSize: 14, textAlign: "center", margin: "0 0 12px" }}>You&rsquo;re already on ReadRead.</p>
                 <Link href={inviter ? `/u/${inviter.username}` : "/feed"} className="btn btn--block">
-                  {first ? `See ${first}’s shelf` : "Open Spine"}
+                  {first ? `See ${first}’s shelf` : "Open ReadRead"}
                 </Link>
               </>
             ) : (
               <Link href="/login" className="btn btn--block">
-                {first ? `Join ${first} on Spine` : "Start your shelf"}
+                {first ? `Join ${first} on ReadRead` : "Start your shelf"}
               </Link>
             )}
             {!inviter && (

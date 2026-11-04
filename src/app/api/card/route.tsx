@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     const covers = await Promise.all(rows.map((r) => coverData(r.book)));
     return new ImageResponse(
       (
-        <Frame footer={me?.username ? `readspine.app/u/${me.username}` : "readspine.app"}>
+        <Frame footer={me?.username ? `readread.app/u/${me.username}` : "readread.app"}>
           <div style={{ display: "flex", flexDirection: "column", marginTop: 40 }}>
             <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 26, color: ACCENT, letterSpacing: "0.08em" }}>MY TOP {rows.length || 10}</div>
             <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: 64, letterSpacing: "-0.04em", marginTop: 6 }}>{clamp(nameOf(me), 24)}</div>
@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
     const first = (p: ProfileRow | null) => nameOf(p).split(" ")[0];
     return new ImageResponse(
       (
-        <Frame footer="readspine.app">
+        <Frame footer="readread.app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 70, gap: 0 }}>
             <OgAvatar name={nameOf(me)} icon={me?.avatar_icon ?? null} color={me?.avatar_color ?? null} size={190} />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 250, height: 250, borderRadius: 125, background: "#2D3FE0", color: "#fff", margin: "0 -30px", border: `10px solid ${GROUND}`, fontFamily: "Bricolage", fontWeight: 800, fontSize: 96, letterSpacing: "-0.04em" }}>
@@ -155,7 +155,7 @@ export async function GET(req: NextRequest) {
   const avg = scored.reduce((s, p) => s + Number(p.score), 0) / Math.max(1, scored.length);
   return new ImageResponse(
     (
-      <Frame footer="readspine.app">
+      <Frame footer="readread.app">
         <div style={{ display: "flex", gap: 40, alignItems: "flex-end", marginTop: 56 }}>
           <OgCover book={r.book} src={cover} width={250} />
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>

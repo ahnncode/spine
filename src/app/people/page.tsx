@@ -44,9 +44,9 @@ function People() {
 
   async function invite() {
     const url = `${window.location.origin}/u/${me?.username}`;
-    const text = "I’m ranking books on Spine — come see how our taste compares.";
+    const text = "I’m ranking books on ReadRead — come see how our taste compares.";
     try {
-      if (navigator.share) await navigator.share({ title: "Spine", text, url });
+      if (navigator.share) await navigator.share({ title: "ReadRead", text, url });
       else {
         await navigator.clipboard.writeText(`${text} ${url}`);
         setCopied(true);

@@ -45,7 +45,7 @@ export function Wordmark({ s = 40 }: { s?: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: s * 0.3 }}>
       <Mark s={s} />
-      <div style={{ fontFamily: "Bricolage", fontWeight: 800, fontSize: s * 0.8, letterSpacing: "-0.05em", color: INK }}>spine</div>
+      <div style={{ fontFamily: "Bricolage", fontWeight: 800, fontSize: s * 0.8, letterSpacing: "-0.05em", color: INK }}>readread</div>
     </div>
   );
 }
@@ -66,7 +66,7 @@ export async function coverData(book: PublicBookCard): Promise<string | null> {
   return null;
 }
 
-/** A book cover at a given width (2:3), with Spine's drawn cover when there's no art. */
+/** A book cover at a given width (2:3), with ReadRead's drawn cover when there's no art. */
 export function OgCover({ book, src, width }: { book: PublicBookCard; src: string | null; width: number }) {
   const height = Math.round(width * 1.5);
   const radius = `${Math.max(2, width * 0.03)}px ${Math.max(4, width * 0.06)}px ${Math.max(4, width * 0.06)}px ${Math.max(2, width * 0.03)}px`;
