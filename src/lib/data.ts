@@ -3,7 +3,8 @@ import type { ImportedBook } from "./goodreads";
 import { startingOrder } from "./goodreads";
 import type { BadgeStatus } from "./badges";
 import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
-import { lookup } from "./openlibrary";
+import { findAppleAuthor } from "./applecovers";
+import { authorToCheck, lookup } from "./openlibrary";
 import { supabase } from "./supabase";
 
 export type Status = "ranked" | "want" | "unsorted" | "reading";
@@ -143,7 +144,20 @@ export async function ensureBooks(inputs: BookInput[]): Promise<Map<string, stri
   return ids;
 }
 
-export async function ensureBook(input: BookInput): Promise<string> {
+/** Wait at most `ms` for a promise; null if it's slower or fails. */
+function within<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([p.catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), ms))]);
+}
+
+export async function ensureBook(raw: BookInput): Promise<string> {
+  let input = raw;
+  // Authors Open Library lists in another script, or in an uncertain order:
+  // use the English spelling from Apple's catalogue when it confirms one.
+  const spellings = authorToCheck(raw);
+  if (spellings) {
+    const english = await within(findAppleAuthor(raw.title, spellings), 2500);
+    if (english) input = { ...raw, author: english };
+  }
   const ids = await ensureBooks([input]);
   const id = ids.get(dedupeKey(input.title, input.author));
   if (!id) throw new Error("Couldn't save that book");
@@ -198,6 +212,13 @@ export async function setBookGenre(bookId: string, genre: string): Promise<boole
 export async function setBookCover(bookId: string, url: string | null): Promise<void> {
   const { error } = await supabase().rpc("set_book_cover", { p_book: bookId, p_url: url });
   if (error) throw error;
+}
+
+/** Replace an author name written in another script with its English spelling. */
+export async function setBookAuthor(bookId: string, author: string): Promise<boolean> {
+  const { data, error } = await supabase().rpc("set_book_author", { p_book: bookId, p_author: author });
+  if (error) throw error;
+  return Boolean(data);
 }
 
 /** Correct a book's title/author (only if nobody else has it, or you fixed it before). */

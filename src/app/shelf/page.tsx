@@ -13,6 +13,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { NoteText, TagList } from "@/components/Social";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { TabBar } from "@/components/TabBar";
+import { useAuthorFix } from "@/components/useAuthorFix";
 import { useCoverBackfill } from "@/components/useCoverBackfill";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
@@ -36,6 +37,7 @@ function Shelf() {
   const { list: readAlongs, people: raPeople } = useReadAlongs();
   useEnrichment(entries, reload);
   useCoverBackfill(entries, reload);
+  useAuthorFix(entries, reload);
   const [tab, setTab] = useState<Tab>("ranked");
   const [genre, setGenre] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);

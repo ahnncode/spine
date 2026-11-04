@@ -1,3 +1,4 @@
+import { englishAuthorName, isLatin } from "./authors";
 import { cleanTitle, dedupeKey, type BookInput } from "./books";
 import { genresFromSubjects } from "./genres";
 
@@ -5,6 +6,8 @@ interface OLDoc {
   key: string;
   title: string;
   author_name?: string[];
+  /** Other spellings of the authors' names (often the English one). */
+  author_alternative_name?: string[];
   first_publish_year?: number;
   cover_i?: number;
   isbn?: string[];
@@ -23,11 +26,11 @@ interface OLEdition {
 
 // Full detail, for filling in one book (includes subjects for genres).
 const FIELDS =
-  "key,title,author_name,first_publish_year,cover_i,isbn,number_of_pages_median,subject," +
+  "key,title,author_name,author_alternative_name,first_publish_year,cover_i,isbn,number_of_pages_median,subject," +
   "editions,editions.title,editions.language,editions.cover_i,editions.isbn";
 // Search results: just what the list shows. Leaving out subjects and the full
 // ISBN lists cuts responses from ~300KB to a few KB.
-const QUICK_FIELDS = "key,title,author_name,first_publish_year,cover_i,number_of_pages_median";
+const QUICK_FIELDS = "key,title,author_name,author_alternative_name,first_publish_year,cover_i,number_of_pages_median";
 const ENGLISH_FIELDS = `${QUICK_FIELDS},editions,editions.title,editions.language,editions.cover_i,editions.isbn`;
 
 /** Spine is for English readers: prefer English editions' titles and covers. */
@@ -36,11 +39,32 @@ function englishEdition(d: OLDoc): OLEdition | null {
   return ed?.title && ed.language?.includes("eng") ? ed : null;
 }
 
+/**
+ * Books whose author we spelled from Open Library's alternatives (or couldn't),
+ * with every spelling we saw, so Apple's catalogue can confirm the English one.
+ */
+const authorSpellings = new Map<string, string[]>();
+
+/** Spellings to check for a book's author, if it needs checking. */
+export function authorToCheck(book: BookInput): string[] | null {
+  const key = dedupeKey(book.title, book.author);
+  if (authorSpellings.has(key)) return authorSpellings.get(key)!;
+  return book.author && !isLatin(book.author) ? [book.author] : null;
+}
+
 function toBook(d: OLDoc, isbn13?: string): BookInput {
   const en = englishEdition(d);
+  const native = d.author_name?.[0] ?? null;
+  const english = englishAuthorName(native, d.author_alternative_name);
+  const title = cleanTitle(en?.title ?? d.title);
+  if (english.guessed || (english.name && !isLatin(english.name))) {
+    const alts = (d.author_alternative_name ?? []).filter((a) => isLatin(a) && !a.includes(";"));
+    authorSpellings.set(dedupeKey(title, english.name), [english.name!, ...alts].slice(0, 12));
+    if (authorSpellings.size > 500) authorSpellings.delete(authorSpellings.keys().next().value!);
+  }
   return {
-    title: cleanTitle(en?.title ?? d.title),
-    author: d.author_name?.[0] ?? null,
+    title,
+    author: english.name,
     ol_work_key: d.key,
     cover_id: en?.cover_i ?? d.cover_i ?? null,
     isbn13: isbn13 ?? en?.isbn?.find((i) => i.length === 13) ?? d.isbn?.find((i) => i.length === 13) ?? null,

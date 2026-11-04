@@ -1,3 +1,5 @@
+import { isLatin, nameWords } from "./authors";
+
 /**
  * Backup cover art from Apple's book catalogue, for books Open Library has
  * no picture for. No key needed; Apple allows about 20 lookups a minute.
@@ -44,4 +46,26 @@ export async function findAppleCover(title: string, author: string | null): Prom
   const { results } = (await res.json()) as { results?: AppleResult[] };
   const hit = (results ?? []).find((r) => r.artworkUrl100 && sameBook({ title, author }, r));
   return hit?.artworkUrl100 ? bigArtwork(hit.artworkUrl100) : null;
+}
+
+/**
+ * How Apple's English catalogue spells an author, for names Open Library has
+ * in another script or in an uncertain order. `spellings` are the names we
+ * already think it could be; Apple's must use the same words.
+ */
+export async function findAppleAuthor(title: string, spellings: string[]): Promise<string | null> {
+  const words = spellings.filter(isLatin).map(nameWords);
+  if (!words.length) return null;
+  const term = `${title.split(":")[0]} ${spellings.find(isLatin) ?? ""}`.replace(/[()[\]]/g, " ").replace(/\s+/g, " ").trim();
+  const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: "us" });
+  const res = await fetch(`https://itunes.apple.com/search?${params}`);
+  if (!res.ok) throw new Error(`Apple lookup failed (${res.status})`);
+  const { results } = (await res.json()) as { results?: AppleResult[] };
+  for (const r of results ?? []) {
+    if (!r.artistName || !sameBook({ title, author: null }, r)) continue;
+    const first = r.artistName.split(/\s*(?:&|,| and )\s*/)[0].trim();
+    const got = nameWords(first);
+    if (got.size && words.some((w) => [...got].every((x) => w.has(x)) && [...w].every((x) => got.has(x)))) return first;
+  }
+  return null;
 }
