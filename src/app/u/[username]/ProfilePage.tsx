@@ -1,5 +1,6 @@
 "use client";
 
+import { ShareCardButton } from "@/components/ShareCard";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -224,6 +225,15 @@ function Inner() {
                         : `You’ve ranked ${shared.length} of the same books — 3 needed`}
                     </div>
                   </div>
+                  {data.match?.match != null && data.profile.username && (
+                    <ShareCardButton
+                      query={`kind=twins&u=${data.profile.username}`}
+                      label="Share"
+                      filename={`spine-taste-${data.profile.username}`}
+                      className="btn"
+                      style={{ marginLeft: "auto", minHeight: 36, fontSize: 13, padding: "0 12px", background: "#fff", color: "var(--cobalt-ink)" }}
+                    />
+                  )}
                 </div>
 
                 {disagree.length > 0 && (

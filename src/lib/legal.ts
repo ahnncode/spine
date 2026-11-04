@@ -11,6 +11,6 @@ export const LEGAL = {
   governingState: "Pennsylvania",
   /** Where the Supabase project lives (Supabase → Project Settings → General → Region). */
   dataRegion: "the United States (East US)",
-  effectiveDate: "November 2, 2026",
+  effectiveDate: "November 4, 2026",
   minimumAge: 13,
 };

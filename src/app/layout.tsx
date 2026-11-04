@@ -2,13 +2,16 @@ import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/Auth";
 import "./globals.css";
 
-const description = "Rank what you read with quick head-to-heads, and see what your friends can't put down.";
+const description =
+  "Spine is a social book tracker and Goodreads alternative. Rank the books you read with quick head-to-heads instead of stars, import from Goodreads or StoryGraph, and see what your friends can't put down.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://readspine.app"),
   title: "Spine — rank books, not stars",
   description,
   applicationName: "Spine",
+  keywords: ["book tracker", "Goodreads alternative", "StoryGraph alternative", "rank books", "reading tracker", "book ranking app", "book club app", "reading log"],
+  alternates: { canonical: "/" },
   appleWebApp: { title: "Spine", capable: true, statusBarStyle: "default" },
   openGraph: { type: "website", siteName: "Spine", url: "/", title: "Spine — rank books, not stars", description },
   twitter: { card: "summary_large_image", title: "Spine — rank books, not stars", description },

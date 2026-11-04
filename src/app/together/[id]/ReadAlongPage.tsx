@@ -1,5 +1,6 @@
 "use client";
 
+import { ShareCardButton } from "@/components/ShareCard";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
@@ -223,10 +224,17 @@ function Inner() {
                     : " — you mostly agree"}
                   . Group average {formatScore(verdict.reduce((s, p) => s + (p.score ?? 0), 0) / verdict.length)}.
                 </p>
+                <ShareCardButton
+                  query={`kind=verdict&id=${data.ra.id}`}
+                  label="Share the verdict"
+                  filename="spine-verdict"
+                  className="btn btn--block"
+                  style={{ marginTop: 14, background: "var(--accent)", color: "var(--ink)" }}
+                />
                 <Link
                   href="/search"
                   className="btn btn--block"
-                  style={{ marginTop: 14, background: "#fff", color: "var(--ink)" }}
+                  style={{ marginTop: 8, background: "#fff", color: "var(--ink)" }}
                   onClick={() => rememberNextGroup(data.ra.id, joined.map((p) => p.user_id).filter((u) => u !== me?.id))}
                 >
                   Pick the next book together

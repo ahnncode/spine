@@ -640,3 +640,13 @@ button.stamp--locked { border: 1.5px dashed #bdbcb6; }
   .search-progress[data-on="true"] span { animation: none; left: 0; width: 100%; opacity: 0.5; }
   .skeleton { animation: none; }
 }
+
+/* Landing page: what Spine is, for readers and search engines. */
+.landing-more { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 8px; }
+.landing-feature { margin-top: 22px; }
+.landing-feature p, .landing-faq p { margin: 6px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+.landing-faq { border-bottom: 1px solid var(--line); padding: 4px 0 12px; }
+.landing-faq summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.share-card-frame { display: flex; justify-content: center; }
+.share-card-img { width: 100%; max-width: 320px; aspect-ratio: 4 / 5; border-radius: 16px; box-shadow: 0 16px 36px -18px rgba(17,17,17,0.5); }
+.share-card-loading { width: 100%; max-width: 320px; aspect-ratio: 4 / 5; }

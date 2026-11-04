@@ -14,6 +14,26 @@ const SAMPLE = [
   { title: "Piranesi", author: "Susanna Clarke", score: 8.8 },
 ];
 
+const FEATURES = [
+  { h: "A Goodreads alternative built on rankings", p: "Stars drift. Spine asks one easy question instead: which did you like more? Every book you finish lands in the right spot on your shelf, with a score from 0 to 10 that stays honest." },
+  { h: "See what your friends are reading", p: "Follow friends, see their rankings and check-ins, and find out your taste match — plus the books you disagree on most." },
+  { h: "Read together, spoiler-free", p: "Start a read-along for any book: everyone's progress in one place, a discussion that hides anything past where you are, and a score reveal when you've all finished." },
+  { h: "Bring your Goodreads or StoryGraph library", p: "Upload your export and your ratings become a starting ranking in seconds. Then sharpen it with quick head-to-heads." },
+  { h: "Streaks, badges and your year in books", p: "Check in as you read to keep a weekly streak, collect a genre passport and 31 badges, and get a yearly recap of everything you read." },
+];
+
+const FAQ = [
+  { q: "Is Spine free?", a: "Yes. Spine is free to use, with no ads." },
+  { q: "How is ranking different from star ratings?", a: "Instead of picking a number, you compare a new book with ones you've already read. Spine places it on your ranked shelf and turns its position into a score from 0 to 10, so your scores stay consistent over time." },
+  { q: "Can I import my Goodreads or StoryGraph books?", a: "Yes. Export your library from Goodreads or StoryGraph as a CSV file and upload it on Spine. Ratings, reviews, dates read and want-to-read shelves come with it." },
+  { q: "Is there an app?", a: "Spine works in your phone's browser and can be added to your home screen like an app. Native iPhone and Android apps are planned." },
+  { q: "Can I keep my shelf private?", a: "Yes. You can make your shelf private at any time, and public web profiles are off unless you turn them on." },
+];
+
+function jsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
 export default function Landing() {
   const { session, loading } = useAuth();
   const router = useRouter();
@@ -88,6 +108,45 @@ export default function Landing() {
         <p className="muted" style={{ textAlign: "center", fontSize: 14, margin: "14px 0 0" }}>
           Coming from Goodreads or StoryGraph? Bring your whole library in one upload.
         </p>
+
+        <section className="landing-more" aria-label="About Spine">
+          {FEATURES.map((f) => (
+            <div key={f.h} className="landing-feature">
+              <h2 className="h2">{f.h}</h2>
+              <p>{f.p}</p>
+            </div>
+          ))}
+          <h2 className="h2" style={{ marginTop: 28 }}>Questions</h2>
+          {FAQ.map((q) => (
+            <details key={q.q} className="landing-faq">
+              <summary>{q.q}</summary>
+              <p>{q.a}</p>
+            </details>
+          ))}
+        </section>
+        <script
+          type="application/ld+json"
+          // Structured data so search engines understand what Spine is.
+          dangerouslySetInnerHTML={{ __html: jsonLd({
+            "@context": "https://schema.org",
+            "@graph": [
+              {
+                "@type": "WebApplication",
+                name: "Spine",
+                url: "https://readspine.app",
+                applicationCategory: "LifestyleApplication",
+                operatingSystem: "Web, iOS, Android",
+                description: "A social book tracker where you rank the books you read with quick head-to-head comparisons instead of star ratings.",
+                offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+              },
+              {
+                "@type": "FAQPage",
+                mainEntity: FAQ.map((q) => ({ "@type": "Question", name: q.q, acceptedAnswer: { "@type": "Answer", text: q.a } })),
+              },
+            ],
+          }) }}
+        />
+
         <p className="muted" style={{ textAlign: "center", fontSize: 13, margin: "20px 0 0" }}>
           <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
         </p>

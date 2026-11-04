@@ -36,7 +36,7 @@ const NEXT_KEY = "spine:next";
 const NOT_A_DESTINATION = /^\/(welcome|start|login)?$/;
 
 /** Remember a page someone was headed to (e.g. a friend's profile) before signing in. */
-function rememberDestination(path: string) {
+export function rememberDestination(path: string) {
   try {
     if (!NOT_A_DESTINATION.test(path)) sessionStorage.setItem(NEXT_KEY, path);
   } catch {}

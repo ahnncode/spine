@@ -39,6 +39,8 @@ export default function Privacy() {
         <li><strong>By default your shelf is public to signed-in readers:</strong> your rankings, scores, notes, tags, check-ins and the books you’re reading. That’s what makes the feed, taste match and recommendations work.</li>
         <li><strong>You can make your shelf private</strong> (You → Edit → Private shelf). Then only you can see it, you won’t appear in anyone’s feed, and your scores aren’t used in community scores, taste match, or anyone’s recommendations.</li>
         <li><strong>Your username and display name are visible</strong> to signed-in readers even when your shelf is private, so friends can find you.</li>
+        <li><strong>Public web profiles are off unless you turn them on</strong> (You → Edit → Show my profile on the web). When on, anyone with your link, including search engines, can see your name, username, picture, blurb, top 10 rankings, what you&rsquo;re reading and your badges. Your notes, check-ins and the rest of your shelf stay visible only to signed-in readers.</li>
+        <li><strong>Book pages are public:</strong> anyone can see a book&rsquo;s details and its community score (an average that never reveals who scored what), plus readers who have turned on public profiles.</li>
         <li><strong>Comments and hearts</strong> are visible to anyone who can see the post they’re on.</li>
         <li><strong>Blocking</strong> hides your shelf, posts and comments from that person and theirs from you, and ends follows between you.</li>
         <li><strong>Community scores and predictions</strong> combine many readers’ scores. They never reveal who scored what.</li>

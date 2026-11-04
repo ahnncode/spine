@@ -56,6 +56,8 @@ export interface Profile {
   /** Chosen profile picture: an icon on a color (both null = initials). */
   avatar_icon?: string | null;
   avatar_color?: string | null;
+  /** Visible on the web to people without an account. */
+  public_profile?: boolean;
 }
 
 const ENTRY_SELECT =
@@ -439,7 +441,7 @@ export async function importGoodreads(
 
 /* ------------------------------ Profiles & follows ----------------------- */
 
-const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at, bio, avatar_icon, avatar_color";
+const PROFILE_SELECT = "id, username, display_name, is_private, yearly_goal, created_at, bio, avatar_icon, avatar_color, public_profile";
 
 export async function fetchMyProfile(): Promise<Profile | null> {
   const uid = await myId();

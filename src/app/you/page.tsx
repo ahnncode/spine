@@ -1,5 +1,6 @@
 "use client";
 
+import { ShareCardButton } from "@/components/ShareCard";
 import { ReadAlongStack } from "@/components/ReadAlongStack";
 import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
@@ -292,7 +293,12 @@ function You() {
 
         {ranked.length > 0 && (
           <section className="card" style={{ marginTop: 10 }}>
-            <h2 className="h2">Your top three</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+              <h2 className="h2">Your top three</h2>
+              {ranked.length >= 3 && (
+                <ShareCardButton query="kind=top" label="Share top 10" filename="spine-top-10" className="btn btn--quiet" style={{ minHeight: 36, fontSize: 13, padding: "0 12px" }} />
+              )}
+            </div>
             <div style={{ display: "flex", gap: 14, marginTop: 14 }}>
               {ranked.slice(0, 3).map((e) => (
                 <Link key={e.id} href={`/book/${e.book_id}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }} aria-label={`#${e.rank} ${e.book.title}`}>
@@ -457,7 +463,7 @@ function You() {
 
       {editing && profile && (
         <EditProfile
-          initial={{ name: profile.display_name ?? "", bio: profile.bio ?? "", goal: profile.yearly_goal, isPrivate: profile.is_private }}
+          initial={{ name: profile.display_name ?? "", bio: profile.bio ?? "", goal: profile.yearly_goal, isPrivate: profile.is_private, isPublic: Boolean(profile.public_profile) }}
           username={profile.username ?? ""}
           onDeleted={() => router.replace("/")}
           onClose={() => setEditing(false)}
@@ -472,7 +478,7 @@ function You() {
 function EditProfile({
   initial, username, onClose, onSaved, onDeleted,
 }: {
-  initial: { name: string; bio: string; goal: number | null; isPrivate: boolean };
+  initial: { name: string; bio: string; goal: number | null; isPrivate: boolean; isPublic: boolean };
   username: string;
   onClose: () => void;
   onSaved: () => Promise<void>;
@@ -484,6 +490,7 @@ function EditProfile({
   const [bio, setBio] = useState(initial.bio);
   const [goal, setGoal] = useState(initial.goal ? String(initial.goal) : "");
   const [isPrivate, setPrivate] = useState(initial.isPrivate);
+  const [isPublic, setPublic] = useState(initial.isPublic);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -509,6 +516,7 @@ function EditProfile({
         bio: bio.replace(/\s*\n\s*\n+/g, "\n").trim().slice(0, 160) || null,
         yearly_goal: Number.isFinite(g) && g > 0 ? Math.min(g, 1000) : null,
         is_private: isPrivate,
+        public_profile: isPublic && !isPrivate,
       });
       await onSaved();
     } catch (e) {
@@ -544,6 +552,15 @@ function EditProfile({
           <span>
             <span style={{ fontWeight: 600, display: "block" }}>Private shelf</span>
             <span className="muted" style={{ fontSize: 13 }}>Only you see your shelf and rankings. You won&rsquo;t appear in friends&rsquo; feeds, and your scores aren&rsquo;t used for anyone&rsquo;s community or predicted scores.</span>
+          </span>
+        </label>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 14, cursor: isPrivate ? "default" : "pointer", opacity: isPrivate ? 0.5 : 1 }}>
+          <input type="checkbox" checked={isPublic && !isPrivate} disabled={isPrivate} onChange={(e) => setPublic(e.target.checked)} style={{ width: 22, height: 22, marginTop: 2, accentColor: "var(--ink)" }} />
+          <span>
+            <span style={{ fontWeight: 600, display: "block" }}>Show my profile on the web</span>
+            <span className="muted" style={{ fontSize: 13 }}>
+              Anyone with your link — and search engines — can see your name, picture, blurb, top 10, reading now and badges, without an account.
+            </span>
           </span>
         </label>
         {error && <p className="error" role="alert">{error}</p>}
