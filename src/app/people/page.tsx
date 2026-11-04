@@ -8,7 +8,7 @@ import { Name } from "@/components/Badge";
 import { FollowButton } from "@/components/FollowButton";
 import { BackIcon, SearchIcon, ShareIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
-import { fetchFollowing, fetchProfiles, searchProfiles, similarReaders, type Profile } from "@/lib/data";
+import { fetchFollowing, fetchProfiles, inviteUrl, searchProfiles, similarReaders, type Profile } from "@/lib/data";
 
 export default function PeoplePage() {
   return (
@@ -43,12 +43,13 @@ function People() {
   }, [query]);
 
   async function invite() {
-    const url = `${window.location.origin}/u/${me?.username}`;
-    const text = "I’m ranking books on readread — come see how our taste compares.";
+    // The invite link credits you when they join; one string so iOS shows the link once.
+    const url = me?.username ? inviteUrl(me.username) : window.location.origin;
+    const text = `I’m ranking books on readread — come see how our taste compares. ${url}`;
     try {
-      if (navigator.share) await navigator.share({ title: "readread", text, url });
+      if (navigator.share) await navigator.share({ text });
       else {
-        await navigator.clipboard.writeText(`${text} ${url}`);
+        await navigator.clipboard.writeText(text);
         setCopied(true);
       }
     } catch {
@@ -83,8 +84,13 @@ function People() {
         </div>
 
         {shown ? (
-          shown.length ? <div style={{ marginTop: 8 }}>{shown.map((p) => row(p))}</div> : (
-            <div className="empty"><p className="h2">No one by that name yet</p><p style={{ margin: 0, fontSize: 14 }}>Invite them below.</p></div>
+          shown.length ? (
+            <>
+              <div style={{ marginTop: 8 }}>{shown.map((p) => row(p))}</div>
+              <InviteSomeone query={query} username={me?.username ?? null} compact />
+            </>
+          ) : (
+            <InviteSomeone query={query} username={me?.username ?? null} />
           )
         ) : (
           <>
@@ -105,6 +111,86 @@ function People() {
         )}
       </main>
       <TabBar />
+    </div>
+  );
+}
+
+/** What they typed, read as a contact: an email, a phone number, or a name. */
+function asContact(query: string): { kind: "email" | "phone" | "name"; value: string } {
+  const q = query.trim().replace(/^@/, "");
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(q)) return { kind: "email", value: q };
+  const digits = q.replace(/[^\d+]/g, "");
+  if (/^\+?\d{7,15}$/.test(digits) && !/[a-z]/i.test(q)) return { kind: "phone", value: digits };
+  return { kind: "name", value: q };
+}
+
+/**
+ * Couldn't find them? Invite them right here: a text or email when they typed
+ * a number or address, otherwise the share sheet, with your invite link.
+ */
+function InviteSomeone({ query, username, compact = false }: { query: string; username: string | null; compact?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  const contact = asContact(query);
+  const url = username ? inviteUrl(username) : "https://readread.app";
+  const first = contact.kind === "name" ? contact.value.split(/\s+/)[0] : "";
+  // Friendly, with the name if they typed one (lowercase "hey" reads like a text).
+  const greeting = first && first.length <= 20 && /^[\p{L}'-]+$/u.test(first) ? `hey ${first}! ` : "";
+  const message = `${greeting}I’m ranking my books on readread — join me and we can compare taste: ${url}`;
+
+  async function share() {
+    try {
+      if (navigator.share) {
+        await navigator.share({ text: message });
+        return;
+      }
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
+    }
+    copy();
+  }
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.prompt("Copy your invite", message);
+    }
+  }
+
+  const direct =
+    contact.kind === "email"
+      ? { href: `mailto:${contact.value}?subject=${encodeURIComponent("Join me on readread")}&body=${encodeURIComponent(message)}`, label: "Email them an invite" }
+      : contact.kind === "phone"
+        ? { href: `sms:${contact.value}?&body=${encodeURIComponent(message)}`, label: "Text them an invite" }
+        : null;
+
+  if (compact) {
+    return (
+      <button className="btn btn--ghost" style={{ marginTop: 10, paddingLeft: 0, fontSize: 14 }} onClick={share}>
+        {copied ? "Invite copied" : "Don’t see them? Send an invite →"}
+      </button>
+    );
+  }
+
+  const who = contact.kind === "name" && contact.value ? `“${contact.value}”` : "them";
+  return (
+    <div className="card" style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+      <div>
+        <p className="h2" style={{ margin: 0 }}>{contact.kind === "name" ? <>No one called {who} yet</> : "They’re not on readread yet"}</p>
+        <p className="muted" style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.45 }}>
+          Send them your invite link. Once they&rsquo;ve ranked a few books, you&rsquo;ll see how your taste compares, and it counts toward your Connector badge.
+        </p>
+      </div>
+      <div className="m muted" style={{ fontSize: 12, padding: "10px 12px", borderRadius: 10, background: "var(--well)", lineHeight: 1.45, overflowWrap: "anywhere" }}>
+        {message}
+      </div>
+      {direct ? (
+        <a href={direct.href} className="btn btn--block" style={{ textDecoration: "none" }}>{direct.label}</a>
+      ) : (
+        <button className="btn btn--block" onClick={share}>{first ? `Invite ${first}` : "Send an invite"}</button>
+      )}
+      <button className="btn btn--outline btn--block" onClick={copy}>{copied ? "Copied" : "Copy invite"}</button>
     </div>
   );
 }
