@@ -134,6 +134,7 @@ export default function Landing() {
                 "@type": "WebApplication",
                 name: "readread",
                 url: "https://readread.app",
+                sameAs: ["https://www.instagram.com/readread.app/"],
                 applicationCategory: "LifestyleApplication",
                 operatingSystem: "Web, iOS, Android",
                 description: "A social book tracker where you rank the books you read with quick head-to-head comparisons instead of star ratings.",
@@ -148,7 +149,7 @@ export default function Landing() {
         />
 
         <p className="muted" style={{ textAlign: "center", fontSize: 13, margin: "20px 0 0" }}>
-          <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
+          <a href="https://www.instagram.com/readread.app/" target="_blank" rel="noopener noreferrer">Instagram</a> · <Link href="/privacy">Privacy</Link> · <Link href="/terms">Terms</Link>
         </p>
       </main>
     </div>
