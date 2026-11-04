@@ -1,0 +1,25 @@
+# The app moved from readspine.app to readread.app. Netlify serves domain
+# aliases as-is, so send old addresses (and every path on them) to the new one.
+[[redirects]]
+  from = "https://readspine.app/*"
+  to = "https://readread.app/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.readspine.app/*"
+  to = "https://readread.app/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://readspine.app/*"
+  to = "https://readread.app/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "http://www.readspine.app/*"
+  to = "https://readread.app/:splat"
+  status = 301
+  force = true
