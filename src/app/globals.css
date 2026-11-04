@@ -409,7 +409,7 @@ img { display: block; max-width: 100%; }
   border: 1px solid var(--line-2); background: var(--surface);
   font-size: 13px; font-weight: 600; color: var(--ink);
 }
-.tag-chip[aria-pressed="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.tag-chip[aria-pressed="true"], .tag-chip[data-pressed] { background: var(--ink); color: #fff; border-color: var(--ink); }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
 .tag-pill { font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: var(--well); color: var(--ink-2); }
 .textarea {

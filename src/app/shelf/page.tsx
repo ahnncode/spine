@@ -226,6 +226,7 @@ function Shelf() {
                     entry={sheet}
                     compact
                     onSaved={async () => { await reload(); setEditingThoughts(false); setSheet(null); }}
+                    onDateSaved={reload}
                   />
                 ) : (
                   <>

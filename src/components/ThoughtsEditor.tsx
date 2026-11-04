@@ -2,7 +2,8 @@
 
 import { useMentionPicker } from "@/components/Mentions";
 import { useState } from "react";
-import { saveThoughts, type Entry } from "@/lib/data";
+import { saveFinishedOn, saveThoughts, type Entry } from "@/lib/data";
+import { FinishedPicker } from "@/components/FinishedPicker";
 import { NOTE_MAX, REVIEW_TAGS } from "@/lib/thoughts";
 
 /**
@@ -12,23 +13,42 @@ import { NOTE_MAX, REVIEW_TAGS } from "@/lib/thoughts";
 export function ThoughtsEditor({
   entry,
   onSaved,
+  onDateSaved,
   compact = false,
+  showDate = true,
 }: {
   entry: Pick<Entry, "id" | "note" | "tags" | "note_spoiler" | "finished_on">;
   onSaved?: () => void | Promise<void>;
+  /** After the finish date saves on its own (the editor stays open). */
+  onDateSaved?: () => void | Promise<void>;
   compact?: boolean;
+  /** Off right after ranking, where the date was just picked. */
+  showDate?: boolean;
 }) {
   const [tags, setTags] = useState<string[]>(entry.tags ?? []);
   const [note, setNote] = useState(entry.note ?? "");
   const [spoiler, setSpoiler] = useState(entry.note_spoiler ?? false);
-  const [finished, setFinished] = useState(entry.finished_on ?? "");
+  const [finished, setFinished] = useState<string | null>(entry.finished_on ?? null);
+  const [dateNote, setDateNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   const mention = useMentionPicker<HTMLTextAreaElement>(note, (v) => { setNote(v); setSaved(false); });
   const [error, setError] = useState<string | null>(null);
 
-  const today = new Date();
-  const max = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  // The date saves the moment it's picked: no separate button to forget.
+  async function pickDate(v: string | null) {
+    const before = finished;
+    setFinished(v);
+    setDateNote(null);
+    try {
+      await saveFinishedOn(entry.id, v);
+      setDateNote("Date saved");
+      await onDateSaved?.();
+    } catch {
+      setFinished(before);
+      setDateNote("Couldn’t save the date — try again");
+    }
+  }
 
   function toggle(key: string) {
     setSaved(false);
@@ -39,7 +59,7 @@ export function ThoughtsEditor({
     setBusy(true);
     setError(null);
     try {
-      await saveThoughts(entry.id, { note, tags, spoiler, finishedOn: finished || null });
+      await saveThoughts(entry.id, { note, tags, spoiler });
       setSaved(true);
       await onSaved?.();
     } catch (e) {
@@ -76,11 +96,11 @@ export function ThoughtsEditor({
           <input type="checkbox" checked={spoiler} onChange={(e) => { setSpoiler(e.target.checked); setSaved(false); }} style={{ width: 20, height: 20, accentColor: "var(--ink)" }} />
           Contains spoilers
         </label>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}>
-          <span className="muted">Finished</span>
-          <input type="date" className="input" style={{ height: 44, padding: "0 10px", fontSize: 15 }} max={max} value={finished} onChange={(e) => { setFinished(e.target.value); setSaved(false); }} />
-        </label>
       </div>
+      {showDate && <div style={{ marginTop: 10 }}>
+        <FinishedPicker value={finished} onChange={pickDate} />
+        {dateNote && <p className="muted" role="status" style={{ margin: "6px 0 0", fontSize: 12 }}>{dateNote}</p>}
+      </div>}
       {error && <p className="error" role="alert">{error}</p>}
       <button className="btn btn--outline btn--block" style={{ marginTop: 12 }} disabled={busy || saved} onClick={save}>
         {busy ? "Saving…" : saved ? "Saved" : "Save thoughts"}

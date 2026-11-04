@@ -70,8 +70,10 @@ export async function myId(): Promise<string> {
   return id;
 }
 
-function today(): string {
+/** Today's date (or `daysAgo` before it) as YYYY-MM-DD, in the reader's time zone. */
+export function today(daysAgo = 0): string {
   const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
@@ -337,6 +339,8 @@ export async function placeBook(opts: {
   existing: Entry | null;
   /** A score set by hand (first few books only). */
   manualScore?: number | null;
+  /** When they finished it (null: don't remember). Left out: keep what's saved, or today. */
+  finishedOn?: string | null;
 }): Promise<void> {
   const uid = await myId();
   const { bookId, bucket, index, existing } = opts;
@@ -361,7 +365,7 @@ export async function placeBook(opts: {
     needs_sort: false,
     // Re-ranking by head-to-head replaces any score set by hand.
     manual_score: opts.manualScore ?? null,
-    finished_on: existing?.finished_on ?? today(),
+    finished_on: opts.finishedOn !== undefined ? opts.finishedOn : existing?.finished_on ?? today(),
     started_on: existing?.started_on ?? null,
     ranked_at: wasRanked ? existing?.ranked_at ?? new Date().toISOString() : new Date().toISOString(),
     source: existing?.source ?? "app",
@@ -721,6 +725,12 @@ export async function saveThoughts(
   };
   if (t.finishedOn !== undefined) fields.finished_on = t.finishedOn;
   const { error } = await supabase().from("shelf_entries").update(fields).eq("id", entryId);
+  if (error) throw error;
+}
+
+/** Change just the date a book was finished (null: don't remember). */
+export async function saveFinishedOn(entryId: string, finishedOn: string | null): Promise<void> {
+  const { error } = await supabase().from("shelf_entries").update({ finished_on: finishedOn }).eq("id", entryId);
   if (error) throw error;
 }
 

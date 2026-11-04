@@ -9,8 +9,9 @@ import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { isImported } from "@/lib/goodreads";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
+import { FinishedPicker } from "@/components/FinishedPicker";
 import type { Book } from "@/lib/books";
-import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, type Entry, type RankedEntry } from "@/lib/data";
+import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, today, type Entry, type RankedEntry } from "@/lib/data";
 import { BADGE } from "@/lib/badges";
 import { Medallion } from "@/components/Badge";
 import {
@@ -109,6 +110,7 @@ function Flow() {
   const [queueLeft, setQueueLeft] = useState<string[]>([]);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [finishedOn, setFinishedOn] = useState<string | null>(() => today());
 
   useEffect(() => {
     let live = true;
@@ -122,6 +124,8 @@ function Flow() {
         }
         setBook(b);
         setEntries(e);
+        const mine = e.find((x) => x.book_id === id);
+        if (mine?.finished_on) setFinishedOn(mine.finished_on);
         setPhase("bucket");
       })
       .catch((e) => {
@@ -150,7 +154,8 @@ function Flow() {
   async function finish(b: Bucket, index: number, sorted: RankedEntry[], manualScore: number | null = null) {
     setPhase("saving");
     try {
-      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, manualScore });
+      // Re-ranking keeps the date already saved; a new finish uses the one picked here.
+      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, manualScore, finishedOn: current ? undefined : finishedOn });
       const [fresh, checkinDays, badges] = await Promise.all([
         fetchShelf(),
         fetchCheckinDays().catch(() => []),
@@ -274,7 +279,12 @@ function Flow() {
                 Now #{current.rank} · {formatScore(current.score)}
               </span>
             )}
-            <h2 className="h2" style={{ alignSelf: "stretch", margin: "28px 0 12px" }}>How did it land?</h2>
+            {!current && (
+              <div style={{ alignSelf: "stretch", marginTop: 24 }}>
+                <FinishedPicker value={finishedOn} onChange={setFinishedOn} />
+              </div>
+            )}
+            <h2 className="h2" style={{ alignSelf: "stretch", margin: current ? "28px 0 12px" : "22px 0 12px" }}>How did it land?</h2>
             <div className="stack" style={{ alignSelf: "stretch" }}>
               {BUCKET_ORDER.map((b) => (
                 <button key={b} className="bucket-btn" onClick={() => chooseBucket(b)}>
@@ -437,7 +447,7 @@ function Flow() {
                 </li>
               ))}
             </ol>
-            <ThoughtsEditor entry={result.me} />
+            <ThoughtsEditor entry={result.me} showDate={false} />
             <div className="spacer" style={{ minHeight: 24 }} />
             {queueLeft.length > 0 ? (
               <>
