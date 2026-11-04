@@ -641,7 +641,7 @@ button.stamp--locked { border: 1.5px dashed #bdbcb6; }
   .skeleton { animation: none; }
 }
 
-/* Landing page: what ReadRead is, for readers and search engines. */
+/* Landing page: what readread is, for readers and search engines. */
 .landing-more { margin-top: 36px; border-top: 1px solid var(--line); padding-top: 8px; }
 .landing-feature { margin-top: 22px; }
 .landing-feature p, .landing-faq p { margin: 6px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-2); }

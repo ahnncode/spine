@@ -3,17 +3,17 @@ import Link from "next/link";
 import { LegalPage } from "@/components/LegalPage";
 import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Privacy — ReadRead" };
+export const metadata: Metadata = { title: "Privacy — readread" };
 
 export default function Privacy() {
   return (
     <LegalPage
       title="Privacy"
-      intro="ReadRead is a place to rank the books you read and see what your friends think. This explains what we collect, who can see it, and how to get it deleted. Short version: we keep what the app needs to work, we don’t run ads, and we don’t sell your data."
+      intro="readread is a place to rank the books you read and see what your friends think. This explains what we collect, who can see it, and how to get it deleted. Short version: we keep what the app needs to work, we don’t run ads, and we don’t sell your data."
     >
       <h2>Who we are</h2>
       <p>
-        ReadRead (readread.app) is run by {LEGAL.operator}. If you have a question about your data, email{" "}
+        readread (readread.app) is run by {LEGAL.operator}. If you have a question about your data, email{" "}
         <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a>.
       </p>
 
@@ -48,14 +48,14 @@ export default function Privacy() {
 
       <h2>How we use it</h2>
       <ul>
-        <li>To run ReadRead: sign you in, store your shelf, show your feed, work out scores, taste match and recommendations.</li>
+        <li>To run readread: sign you in, store your shelf, show your feed, work out scores, taste match and recommendations.</li>
         <li>To send sign-in emails. We don’t send marketing email.</li>
-        <li>To keep ReadRead safe: stop bots, investigate reports, and enforce our <Link href="/terms">terms</Link>.</li>
+        <li>To keep readread safe: stop bots, investigate reports, and enforce our <Link href="/terms">terms</Link>.</li>
       </ul>
       <p>We don’t sell your personal information or share it for advertising.</p>
 
       <h2>Services we rely on</h2>
-      <p>These companies process data for us to run ReadRead:</p>
+      <p>These companies process data for us to run readread:</p>
       <div className="table-wrap">
         <table>
           <thead><tr><th>Service</th><th>What for</th><th>What it handles</th></tr></thead>
@@ -69,7 +69,7 @@ export default function Privacy() {
           </tbody>
         </table>
       </div>
-      <p>Book details we look up are stored in ReadRead’s shared book catalog, which isn’t linked to who searched for them.</p>
+      <p>Book details we look up are stored in readread’s shared book catalog, which isn’t linked to who searched for them.</p>
 
       <h2>The camera</h2>
       <p>The barcode scanner uses your camera only while it’s open, and only to read the barcode on your device. Video is never uploaded or saved.</p>
@@ -89,7 +89,7 @@ export default function Privacy() {
       </p>
 
       <h2>Where data is stored</h2>
-      <p>ReadRead’s data is stored with our providers in {LEGAL.dataRegion}. If you use ReadRead from elsewhere, your data is transferred there.</p>
+      <p>readread’s data is stored with our providers in {LEGAL.dataRegion}. If you use readread from elsewhere, your data is transferred there.</p>
 
       <h2>Security</h2>
       <p>
@@ -98,7 +98,7 @@ export default function Privacy() {
       </p>
 
       <h2>Children</h2>
-      <p>ReadRead isn’t for children under {LEGAL.minimumAge}. If you believe a child under {LEGAL.minimumAge} has an account, email us and we’ll delete it.</p>
+      <p>readread isn’t for children under {LEGAL.minimumAge}. If you believe a child under {LEGAL.minimumAge} has an account, email us and we’ll delete it.</p>
 
       <h2>Changes</h2>
       <p>If we change this policy, we’ll update the date above. For significant changes, we’ll also let you know in the app or by email before they take effect.</p>

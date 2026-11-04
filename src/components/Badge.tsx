@@ -107,7 +107,7 @@ export function Medallion({
 export function EarlyMark({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" role="img" aria-label="Early adopter" className="early-mark">
-      <title>Early adopter · joined in ReadRead&rsquo;s first year</title>
+      <title>Early adopter · joined in readread&rsquo;s first year</title>
       <path d={SEAL} fill="var(--accent)" stroke="var(--accent)" strokeWidth="1.2" strokeLinejoin="round" />
       <path d="M12 6.8c.5 3 1.9 4.4 5 5-3.1.6-4.5 2-5 5-.5-3-1.9-4.4-5-5 3.1-.6 4.5-2 5-5z" fill="var(--ink)" />
     </svg>

@@ -66,7 +66,7 @@ export async function coverData(book: PublicBookCard): Promise<string | null> {
   return null;
 }
 
-/** A book cover at a given width (2:3), with ReadRead's drawn cover when there's no art. */
+/** A book cover at a given width (2:3), with readread's drawn cover when there's no art. */
 export function OgCover({ book, src, width }: { book: PublicBookCard; src: string | null; width: number }) {
   const height = Math.round(width * 1.5);
   const radius = `${Math.max(2, width * 0.03)}px ${Math.max(4, width * 0.06)}px ${Math.max(4, width * 0.06)}px ${Math.max(2, width * 0.03)}px`;

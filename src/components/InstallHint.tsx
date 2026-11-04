@@ -13,7 +13,7 @@ interface InstallPromptEvent extends Event {
 type Kind = "ios" | "android";
 
 /**
- * A one-time tip to add ReadRead to the home screen. iPhones never offer this on
+ * A one-time tip to add readread to the home screen. iPhones never offer this on
  * their own (it's hidden in Safari's Share menu); Android Chrome has a real
  * install prompt we can trigger.
  */
@@ -64,7 +64,7 @@ export function InstallHint() {
     <div className="card" role="note" style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 12px 12px 14px" }}>
       <Mark size={36} />
       <div style={{ flex: 1, fontSize: 14, lineHeight: 1.4 }}>
-        <strong>Get ReadRead on your home screen.</strong>{" "}
+        <strong>Get readread on your home screen.</strong>{" "}
         {kind === "ios" ? (
           <span className="muted">
             Tap <ShareIcon size={14} style={{ verticalAlign: "-2px" }} aria-label="Share" /> below, then &ldquo;Add to Home Screen.&rdquo;

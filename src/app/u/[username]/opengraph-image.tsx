@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { clamp, coverData, GROUND, INK, MUTED, OgAvatar, OgCover, ogFonts, Wordmark } from "@/lib/og";
 import { getPublicProfile } from "@/lib/public";
 
-export const alt = "A reader on ReadRead";
+export const alt = "A reader on readread";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -23,7 +23,7 @@ export default async function Image({ params }: { params: Promise<{ username: st
             <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: name.length > 18 ? 52 : 64, lineHeight: 1, letterSpacing: "-0.04em" }}>{clamp(name, 28)}</div>
               <div style={{ display: "flex", marginTop: 10, fontSize: 26, color: MUTED }}>
-                {p ? `@${p.username} · ${p.ranked} ranked` : "is ranking books on ReadRead"}
+                {p ? `@${p.username} · ${p.ranked} ranked` : "is ranking books on readread"}
               </div>
             </div>
           </div>

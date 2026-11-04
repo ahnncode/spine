@@ -3,7 +3,7 @@
  * publishing; the pages read them from here.
  */
 export const LEGAL = {
-  /** Who runs ReadRead (your name, or a company if you form one). */
+  /** Who runs readread (your name, or a company if you form one). */
   operator: "Paul Ahnn",
   /** Where people can reach you about privacy, accounts or legal questions. */
   contactEmail: "hello@readspine.app",

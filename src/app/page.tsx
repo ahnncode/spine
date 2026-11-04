@@ -15,7 +15,7 @@ const SAMPLE = [
 ];
 
 const FEATURES = [
-  { h: "A Goodreads alternative built on rankings", p: "Stars drift. ReadRead asks one easy question instead: which did you like more? Every book you finish lands in the right spot on your shelf, with a score from 0 to 10 that stays honest." },
+  { h: "A Goodreads alternative built on rankings", p: "Stars drift. readread asks one easy question instead: which did you like more? Every book you finish lands in the right spot on your shelf, with a score from 0 to 10 that stays honest." },
   { h: "See what your friends are reading", p: "Follow friends, see their rankings and check-ins, and find out your taste match — plus the books you disagree on most." },
   { h: "Read together, spoiler-free", p: "Start a read-along for any book: everyone's progress in one place, a discussion that hides anything past where you are, and a score reveal when you've all finished." },
   { h: "Bring your Goodreads or StoryGraph library", p: "Upload your export and your ratings become a starting ranking in seconds. Then sharpen it with quick head-to-heads." },
@@ -23,10 +23,10 @@ const FEATURES = [
 ];
 
 const FAQ = [
-  { q: "Is ReadRead free?", a: "Yes. ReadRead is free to use, with no ads." },
-  { q: "How is ranking different from star ratings?", a: "Instead of picking a number, you compare a new book with ones you've already read. ReadRead places it on your ranked shelf and turns its position into a score from 0 to 10, so your scores stay consistent over time." },
-  { q: "Can I import my Goodreads or StoryGraph books?", a: "Yes. Export your library from Goodreads or StoryGraph as a CSV file and upload it on ReadRead. Ratings, reviews, dates read and want-to-read shelves come with it." },
-  { q: "Is there an app?", a: "ReadRead works in your phone's browser and can be added to your home screen like an app. Native iPhone and Android apps are planned." },
+  { q: "Is readread free?", a: "Yes. readread is free to use, with no ads." },
+  { q: "How is ranking different from star ratings?", a: "Instead of picking a number, you compare a new book with ones you've already read. readread places it on your ranked shelf and turns its position into a score from 0 to 10, so your scores stay consistent over time." },
+  { q: "Can I import my Goodreads or StoryGraph books?", a: "Yes. Export your library from Goodreads or StoryGraph as a CSV file and upload it on readread. Ratings, reviews, dates read and want-to-read shelves come with it." },
+  { q: "Is there an app?", a: "readread works in your phone's browser and can be added to your home screen like an app. Native iPhone and Android apps are planned." },
   { q: "Can I keep my shelf private?", a: "Yes. You can make your shelf private at any time, and public web profiles are off unless you turn them on." },
 ];
 
@@ -109,7 +109,7 @@ export default function Landing() {
           Coming from Goodreads or StoryGraph? Bring your whole library in one upload.
         </p>
 
-        <section className="landing-more" aria-label="About ReadRead">
+        <section className="landing-more" aria-label="About readread">
           {FEATURES.map((f) => (
             <div key={f.h} className="landing-feature">
               <h2 className="h2">{f.h}</h2>
@@ -126,13 +126,13 @@ export default function Landing() {
         </section>
         <script
           type="application/ld+json"
-          // Structured data so search engines understand what ReadRead is.
+          // Structured data so search engines understand what readread is.
           dangerouslySetInnerHTML={{ __html: jsonLd({
             "@context": "https://schema.org",
             "@graph": [
               {
                 "@type": "WebApplication",
-                name: "ReadRead",
+                name: "readread",
                 url: "https://readread.app",
                 applicationCategory: "LifestyleApplication",
                 operatingSystem: "Web, iOS, Android",

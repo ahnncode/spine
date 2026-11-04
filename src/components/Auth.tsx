@@ -82,7 +82,7 @@ export function SetupNotice() {
         <span className="wordmark">readread</span>
         <h1 className="h1" style={{ marginTop: 32 }}>Almost there.</h1>
         <p className="lede">
-          ReadRead needs a Supabase project to store accounts and shelves. Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
+          readread needs a Supabase project to store accounts and shelves. Add <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
           <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to <code>.env.local</code> (or your host&rsquo;s environment
           settings), run the SQL in <code>supabase/migrations</code>, then reload.
         </p>
@@ -146,7 +146,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
     return (
       <div className="app">
         <main className="screen screen--flow">
-          <h1 className="h1" style={{ marginTop: 40 }}>Can&rsquo;t reach ReadRead</h1>
+          <h1 className="h1" style={{ marginTop: 40 }}>Can&rsquo;t reach readread</h1>
           <p className="lede">Check your connection and try again.</p>
           <button className="btn btn--block" style={{ marginTop: 20 }} onClick={() => reloadProfile()}>Try again</button>
         </main>

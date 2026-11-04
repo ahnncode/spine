@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { ACCENT, clamp, coverData, GROUND, INK, MUTED, OgCover, ogFonts, Wordmark } from "@/lib/og";
 import { getReadAlongCard } from "@/lib/public";
 
-export const alt = "A read-along on ReadRead";
+export const alt = "A read-along on readread";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -25,7 +25,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             {card?.author && <div style={{ display: "flex", marginTop: 14, fontSize: 30, color: MUTED }}>{clamp(card.author, 50)}</div>}
           </div>
           <div style={{ display: "flex", marginTop: "auto", fontSize: 26 }}>
-            {card ? `${card.readers} reader${card.readers === 1 ? "" : "s"} · progress, spoiler-safe chat, and a score reveal` : "Read a book with friends on ReadRead"}
+            {card ? `${card.readers} reader${card.readers === 1 ? "" : "s"} · progress, spoiler-safe chat, and a score reveal` : "Read a book with friends on readread"}
           </div>
         </div>
       </div>

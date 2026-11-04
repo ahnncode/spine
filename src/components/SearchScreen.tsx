@@ -240,7 +240,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
           </ul>
         )}
         <Link href="/people" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", marginTop: 20, padding: "16px 18px" }}>
-          <span style={{ fontWeight: 600 }}>Find friends on ReadRead</span>
+          <span style={{ fontWeight: 600 }}>Find friends on readread</span>
           <ArrowIcon size={18} />
         </Link>
       </main>

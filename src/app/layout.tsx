@@ -3,18 +3,18 @@ import { AuthProvider } from "@/components/Auth";
 import "./globals.css";
 
 const description =
-  "ReadRead is a social book tracker and Goodreads alternative. Rank the books you read with quick head-to-heads instead of stars, import from Goodreads or StoryGraph, and see what your friends can't put down.";
+  "readread is a social book tracker and Goodreads alternative. Rank the books you read with quick head-to-heads instead of stars, import from Goodreads or StoryGraph, and see what your friends can't put down.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://readread.app"),
-  title: "ReadRead — rank books, not stars",
+  title: "readread — rank books, not stars",
   description,
-  applicationName: "ReadRead",
+  applicationName: "readread",
   keywords: ["book tracker", "Goodreads alternative", "StoryGraph alternative", "rank books", "reading tracker", "book ranking app", "book club app", "reading log"],
   alternates: { canonical: "/" },
-  appleWebApp: { title: "ReadRead", capable: true, statusBarStyle: "default" },
-  openGraph: { type: "website", siteName: "ReadRead", url: "/", title: "ReadRead — rank books, not stars", description },
-  twitter: { card: "summary_large_image", title: "ReadRead — rank books, not stars", description },
+  appleWebApp: { title: "readread", capable: true, statusBarStyle: "default" },
+  openGraph: { type: "website", siteName: "readread", url: "/", title: "readread — rank books, not stars", description },
+  twitter: { card: "summary_large_image", title: "readread — rank books, not stars", description },
 };
 
 export const viewport: Viewport = {

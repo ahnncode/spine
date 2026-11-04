@@ -12,17 +12,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const p = await getPublicProfile(username);
   if (!p) {
     // Not public: say only what the link itself already says.
-    return { title: `@${username} on ReadRead`, description: "Join ReadRead to see their ranked shelf and compare your taste.", robots: { index: false } };
+    return { title: `@${username} on readread`, description: "Join readread to see their ranked shelf and compare your taste.", robots: { index: false } };
   }
   const name = p.display_name || p.username;
   const top = p.top.slice(0, 3).map((b) => b.title).join(", ");
-  const description = p.bio || (top ? `${name}'s top books: ${top}. ${p.ranked} ranked on ReadRead.` : `${name} is ranking books on ReadRead.`);
+  const description = p.bio || (top ? `${name}'s top books: ${top}. ${p.ranked} ranked on readread.` : `${name} is ranking books on readread.`);
   return {
-    title: `${name} (@${p.username}) — ReadRead`,
+    title: `${name} (@${p.username}) — readread`,
     description,
     alternates: { canonical: `/u/${p.username}` },
-    openGraph: { title: `${name} on ReadRead`, description, type: "profile", url: `/u/${p.username}` },
-    twitter: { card: "summary_large_image", title: `${name} on ReadRead`, description },
+    openGraph: { title: `${name} on readread`, description, type: "profile", url: `/u/${p.username}` },
+    twitter: { card: "summary_large_image", title: `${name} on readread`, description },
   };
 }
 

@@ -11,12 +11,12 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const book = await getPublicBook(id);
-  if (!book) return { title: "Book — ReadRead" };
+  if (!book) return { title: "Book — readread" };
   const by = book.author ? ` by ${book.author}` : "";
-  const score = book.avg_score != null ? ` ReadRead score ${formatScore(book.avg_score)} from ${book.readers} reader${book.readers === 1 ? "" : "s"}.` : "";
-  const description = `${book.title}${by} on ReadRead.${score} Rank it against the books you've read and compare taste with friends.`;
+  const score = book.avg_score != null ? ` readread score ${formatScore(book.avg_score)} from ${book.readers} reader${book.readers === 1 ? "" : "s"}.` : "";
+  const description = `${book.title}${by} on readread.${score} Rank it against the books you've read and compare taste with friends.`;
   return {
-    title: `${book.title}${by} — ReadRead`,
+    title: `${book.title}${by} — readread`,
     description,
     alternates: { canonical: `/book/${book.id}` },
     openGraph: { title: `${book.title}${by}`, description, type: "book", url: `/book/${book.id}` },

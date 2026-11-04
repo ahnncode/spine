@@ -37,7 +37,7 @@ const QUICK_FIELDS =
   "key,title,author_name,author_alternative_name,first_publish_year,cover_i,number_of_pages_median,readinglog_count,edition_count";
 const ENGLISH_FIELDS = `${QUICK_FIELDS},editions,editions.title,editions.language,editions.cover_i,editions.isbn`;
 
-/** ReadRead is for English readers: prefer English editions' titles and covers. */
+/** readread is for English readers: prefer English editions' titles and covers. */
 function englishEdition(d: OLDoc): OLEdition | null {
   const ed = d.editions?.docs?.[0];
   return ed?.title && ed.language?.includes("eng") ? ed : null;

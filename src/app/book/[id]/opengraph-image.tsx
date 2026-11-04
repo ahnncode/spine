@@ -2,11 +2,11 @@ import { ImageResponse } from "next/og";
 import { ACCENT, clamp, coverData, GROUND, INK, MUTED, OgCover, ogFonts, ScoreDisc, Wordmark } from "@/lib/og";
 import { getPublicBook } from "@/lib/public";
 
-export const alt = "A book on ReadRead";
+export const alt = "A book on readread";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** Link preview for a book: its cover, title, and ReadRead score. */
+/** Link preview for a book: its cover, title, and readread score. */
 export default async function Image({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [book, fonts] = await Promise.all([getPublicBook(id), ogFonts()]);
@@ -28,7 +28,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               <>
                 <ScoreDisc score={book.avg_score} size={84} top={book.avg_score >= 6.7} />
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 700, fontSize: 30 }}>ReadRead score</div>
+                  <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 700, fontSize: 30 }}>readread score</div>
                   <div style={{ display: "flex", fontSize: 22, color: MUTED }}>
                     {book.readers} reader{book.readers === 1 ? "" : "s"} · {book.readers ? Math.round((book.loved / book.readers) * 100) : 0}% loved it
                   </div>
@@ -37,7 +37,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
             ) : (
               <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 26, color: INK }}>
                 <div style={{ display: "flex", width: 14, height: 14, borderRadius: 7, background: ACCENT }} />
-                Rank it on ReadRead
+                Rank it on readread
               </div>
             )}
           </div>

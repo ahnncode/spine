@@ -49,7 +49,7 @@ export interface Profile {
   display_name: string | null;
   is_private: boolean;
   yearly_goal: number | null;
-  /** When they joined; joining in ReadRead's first year earns the Early Adopter mark. */
+  /** When they joined; joining in readread's first year earns the Early Adopter mark. */
   created_at?: string | null;
   /** A short status line anyone can see. */
   bio?: string | null;
