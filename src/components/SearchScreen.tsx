@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dedupeKey, type Book, type BookInput } from "@/lib/books";
 import { addToWant, ensureBook, recommendations, startReading, type Entry } from "@/lib/data";
+import { WeeklyPicks } from "@/components/WeeklyPicks";
 import { searchBooks } from "@/lib/openlibrary";
 import { formatScore } from "@/lib/ranking";
 import { TASTE_UNLOCK } from "@/lib/stats";
@@ -193,7 +194,10 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
               </div>
             </>
           ) : (
-            <Recommendations recs={recs} rankedCount={rankedCount} />
+            <>
+              <WeeklyPicks />
+              <Recommendations recs={recs} rankedCount={rankedCount} />
+            </>
           )
         ) : results.length === 0 && searching ? (
           <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }} aria-busy="true" aria-label="Searching">

@@ -830,12 +830,47 @@ export async function fetchScoredEntry(id: string): Promise<ScoredEntry | null> 
   return { ...e, score: Number(e.score), tags: e.tags ?? [] };
 }
 
+/* ------------------------------ Weekly picks ----------------------------- */
+
+export interface WeeklyPick {
+  id: string;
+  kind: "mystery" | "wildcard";
+  reason: string | null;
+  predicted: number | null;
+  basis: number;
+  revealed: boolean;
+  response: "want" | "reading" | "skip" | null;
+  hints: { genres: string[]; decade: number | null; pages: number | null; initial: string };
+  book: (Pick<Book, "id" | "title" | "author" | "cover_id" | "isbn13" | "genres"> & { cover_url?: string | null; year: number | null; pages: number | null }) | null;
+}
+export type WeeklyPicks = { locked: true; ranked: number } | { locked: false; picks: WeeklyPick[] };
+
+/** This week's mystery pick and wildcard (made on the spot if needed). */
+export async function fetchWeeklyPicks(): Promise<WeeklyPicks> {
+  const { data, error } = await supabase().rpc("my_weekly_picks");
+  if (error) throw error;
+  const rows = (data ?? []) as Array<WeeklyPick | { locked: true; ranked: number }>;
+  const lock = rows.find((r): r is { locked: true; ranked: number } => "locked" in r);
+  if (lock) return lock;
+  return { locked: false, picks: rows as WeeklyPick[] };
+}
+
+export async function revealPick(id: string): Promise<void> {
+  const { error } = await supabase().rpc("reveal_pick", { p_id: id });
+  if (error) throw error;
+}
+
+export async function respondToPick(id: string, response: "want" | "reading" | "skip"): Promise<void> {
+  const { error } = await supabase().rpc("respond_pick", { p_id: id, p_response: response });
+  if (error) throw error;
+}
+
 /* ------------------------------ Notifications ---------------------------- */
 
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along";
+  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks";
   /** For read-along notifications: invite, joined, message or verdict. */
   detail?: string | null;
   /** For badge notifications: which badge. */

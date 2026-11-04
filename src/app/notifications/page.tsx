@@ -97,7 +97,7 @@ function Inner() {
         {data && data.items.length === 0 && (
           <div className="empty">
             <p className="h2">Nothing yet</p>
-            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments, mentions, pokes, new followers and badges show up here.</p>
+            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments, mentions, pokes, new followers, badges and your weekly picks show up here.</p>
           </div>
         )}
         {data && data.items.length > 0 && (
@@ -107,7 +107,18 @@ function Inner() {
               const opensThread = n.target_type === "entry" && n.target_id;
               const checkin = n.target_type === "checkin" ? data.checkins.get(n.target_id ?? "") : undefined;
               const badge = n.kind === "badge" && n.badge ? BADGE[n.badge] : undefined;
-              const body = badge ? (
+              const picks = n.kind === "picks";
+              const body = picks ? (
+                <>
+                  <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 20, background: "var(--ink)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, flexShrink: 0 }}>?</span>
+                  <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
+                    <strong>Your weekly picks are here</strong>
+                    <span className="muted" style={{ display: "block", fontSize: 13 }}>A mystery book to reveal, and a wildcard</span>
+                    <span className="when" style={{ display: "block" }}>{ago(n.created_at)}</span>
+                  </span>
+                  {!n.read_at && <span aria-label="New" style={{ width: 8, height: 8, borderRadius: 4, background: "var(--accent)", flexShrink: 0 }} />}
+                </>
+              ) : badge ? (
                 <>
                   <span style={{ width: 40, display: "flex", justifyContent: "center", flexShrink: 0 }}><Medallion badge={badge.key} earned size={40} /></span>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
@@ -134,7 +145,9 @@ function Inner() {
               };
               return (
                 <li key={n.id}>
-                  {n.kind === "read_along" && n.target_id ? (
+                  {picks ? (
+                    <Link href="/search#picks" style={rowStyle}>{body}</Link>
+                  ) : n.kind === "read_along" && n.target_id ? (
                     <Link href={`/together/${n.target_id}`} style={rowStyle}>{body}</Link>
                   ) : badge ? (
                     <Link href="/you#badges" style={rowStyle}>{body}</Link>
