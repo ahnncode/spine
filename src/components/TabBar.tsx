@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { HomeIcon, PlusIcon, SearchIcon, ShelfIcon, UserIcon } from "./icons";
+import { useUnread } from "./useUnread";
 
 const TABS = [
   { href: "/feed", label: "Feed", Icon: HomeIcon },
@@ -14,6 +15,7 @@ const TABS = [
 
 export function TabBar() {
   const path = usePathname();
+  const unread = useUnread();
   return (
     <nav className="tabbar" aria-label="Main">
       <div className="tabbar__inner">
@@ -24,8 +26,12 @@ export function TabBar() {
               <Icon size={24} />
             </Link>
           ) : (
-            <Link key={href} href={href} className="tab" aria-current={current ? "page" : undefined}>
-              <Icon strokeWidth={current ? 2.2 : 1.8} />
+            <Link key={href} href={href} className="tab" aria-current={current ? "page" : undefined}
+              aria-label={href === "/feed" && unread ? `${label}, ${unread} new` : undefined}>
+              <span className="tab__icon">
+                <Icon strokeWidth={current ? 2.2 : 1.8} />
+                {href === "/feed" && unread > 0 && <span className="tab__dot" aria-hidden="true" />}
+              </span>
               {label}
             </Link>
           );

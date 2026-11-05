@@ -32,6 +32,7 @@ import { ElsewhereRatings } from "@/components/ElsewhereRatings";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { formatScore } from "@/lib/ranking";
+import { BookSkeleton } from "@/components/Skeleton";
 
 export function BookPage() {
   return (
@@ -126,15 +127,16 @@ function Inner() {
   return (
     <div className="app">
       <main className="screen" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
-        <div style={{ background: "#dce5d3", padding: "14px 16px 26px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div style={{ background: "var(--hero-book)", padding: "14px 16px 26px", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <div style={{ alignSelf: "stretch" }}>
-            <button className="icon-btn" style={{ background: "rgba(255,255,255,0.7)" }} aria-label="Back" onClick={() => router.back()}>
+            <button className="icon-btn" style={{ background: "color-mix(in srgb, var(--surface) 72%, transparent)" }} aria-label="Back" onClick={() => router.back()}>
               <BackIcon size={20} />
             </button>
           </div>
-          {book ? <Cover book={book} width={140} /> : <div style={{ width: 140, height: 210 }} aria-busy="true" />}
+          {book ? <Cover book={book} width={140} /> : <span className="skeleton" style={{ width: 140, height: 210, borderRadius: "3px 6px 6px 3px" }} aria-hidden="true" />}
         </div>
 
+        {!book && <BookSkeleton />}
         {book && (
           <div style={{ padding: "18px 20px 0" }}>
             <h1 className="h1" style={{ fontSize: 32 }}>{book.title}</h1>
@@ -142,12 +144,12 @@ function Inner() {
               {[book.author, book.year, book.pages ? `${book.pages} pages` : null].filter(Boolean).join(" · ")}
             </p>
             {mine && (
-              <button className="link-btn" style={{ fontSize: 12, marginTop: 6, color: "var(--muted)", fontWeight: 500 }} onClick={() => setFixing(true)}>
+              <button className="link-btn" style={{ fontSize: 12, marginTop: 8, color: "var(--muted)", fontWeight: 500 }} onClick={() => setFixing(true)}>
                 Title or author wrong? Fix it
               </button>
             )}
             {book.genres?.length > 0 && (
-              <div style={{ display: "flex", gap: 6, marginTop: 10, flexWrap: "wrap" }}>
+              <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
                 {book.genres.map((g) => GENRE_BY_KEY[g] && (
                   <span key={g} className="pill" style={{ background: GENRE_BY_KEY[g].bg, color: GENRE_BY_KEY[g].fg }}>
                     {GENRE_BY_KEY[g].label}
@@ -173,7 +175,7 @@ function Inner() {
                 </span>
               </Link>
             ) : (
-              <button className="btn btn--quiet btn--block" style={{ marginTop: 14 }} onClick={() => setStarting(true)}>
+              <button className="btn btn--quiet btn--block" style={{ marginTop: 16 }} onClick={() => setStarting(true)}>
                 Read with friends
               </button>
             )}
@@ -206,7 +208,7 @@ function Inner() {
               </>
             ) : (
               <div className="card" style={{ marginTop: 16, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
-                <div className="m score" style={{ width: 60, height: 60, background: "#fff", color: "var(--cobalt-ink)", fontSize: 20 }}>
+                <div className="m score" style={{ width: 60, height: 60, background: "#fff", color: "#1d2ba8", fontSize: 20 }}>
                   {social?.predicted.score != null ? formatScore(social.predicted.score) : "?"}
                 </div>
                 <div>
@@ -280,7 +282,7 @@ function Inner() {
               <section style={{ marginTop: 20 }}>
                 <h2 className="h2">Your thoughts</h2>
                 {editing ? (
-                  <div style={{ marginTop: 10 }}>
+                  <div style={{ marginTop: 12 }}>
                     <ThoughtsEditor entry={mine} compact onSaved={async () => { await loadShelf(); setEditing(false); }} onDateSaved={loadShelf} />
                   </div>
                 ) : (
@@ -320,7 +322,7 @@ function Inner() {
               </section>
             )}
 
-            <div style={{ marginTop: 22 }}>
+            <div style={{ marginTop: 24 }}>
               <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove={Boolean(mine)} onStartedReading={() => setCheckIn(true)} />
             </div>
           </div>
@@ -372,12 +374,12 @@ function FixDetails({ book, onClose, onSaved }: { book: Book; onClose: () => voi
           <label htmlFor="fix-title">Title</label>
           <input id="fix-title" className="input" value={title} maxLength={500} onChange={(e) => setTitle(e.target.value)} />
         </div>
-        <div className="field" style={{ marginTop: 14 }}>
+        <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="fix-author">Author</label>
           <input id="fix-author" className="input" value={author} maxLength={300} onChange={(e) => setAuthor(e.target.value)} />
         </div>
         {error && <p className="error" role="alert">{error}</p>}
-        <button className="btn btn--block" style={{ marginTop: 18 }} disabled={busy || !title.trim()} onClick={save}>{busy ? "Saving…" : "Save"}</button>
+        <button className="btn btn--block" style={{ marginTop: 20 }} disabled={busy || !title.trim()} onClick={save}>{busy ? "Saving…" : "Save"}</button>
       </div>
     </div>
   );

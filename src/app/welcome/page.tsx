@@ -79,7 +79,7 @@ function Welcome() {
         <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Welcome in.</h1>
         <p className="lede">Pick how friends find you. You can change this later.</p>
 
-        <div className="field" style={{ marginTop: 28 }}>
+        <div className="field" style={{ marginTop: 32 }}>
           <label htmlFor="name">Your name</label>
           <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Paul" autoComplete="name" maxLength={40} />
         </div>

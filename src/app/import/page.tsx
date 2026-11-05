@@ -91,7 +91,7 @@ function Importer() {
           </Link>
           <span className="m muted" style={{ fontSize: 12 }}>Step {step} of 3</span>
         </div>
-        <div style={{ display: "flex", gap: 4, marginTop: 10 }} aria-hidden="true">
+        <div style={{ display: "flex", gap: 4, marginTop: 12 }} aria-hidden="true">
           {[1, 2, 3].map((i) => (
             <span
               key={i}
@@ -125,7 +125,7 @@ function Importer() {
             <Link href="/sharpen" className="btn btn--block">
               Start sorting <ArrowIcon size={18} />
             </Link>
-            <Link href="/shelf" className="btn btn--ghost btn--block" style={{ marginTop: 6 }}>
+            <Link href="/shelf" className="btn btn--ghost btn--block" style={{ marginTop: 8 }}>
               See my shelf
             </Link>
           </>
@@ -164,7 +164,7 @@ function Importer() {
                     onChange={(e) => e.target.files?.[0] && readFile(e.target.files[0])}
                   />
                 </div>
-                <details style={{ marginTop: 14, fontSize: 14, color: "var(--ink-2)" }}>
+                <details style={{ marginTop: 16, fontSize: 14, color: "var(--ink-2)" }}>
                   <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--ink)", minHeight: 44, display: "flex", alignItems: "center" }}>
                     Where&rsquo;s my Goodreads export?
                   </summary>
@@ -203,7 +203,7 @@ function Importer() {
                     <span style={{ width: `${Math.round(progress.f * 100)}%` }} />
                   </div>
                 )}
-                <div className="stat-grid" style={{ marginTop: 18 }}>
+                <div className="stat-grid" style={{ marginTop: 20 }}>
                   <div className="stat"><div className="stat__n">{summary.total}</div><div className="stat__l">books found</div></div>
                   <div className="stat"><div className="stat__n">{summary.rated}</div><div className="stat__l">with ratings</div></div>
                   <div className="stat"><div className="stat__n">{summary.want}</div><div className="stat__l">want to read</div></div>
@@ -216,7 +216,7 @@ function Importer() {
               </div>
             )}
 
-            {error && <p className="error" role="alert" style={{ marginTop: 14 }}>{error}</p>}
+            {error && <p className="error" role="alert" style={{ marginTop: 16 }}>{error}</p>}
 
             <div className="spacer" style={{ minHeight: 24 }} />
             {phase !== "pick" && (
@@ -224,7 +224,7 @@ function Importer() {
                 <button className="btn btn--block" disabled={phase === "importing" || !entries} onClick={run}>
                   {phase === "importing" ? "Importing…" : `Import ${summary?.total ?? ""} books`}
                 </button>
-                <button className="btn btn--ghost btn--block" style={{ marginTop: 6 }} disabled={phase === "importing"} onClick={() => { setPhase("pick"); setSummary(null); }}>
+                <button className="btn btn--ghost btn--block" style={{ marginTop: 8 }} disabled={phase === "importing"} onClick={() => { setPhase("pick"); setSummary(null); }}>
                   Choose a different file
                 </button>
               </>

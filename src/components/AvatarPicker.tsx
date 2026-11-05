@@ -115,7 +115,7 @@ export function AvatarPicker({
         </div>
 
         {error && <p className="error" role="alert">{error}</p>}
-        <button className="btn btn--block" style={{ marginTop: 14 }} disabled={busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
+        <button className="btn btn--block" style={{ marginTop: 16 }} disabled={busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
       </div>
     </div>
   );

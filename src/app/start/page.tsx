@@ -143,9 +143,9 @@ function Start() {
     <div className="app">
       <main className="screen screen--flow" style={{ paddingBottom: 120 }}>
         <span className="wordmark">readread</span>
-        <h1 className="h1 h1--xl" style={{ marginTop: 28 }}>Let&rsquo;s build your shelf.</h1>
+        <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Let&rsquo;s build your shelf.</h1>
 
-        <Link href="/import" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 22, textDecoration: "none" }}>
+        <Link href="/import" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 24, textDecoration: "none" }}>
           <span className="icon-btn" style={{ background: "#2a2a2a", color: "#fff", borderRadius: 12 }}><FileIcon /></span>
           <span style={{ flex: 1 }}>
             <span style={{ display: "block", fontWeight: 600 }}>Coming from Goodreads or StoryGraph?</span>
@@ -154,7 +154,7 @@ function Start() {
           <ArrowIcon size={18} />
         </Link>
 
-        <h2 className="h2" style={{ marginTop: 26 }}>Or tap books you&rsquo;ve read</h2>
+        <h2 className="h2" style={{ marginTop: 24 }}>Or tap books you&rsquo;ve read</h2>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
           Pick {TARGET} or so and you&rsquo;ll unlock taste match and picks for you. You&rsquo;ll rank them next.
         </p>
@@ -181,7 +181,7 @@ function Start() {
                   {on && (
                     <span aria-hidden="true" className="score score--top" style={{ position: "absolute", top: -6, right: -6, width: 26, height: 26, fontSize: 14 }}>✓</span>
                   )}
-                  <span className="book-row__title" style={{ display: "block", fontSize: 13, marginTop: 6 }}>{b.title}</span>
+                  <span className="book-row__title" style={{ display: "block", fontSize: 13, marginTop: 8 }}>{b.title}</span>
                 </button>
               </li>
             );
@@ -193,14 +193,14 @@ function Start() {
         <div style={{ maxWidth: "var(--col)", margin: "0 auto", display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1 }}>
             <div className="bar" style={{ height: 6 }}><span style={{ width: `${Math.min(1, count / TARGET) * 100}%`, background: "var(--accent)" }} /></div>
-            <div className="m muted" style={{ fontSize: 12, marginTop: 6 }}>{count} picked{count < TARGET ? ` · ${TARGET - count} to unlock taste match` : " · taste match unlocked"}</div>
+            <div className="m muted" style={{ fontSize: 12, marginTop: 8 }}>{count} picked{count < TARGET ? ` · ${TARGET - count} to unlock taste match` : " · taste match unlocked"}</div>
           </div>
           <button className="btn" disabled={!count || busy} onClick={go}>
             {busy ? "Saving…" : `Rank ${count || ""}`}
           </button>
         </div>
         {error && <p className="error" role="alert" style={{ textAlign: "center" }}>{error}</p>}
-        <div style={{ textAlign: "center", marginTop: 6 }}>
+        <div style={{ textAlign: "center", marginTop: 8 }}>
           <Link href="/feed" style={{ fontSize: 13, color: "var(--muted)" }}>Skip for now</Link>
         </div>
       </div>

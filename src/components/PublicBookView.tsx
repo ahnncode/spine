@@ -56,7 +56,7 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
         </div>
       </div>
       {book.genres.length > 0 && (
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 14 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 16 }}>
           {book.genres.map((g) => GENRE_BY_KEY[g] && (
             <span key={g} className="pill" style={{ background: GENRE_BY_KEY[g].bg, color: GENRE_BY_KEY[g].fg }}>{GENRE_BY_KEY[g].label}</span>
           ))}
@@ -64,12 +64,12 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
       )}
 
       {book.description && (
-        <section style={{ marginTop: 14 }} aria-label="About this book">
+        <section style={{ marginTop: 16 }} aria-label="About this book">
           <p className="book-summary">{book.description}</p>
         </section>
       )}
 
-      <section className="card" style={{ marginTop: 18, display: "flex", gap: 16, alignItems: "center" }}>
+      <section className="card" style={{ marginTop: 20, display: "flex", gap: 16, alignItems: "center" }}>
         {book.avg_score != null ? (
           <>
             <ScoreChip score={book.avg_score} bucket={bucketFor(book.avg_score)} size={64} />

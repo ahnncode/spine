@@ -11,7 +11,7 @@ export function LegalPage({ title, intro, children }: { title: string; intro: st
         <Link href="/" aria-label="readread home" style={{ textDecoration: "none" }}>
           <Logo size={26} />
         </Link>
-        <h1 className="h1" style={{ marginTop: 28 }}>{title}</h1>
+        <h1 className="h1" style={{ marginTop: 32 }}>{title}</h1>
         <p className="muted" style={{ margin: "6px 0 0", fontSize: 14 }}>Effective {LEGAL.effectiveDate}</p>
         <p className="lede">{intro}</p>
         {children}

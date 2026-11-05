@@ -60,13 +60,13 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
             <h2 className="d" style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
               <Link href={`/book/${entry.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{entry.book.title}</Link>
             </h2>
-            <Link href={`/book/${entry.book_id}`} style={{ display: "inline-block", marginTop: 6, fontSize: 13, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
+            <Link href={`/book/${entry.book_id}`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
               Book page →
             </Link>
           </div>
         </div>
 
-        <div style={{ marginTop: 22 }}>
+        <div style={{ marginTop: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <label htmlFor="progress" style={{ fontWeight: 600, fontSize: 14 }}>How far are you?</label>
             <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em" }}>{pct}%</span>
@@ -79,10 +79,10 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
             step={1}
             value={pct}
             onChange={(e) => { setPct(Number(e.target.value)); setTouched(true); if (pages) setPage(String(Math.round((Number(e.target.value) / 100) * pages))); }}
-            style={{ width: "100%", marginTop: 10, accentColor: "var(--accent)", height: 32 }}
+            style={{ width: "100%", marginTop: 12, accentColor: "var(--accent)", height: 32 }}
           />
           {pages && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, fontSize: 14 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 14 }}>
               <label htmlFor="page" className="muted">Page</label>
               <input id="page" className="input" inputMode="numeric" style={{ width: 90, height: 44 }} value={page} onChange={(e) => fromPage(e.target.value)} />
               <span className="muted">of {pages}</span>
@@ -90,7 +90,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           )}
         </div>
 
-        <div className="tag-list" role="group" aria-label="How’s it going?" style={{ marginTop: 18 }}>
+        <div className="tag-list" role="group" aria-label="How’s it going?" style={{ marginTop: 20 }}>
           {VIBES.map((v) => (
             <button key={v.key} type="button" className="tag-chip" aria-pressed={vibe === v.key} onClick={() => setVibe(vibe === v.key ? null : v.key)}>
               {v.label}
@@ -101,7 +101,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
         <input
           id="checkin-note"
           className="input"
-          style={{ width: "100%", marginTop: 10 }}
+          style={{ width: "100%", marginTop: 12 }}
           placeholder="A quick thought (optional) · @ to mention"
           maxLength={CHECKIN_NOTE_MAX}
           value={note}

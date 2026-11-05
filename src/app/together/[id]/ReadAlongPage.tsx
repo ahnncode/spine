@@ -22,6 +22,8 @@ import {
   type Entry, type Profile, type ReadAlong, type ReadAlongMessage, type ReadAlongProgress,
 } from "@/lib/data";
 import { formatScore, type Bucket } from "@/lib/ranking";
+import { CardSkeleton } from "@/components/Skeleton";
+import { deferred } from "@/lib/toast";
 
 export function ReadAlongPage() {
   return (
@@ -131,9 +133,12 @@ function Inner() {
 
   async function leave() {
     setMenu(false);
-    if (!window.confirm("Leave this read-along? The book stays on your shelf.")) return;
-    await leaveReadAlong(id);
+    // Leave straight away; Undo (for 5 seconds) brings you back in.
     router.replace("/you");
+    deferred("You left the read-along", {
+      commit: () => leaveReadAlong(id).catch(() => {}),
+      restore: () => router.push(`/together/${id}`),
+    });
   }
 
   if (data === null) {
@@ -168,7 +173,7 @@ function Inner() {
           )}
         </div>
 
-        {!data ? <div aria-busy="true" style={{ minHeight: 260 }} /> : (
+        {!data ? <CardSkeleton height={220} /> : (
           <>
             <Link href={`/book/${data.ra.book_id}`} className="ra-hero" style={{ textDecoration: "none", color: "inherit" }}>
               <Cover book={data.ra.book} width={84} />
@@ -187,22 +192,22 @@ function Inner() {
             )}
 
             {myState === "invited" && (
-              <div className="card card--ink" style={{ marginTop: 18 }}>
+              <div className="card card--ink" style={{ marginTop: 20 }}>
                 <p style={{ margin: 0, fontWeight: 600 }}>
                   {displayName(data.ra.created_by ? data.people.get(data.ra.created_by) : undefined)} invited you to read this together.
                 </p>
                 <p style={{ margin: "6px 0 0", fontSize: 13, color: "#c9c8c2" }}>
                   Joining puts it in your Reading now. Check in as you go; the discussion hides anything past where you are.
                 </p>
-                <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
-                  <button className="btn" style={{ flex: 1, background: "#fff", color: "var(--ink)" }} onClick={() => respond(true)}>Join</button>
+                <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                  <button className="btn" style={{ flex: 1, background: "#fff", color: "var(--black)" }} onClick={() => respond(true)}>Join</button>
                   <button className="btn btn--ghost" style={{ flex: 1, color: "#fff" }} onClick={() => respond(false)}>Not now</button>
                 </div>
               </div>
             )}
 
             {verdict.length >= 2 && (
-              <section className="card verdict" style={{ marginTop: 18 }}>
+              <section className="card verdict" style={{ marginTop: 20 }}>
                 <p className="eyebrow" style={{ color: "#c9c8c2" }}>The verdict</p>
                 {verdict.map((p, i) => (
                   <div key={p.user_id} className="verdict__row">
@@ -224,12 +229,12 @@ function Inner() {
                   label="Share the verdict"
                   filename="readread-verdict"
                   className="btn btn--block"
-                  style={{ marginTop: 14, background: "var(--accent)", color: "var(--ink)" }}
+                  style={{ marginTop: 16, background: "var(--accent)", color: "var(--black)" }}
                 />
                 <Link
                   href="/search"
                   className="btn btn--block"
-                  style={{ marginTop: 8, background: "#fff", color: "var(--ink)" }}
+                  style={{ marginTop: 8, background: "#fff", color: "var(--black)" }}
                   onClick={() => rememberNextGroup(data.ra.id, joined.map((p) => p.user_id).filter((u) => u !== me?.id))}
                 >
                   Pick the next book together
@@ -237,7 +242,7 @@ function Inner() {
               </section>
             )}
 
-            <section className="card" style={{ marginTop: 18 }}>
+            <section className="card" style={{ marginTop: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <h2 className="h2">Progress</h2>
                 {pace != null && !data.ra.revealed_at && (
@@ -300,9 +305,9 @@ function Inner() {
                   Each message shows how far its writer was. Anything past {myPct}% stays hidden until you catch up.
                 </p>
                 {data.messages.length === 0 && (
-                  <p className="muted" style={{ fontSize: 14, marginTop: 14 }}>No messages yet. Say how it&rsquo;s going.</p>
+                  <p className="muted" style={{ fontSize: 14, marginTop: 16 }}>No messages yet. Say how it&rsquo;s going.</p>
                 )}
-                <div style={{ marginTop: 6 }}>
+                <div style={{ marginTop: 8 }}>
                   {data.messages.map((m) => {
                     const person = data.people.get(m.user_id);
                     const mineMsg = m.user_id === me?.id;
@@ -317,7 +322,14 @@ function Inner() {
                             <span className="muted">{ago(m.created_at)}</span>
                             {mineMsg && (
                               <button className="link-btn" style={{ marginLeft: "auto", fontSize: 12, color: "var(--muted)" }}
-                                onClick={async () => { await deleteReadAlongMessage(m.id); setData((d) => d && { ...d, messages: d.messages.filter((x) => x.id !== m.id) }); }}>
+                                onClick={() => {
+                                  const gone = m;
+                                  setData((d) => d && { ...d, messages: d.messages.filter((x) => x.id !== gone.id) });
+                                  deferred("Message deleted", {
+                                    commit: () => deleteReadAlongMessage(gone.id).catch(() => {}),
+                                    restore: () => setData((d) => d && { ...d, messages: [...d.messages, gone].sort((a, b) => a.created_at.localeCompare(b.created_at)) }),
+                                  });
+                                }}>
                                 Delete
                               </button>
                             )}

@@ -13,6 +13,7 @@ import { EarlyPill, Name } from "@/components/Badge";
 import { AvatarPicker } from "@/components/AvatarPicker";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { BadgeCase } from "@/components/BadgeCase";
+import { NewBadges } from "@/components/NewBadges";
 import { InviteCard } from "@/components/InviteCard";
 import { Cover } from "@/components/Cover";
 import { ArrowIcon, LockIcon } from "@/components/icons";
@@ -143,7 +144,7 @@ function You() {
                 </>
               )}
             </div>
-            {isEarlyAdopter(profile?.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
+            {isEarlyAdopter(profile?.created_at) && <div style={{ marginTop: 8 }}><EarlyPill /></div>}
           </div>
           <button className="btn btn--quiet" style={{ minHeight: 40, fontSize: 14, padding: "0 14px" }} onClick={() => setEditing(true)}>
             Edit
@@ -218,14 +219,14 @@ function You() {
         </div>
 
         {ranked.length < TASTE_UNLOCK && (
-          <Link href="/add" className="card" style={{ display: "block", marginTop: 10, textDecoration: "none" }}>
+          <Link href="/add" className="card" style={{ display: "block", marginTop: 12, textDecoration: "none" }}>
             <div style={{ fontWeight: 600 }}>Taste match unlocks at {TASTE_UNLOCK} ranked</div>
-            <div className="bar" style={{ marginTop: 10 }}><span style={{ width: `${(ranked.length / TASTE_UNLOCK) * 100}%`, background: "var(--cobalt)" }} /></div>
+            <div className="bar" style={{ marginTop: 12 }}><span style={{ width: `${(ranked.length / TASTE_UNLOCK) * 100}%`, background: "var(--cobalt)" }} /></div>
             <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>{TASTE_UNLOCK - ranked.length} to go — then see who reads like you and get picks for your taste</div>
           </Link>
         )}
 
-        <section className="card" style={{ marginTop: 10 }}>
+        <section className="card" style={{ marginTop: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <h2 className="h2">Genre passport</h2>
             <span className="m muted" style={{ fontSize: 12 }}>{earnedStamps} of {stamps.length} stamps</span>
@@ -250,11 +251,11 @@ function You() {
             <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Looking up genres for {pendingGenres} book{pendingGenres === 1 ? "" : "s"}… stamps fill in as you browse.</p>
           )}
           {noGenre.length > 0 ? (
-            <button className="link-btn" style={{ marginTop: 10, fontSize: 13, display: "block" }} onClick={openSorting}>
+            <button className="link-btn" style={{ marginTop: 12, fontSize: 13, display: "block" }} onClick={openSorting}>
               {noGenre.length} book{noGenre.length === 1 ? "" : "s"} without a genre — sort {noGenre.length === 1 ? "it" : "them"}
             </button>
           ) : sortedByMe.length > 0 ? (
-            <button className="link-btn" style={{ marginTop: 10, fontSize: 13, display: "block" }} onClick={openSorting}>
+            <button className="link-btn" style={{ marginTop: 12, fontSize: 13, display: "block" }} onClick={openSorting}>
               Change genres you picked
             </button>
           ) : null}
@@ -264,7 +265,7 @@ function You() {
         </section>
 
         {readAlongs.length > 0 && (
-          <section className="card" style={{ marginTop: 10 }}>
+          <section className="card" style={{ marginTop: 12 }}>
             <h2 className="h2">Reading together</h2>
             {readAlongs.slice(0, 6).map((ra) => {
               const mineState = ra.members.find((m) => m.user_id === profile?.id)?.state;
@@ -292,20 +293,21 @@ function You() {
         )}
 
         <BadgeCase statuses={badges} />
+        <NewBadges statuses={badges} />
 
         {profile?.username && (
           <InviteCard username={profile.username} joined={invites?.joined ?? 0} qualified={invites?.qualified ?? connector?.progress ?? 0} earned={Boolean(connector?.earned)} />
         )}
 
         {ranked.length > 0 && (
-          <section className="card" style={{ marginTop: 10 }}>
+          <section className="card" style={{ marginTop: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
               <h2 className="h2">Your top three</h2>
               {ranked.length >= 3 && (
                 <ShareCardButton query="kind=top" label="Share top 10" filename="readread-top-10" className="btn btn--quiet" style={{ minHeight: 36, fontSize: 13, padding: "0 12px" }} />
               )}
             </div>
-            <div style={{ display: "flex", gap: 14, marginTop: 14 }}>
+            <div style={{ display: "flex", gap: 14, marginTop: 16 }}>
               {ranked.slice(0, 3).map((e) => (
                 <Link key={e.id} href={`/book/${e.book_id}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }} aria-label={`#${e.rank} ${e.book.title}`}>
                   <Cover book={e.book} width={88} />
@@ -316,7 +318,7 @@ function You() {
           </section>
         )}
 
-        <div className="stack" style={{ marginTop: 10 }}>
+        <div className="stack" style={{ marginTop: 12 }}>
           {[
             ...(profile?.username ? [{ href: `/u/${profile.username}/shelf`, label: "Your whole library" }] : []),
             { href: `/wrap/${year}`, label: `Your ${year} in books` },
@@ -331,7 +333,7 @@ function You() {
           ))}
         </div>
 
-        <button className="btn btn--ghost btn--block" style={{ marginTop: 18 }} onClick={signOut}>
+        <button className="btn btn--ghost btn--block" style={{ marginTop: 20 }} onClick={signOut}>
           Sign out
         </button>
         <p className="muted" style={{ textAlign: "center", fontSize: 13, margin: "8px 0 0" }}>
@@ -362,7 +364,7 @@ function You() {
             </div>
             {fixing && <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Pick the right genre for any book that doesn&rsquo;t belong here.</p>}
             {stampBooks.length === 0 ? (
-              <div style={{ marginTop: 18 }}>
+              <div style={{ marginTop: 20 }}>
                 <p style={{ margin: 0, fontSize: 15, color: "var(--ink-2)" }}>Rank a {openStamp.label.toLowerCase()} book to earn this stamp.</p>
                 <Link href="/add" className="btn btn--block" style={{ marginTop: 16 }}>Rank a book</Link>
               </div>
@@ -523,7 +525,7 @@ function EditProfile({
           <label htmlFor="pname">Name</label>
           <input id="pname" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
         </div>
-        <div className="field" style={{ marginTop: 14 }}>
+        <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="pbio" style={{ display: "flex", justifyContent: "space-between" }}>
             <span>Blurb</span>
             <span className="m muted" style={{ fontWeight: 400 }}>{bio.length}/160</span>
@@ -532,7 +534,7 @@ function EditProfile({
             placeholder="Sci-fi lifer slowly converting to literary fiction. Will read anything with a map in the front." style={{ resize: "none", paddingTop: 12, lineHeight: 1.4, height: "auto" }} />
           <span className="muted" style={{ fontSize: 12 }}>Shows under your name. Everyone can see it, even if your shelf is private.</span>
         </div>
-        <div className="field" style={{ marginTop: 14 }}>
+        <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="pgoal">Books to read in {new Date().getFullYear()}</label>
           <input id="pgoal" className="input" inputMode="numeric" value={goal} onChange={(e) => setGoal(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="e.g. 30" />
         </div>
@@ -543,7 +545,7 @@ function EditProfile({
             <span className="muted" style={{ fontSize: 13 }}>Only you see your shelf and rankings. You won&rsquo;t appear in friends&rsquo; feeds, and your scores aren&rsquo;t used for anyone&rsquo;s community or predicted scores.</span>
           </span>
         </label>
-        <label style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 14, cursor: isPrivate ? "default" : "pointer", opacity: isPrivate ? 0.5 : 1 }}>
+        <label style={{ display: "flex", alignItems: "flex-start", gap: 12, marginTop: 16, cursor: isPrivate ? "default" : "pointer", opacity: isPrivate ? 0.5 : 1 }}>
           <input type="checkbox" checked={isPublic && !isPrivate} disabled={isPrivate} onChange={(e) => setPublic(e.target.checked)} style={{ width: 22, height: 22, marginTop: 2, accentColor: "var(--ink)" }} />
           <span>
             <span style={{ fontWeight: 600, display: "block" }}>Show my profile on the web</span>
@@ -564,8 +566,8 @@ function EditProfile({
               This permanently deletes your account, shelf, rankings and follows. It can&rsquo;t be undone. Type <strong>{username}</strong> to confirm.
             </p>
             <label htmlFor="confirm-del" className="visually-hidden">Type your username to confirm</label>
-            <input id="confirm-del" className="input" style={{ width: "100%", marginTop: 10 }} value={typed} onChange={(e) => setTyped(e.target.value)} autoCapitalize="none" autoComplete="off" />
-            <button className="btn btn--block" style={{ marginTop: 10, background: "#b42318" }} disabled={busy || typed !== username} onClick={remove}>
+            <input id="confirm-del" className="input" style={{ width: "100%", marginTop: 12 }} value={typed} onChange={(e) => setTyped(e.target.value)} autoCapitalize="none" autoComplete="off" />
+            <button className="btn btn--block" style={{ marginTop: 12, background: "#b42318" }} disabled={busy || typed !== username} onClick={remove}>
               Delete forever
             </button>
           </div>

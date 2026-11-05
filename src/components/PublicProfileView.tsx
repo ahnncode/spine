@@ -50,14 +50,14 @@ export function PublicProfileView({ username, profile }: { username: string; pro
         <div style={{ minWidth: 0 }}>
           <h1 className="h1" style={{ fontSize: 28 }}>{name}</h1>
           <div className="muted" style={{ fontSize: 13 }}>@{profile.username} · {profile.ranked} ranked · {profile.followers} followers</div>
-          {isEarlyAdopter(profile.joined) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
+          {isEarlyAdopter(profile.joined) && <div style={{ marginTop: 8 }}><EarlyPill /></div>}
         </div>
       </div>
       {profile.bio && <Blurb text={profile.bio} name={name} />}
 
       {profile.reading.length > 0 && (
         <>
-          <h2 className="h2" style={{ marginTop: 22 }}>Reading now</h2>
+          <h2 className="h2" style={{ marginTop: 24 }}>Reading now</h2>
           <div className="cover-strip">
             {profile.reading.map((b) => (
               <Link key={b.book_id} href={`/book/${b.book_id}`} className="cover-strip__item">
@@ -71,7 +71,7 @@ export function PublicProfileView({ username, profile }: { username: string; pro
 
       {badges.length > 0 && (
         <>
-          <h2 className="h2" style={{ marginTop: 18 }}>Badges</h2>
+          <h2 className="h2" style={{ marginTop: 20 }}>Badges</h2>
           <div className="badge-strip">
             {badges.map((b) => (
               <div key={b.key} className="badge-cell" style={{ width: 64, flexShrink: 0 }}>
@@ -83,7 +83,7 @@ export function PublicProfileView({ username, profile }: { username: string; pro
         </>
       )}
 
-      <h2 className="h2" style={{ marginTop: 18 }}>{first}&rsquo;s top {Math.min(10, profile.top.length) || ""}</h2>
+      <h2 className="h2" style={{ marginTop: 20 }}>{first}&rsquo;s top {Math.min(10, profile.top.length) || ""}</h2>
       {profile.top.length === 0 ? (
         <p className="muted" style={{ fontSize: 14 }}>Nothing ranked yet.</p>
       ) : (

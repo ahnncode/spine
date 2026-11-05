@@ -11,6 +11,8 @@ import { EntryThread } from "@/components/EntryThread";
 import { FollowButton } from "@/components/FollowButton";
 import { BackIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
+import { RowsSkeleton } from "@/components/Skeleton";
+import { clearUnread } from "@/components/useUnread";
 import {
   fetchCheckinsById, fetchFollowing, fetchNotifications, fetchProfiles, markAllRead,
   fetchMyReadAlongs, type Checkin, type Notification, type Profile, type ReadAlong,
@@ -49,7 +51,7 @@ function Inner() {
       ]);
       setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])) });
       // Opening the list counts as reading it.
-      if (items.some((n) => !n.read_at)) markAllRead().catch(() => {});
+      if (items.some((n) => !n.read_at)) markAllRead().then(clearUnread).catch(() => {});
     })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set(), readAlongs: new Map() }));
   }, []);
 
@@ -88,7 +90,7 @@ function Inner() {
         </div>
         <h1 className="h1" style={{ marginTop: 12 }}>Notifications</h1>
 
-        {!data && <div aria-busy="true" style={{ minHeight: 200 }} />}
+        {!data && <RowsSkeleton avatar count={6} label="Loading notifications" />}
         {data && data.items.length === 0 && (
           <div className="empty">
             <p className="h2">Nothing yet</p>
@@ -105,7 +107,7 @@ function Inner() {
               const picks = n.kind === "picks";
               const body = picks ? (
                 <>
-                  <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 20, background: "var(--ink)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, flexShrink: 0 }}>?</span>
+                  <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 20, background: "var(--panel)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, flexShrink: 0 }}>?</span>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
                     <strong>Your weekly picks are here</strong>
                     <span className="muted" style={{ display: "block", fontSize: 13 }}>A mystery book to reveal, and a wildcard</span>

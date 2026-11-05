@@ -20,6 +20,7 @@ import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
+import { RowsSkeleton } from "@/components/Skeleton";
 
 export default function ShelfPage() {
   return (
@@ -86,7 +87,7 @@ function Shelf() {
 
         {reading.length > 0 && (
           <section aria-label="Reading now">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 18 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 20 }}>
               <h2 className="eyebrow">Reading now</h2>
               {streak.weeks > 0 && (
                 <span className="m" style={{ fontSize: 12, fontWeight: 700, color: streak.activeThisWeek ? "var(--cobalt-ink)" : "var(--accent-ink)" }}>
@@ -129,7 +130,7 @@ function Shelf() {
         </div>
 
         {error && <p className="error" role="alert">{error}</p>}
-        {!entries && !error && <div aria-busy="true" style={{ minHeight: 200 }} />}
+        {!entries && !error && <RowsSkeleton count={6} label="Loading shelf" />}
 
         {entries && entries.length === 0 && (
           <div className="empty">
@@ -154,7 +155,7 @@ function Shelf() {
               </div>
             )}
             {roughCount > 1 && (
-              <Link href="/sharpen" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 14, textDecoration: "none" }}>
+              <Link href="/sharpen" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 16, textDecoration: "none" }}>
                 <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-display)", fontWeight: 800 }}>
                   {roughCount > 99 ? "99+" : roughCount}
                 </span>
@@ -217,7 +218,7 @@ function Shelf() {
                   <Link href={`/book/${sheet.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{sheet.book.title}</Link>
                 </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{sheet.book.author}</p>
-                <Link href={`/book/${sheet.book_id}`} style={{ display: "inline-block", marginTop: 6, fontSize: 14, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
+                <Link href={`/book/${sheet.book_id}`} style={{ display: "inline-block", marginTop: 8, fontSize: 14, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
                   See friends &amp; scores →
                 </Link>
               </div>
@@ -248,7 +249,7 @@ function Shelf() {
               </div>
             )}
             {!editingThoughts && (
-              <div style={{ marginTop: 10 }}>
+              <div style={{ marginTop: 12 }}>
                 <BookActions bookId={sheet.book_id} entry={sheet} onChange={async () => { await reload(); setSheet(null); }} />
               </div>
             )}
@@ -274,7 +275,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
       aria-pressed={on}
       style={{
         flexShrink: 0, minHeight: 36, padding: "0 14px", borderRadius: 18, fontSize: 13, fontWeight: 600,
-        border: on ? 0 : "1px solid var(--line-2)", background: on ? "var(--ink)" : "transparent", color: on ? "#fff" : "var(--ink)",
+        border: on ? 0 : "1px solid var(--line-2)", background: on ? "var(--ink)" : "transparent", color: on ? "var(--on-ink)" : "var(--ink)",
       }}
     >
       {children}

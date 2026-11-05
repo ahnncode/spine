@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/Auth";
 import { SheetSwipe } from "@/components/SheetSwipe";
+import { Toaster } from "@/components/Toaster";
 import "./globals.css";
 
 const description =
@@ -19,7 +20,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f7f7f5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f7f7f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#121211" },
+  ],
   width: "device-width",
   initialScale: 1,
   // Draw under the notch and home bar; the CSS pads with the safe-area insets.
@@ -42,6 +46,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <AuthProvider>{children}</AuthProvider>
         <SheetSwipe />
+        <Toaster />
       </body>
     </html>
   );

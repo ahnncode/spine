@@ -7,7 +7,7 @@ export function Mark({ size = 28 }: { size?: number }) {
     <span
       aria-hidden="true"
       style={{
-        width: size, height: size, borderRadius: size * 0.23, background: "var(--ink)", flexShrink: 0,
+        width: size, height: size, borderRadius: size * 0.23, background: "var(--panel)", flexShrink: 0,
         display: "inline-flex", flexDirection: "column", justifyContent: "center", gap: size * 0.07,
         padding: `0 ${size * 0.2}px`, boxSizing: "border-box",
       }}

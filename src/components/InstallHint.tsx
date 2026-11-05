@@ -61,7 +61,7 @@ export function InstallHint() {
   if (!kind) return null;
 
   return (
-    <div className="card" role="note" style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 14, padding: "12px 12px 12px 14px" }}>
+    <div className="card" role="note" style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, padding: "12px 12px 12px 14px" }}>
       <Mark size={36} />
       <div style={{ flex: 1, fontSize: 14, lineHeight: 1.4 }}>
         <strong>Get readread on your home screen.</strong>{" "}

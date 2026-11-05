@@ -6,7 +6,7 @@ import { poke, pokedToday } from "@/lib/data";
 
 /** Nudge a friend about their reading, once a day. */
 export function PokeButton({ userId, name }: { userId: string; name: string }) {
-  const [state, setState] = useState<"idle" | "busy" | "sent" | "done">("idle");
+  const [state, setState] = useState<"idle" | "sent" | "done">("idle");
 
   useEffect(() => {
     let live = true;
@@ -16,11 +16,13 @@ export function PokeButton({ userId, name }: { userId: string; name: string }) {
     };
   }, [userId]);
 
+  // Optimistic: "Poked!" right away; only rolls back if it didn't go through.
   async function send() {
-    setState("busy");
+    setState("sent");
     try {
       const r = await poke(userId);
-      setState(r === "ok" ? "sent" : r === "already" ? "done" : "idle");
+      if (r === "already") setState("done");
+      else if (r !== "ok") setState("idle");
     } catch {
       setState("idle");
     }

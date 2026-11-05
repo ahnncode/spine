@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
 import { fetchMyProfile, type Profile } from "@/lib/data";
 import { supabase, supabaseConfigured } from "@/lib/supabase";
+import { FeedSkeleton, ProfileSkeleton, RowsSkeleton } from "./Skeleton";
+import { TabBar } from "./TabBar";
 
 interface AuthState {
   session: Session | null;
@@ -91,12 +93,18 @@ export function SetupNotice() {
   );
 }
 
-function Loading() {
+const TAB_PATHS = ["/feed", "/search", "/shelf", "/you"];
+
+/** While we check who you are: an outline of the screen you're opening. */
+function Loading({ path, signedIn }: { path: string; signedIn: boolean }) {
+  const tab = TAB_PATHS.some((t) => path === t || path.startsWith(t + "/"));
   return (
     <div className="app">
       <main className="screen" aria-busy="true">
         <span className="visually-hidden">Loading</span>
+        {signedIn && (path.startsWith("/feed") ? <FeedSkeleton /> : path.startsWith("/u/") ? <ProfileSkeleton /> : <RowsSkeleton count={6} />)}
       </main>
+      {signedIn && tab && <TabBar />}
     </div>
   );
 }
@@ -153,6 +161,6 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       </div>
     );
   }
-  if (loading || !session || !profileLoaded || needsWelcome) return <Loading />;
+  if (loading || !session || !profileLoaded || needsWelcome) return <Loading path={path} signedIn={Boolean(session)} />;
   return <ProfileContext.Provider value={{ profile, reloadProfile }}>{children}</ProfileContext.Provider>;
 }

@@ -37,7 +37,7 @@ export function BookSummary({ book }: { book: Pick<Book, "id" | "title" | "autho
 
   if (state.looking) {
     return (
-      <div aria-busy="true" aria-label="Looking up a summary" style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 7 }}>
+      <div aria-busy="true" aria-label="Looking up a summary" style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 7 }}>
         {[100, 94, 62].map((w) => <span key={w} className="skeleton" style={{ display: "block", height: 12, width: `${w}%` }} />)}
       </div>
     );
@@ -46,7 +46,7 @@ export function BookSummary({ book }: { book: Pick<Book, "id" | "title" | "autho
   const long = state.text.length > 260;
 
   return (
-    <section style={{ marginTop: 14 }} aria-label="About this book">
+    <section style={{ marginTop: 16 }} aria-label="About this book">
       <p className={`book-summary${open || !long ? "" : " book-summary--clamped"}`}>{state.text}</p>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
         {long && (

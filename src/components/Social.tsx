@@ -10,9 +10,11 @@ import { CommentIcon, HeartIcon } from "./icons";
 export function HeartButton({ type, id, initial, onChange }: { type: TargetType; id: string; initial?: HeartState; onChange?: (s: HeartState) => void }) {
   const [state, setState] = useState<HeartState>(initial ?? { count: 0, mine: false });
   const [busy, setBusy] = useState(false);
+  const [popped, setPopped] = useState(false);
 
   async function toggle() {
     if (busy) return;
+    setPopped(!state.mine);
     const next = { count: state.count + (state.mine ? -1 : 1), mine: !state.mine };
     setState(next);
     setBusy(true);
@@ -27,7 +29,7 @@ export function HeartButton({ type, id, initial, onChange }: { type: TargetType;
   }
 
   return (
-    <button className="action-btn" aria-pressed={state.mine} aria-label={`${state.mine ? "Remove heart" : "Heart"}${state.count ? `, ${state.count}` : ""}`} onClick={toggle}>
+    <button className="action-btn action-btn--heart" data-pop={popped && state.mine ? "on" : undefined} aria-pressed={state.mine} aria-label={`${state.mine ? "Remove heart" : "Heart"}${state.count ? `, ${state.count}` : ""}`} onClick={toggle}>
       <HeartIcon size={17} filled={state.mine} />
       {state.count > 0 && <span>{state.count}</span>}
     </button>

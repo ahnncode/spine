@@ -42,12 +42,12 @@ export function WeeklyPicks() {
   const days = daysToMonday();
 
   return (
-    <section id="picks" style={{ marginTop: 22, scrollMarginTop: 16 }}>
+    <section id="picks" style={{ marginTop: 24, scrollMarginTop: 16 }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
         <h2 className="h2">This week&rsquo;s picks</h2>
         <span className="m muted" style={{ fontSize: 12 }}>new in {days} day{days === 1 ? "" : "s"}</span>
       </div>
-      <div className="stack" style={{ marginTop: 10 }}>
+      <div className="stack" style={{ marginTop: 12 }}>
         {data.picks.map((p) =>
           p.kind === "mystery" ? (
             <MysteryCard key={p.id} pick={p} onChange={(patch) => update(p.id, patch)} />
@@ -107,7 +107,7 @@ function MysteryCard({ pick, onChange }: { pick: WeeklyPick; onChange: (p: Parti
           </ul>
         </div>
       </div>
-      <button className="btn btn--block" style={{ marginTop: 16, background: "var(--accent)", color: "var(--ink)" }} disabled={busy} onClick={reveal}>
+      <button className="btn btn--block" style={{ marginTop: 16, background: "var(--accent)", color: "var(--black)" }} disabled={busy} onClick={reveal}>
         {busy ? "Revealing…" : "Reveal the book"}
       </button>
     </div>
@@ -166,8 +166,8 @@ function PickActions({ pick, onChange, dark = false }: { pick: WeeklyPick; onCha
   }
   const quiet = dark ? { background: "transparent", color: "#fff", border: "1px solid #444" } : undefined;
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 14 }}>
-      <button className="btn" style={dark ? { background: "#fff", color: "var(--ink)" } : undefined} disabled={busy} onClick={() => act("want")}>Want to read</button>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 16 }}>
+      <button className="btn" style={dark ? { background: "#fff", color: "var(--black)" } : undefined} disabled={busy} onClick={() => act("want")}>Want to read</button>
       <button className="btn btn--outline" style={quiet} disabled={busy} onClick={() => act("reading")}>Start reading</button>
       <Link href={`/rank/${b.id}`} className="btn btn--ghost" style={{ ...(dark ? { color: "#c9c8c2" } : {}), fontSize: 14 }}>Read it already</Link>
       <button className="btn btn--ghost" style={{ ...(dark ? { color: "#c9c8c2" } : {}), fontSize: 14 }} disabled={busy} onClick={() => act("skip")}>Not for me</button>

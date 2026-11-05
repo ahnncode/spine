@@ -33,7 +33,7 @@ export function MissingDates({ entries, onChanged }: { entries: Entry[]; onChang
 
   return (
     <>
-      <button className="notice" style={{ display: "block", width: "100%", textAlign: "left", border: 0, marginTop: 14 }} onClick={() => setOpen(true)}>
+      <button className="notice" style={{ display: "block", width: "100%", textAlign: "left", border: 0, marginTop: 16 }} onClick={() => setOpen(true)}>
         <strong>{missing.length} ranked book{missing.length === 1 ? " has" : "s have"} no finish date</strong>, so {missing.length === 1 ? "it isn’t" : "they aren’t"} counted in any year. Add dates →
       </button>
       {open && (

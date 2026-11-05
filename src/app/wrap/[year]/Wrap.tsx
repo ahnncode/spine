@@ -14,6 +14,7 @@ import { GENRE_BY_KEY } from "@/lib/genres";
 import { readInYear } from "@/lib/stats";
 import { WrapShareButton } from "@/components/WrapShare";
 import { MissingDates } from "@/components/MissingDates";
+import { CardSkeleton } from "@/components/Skeleton";
 
 export function Wrap() {
   return (
@@ -86,7 +87,7 @@ function Inner() {
 
         {entries && <MissingDates entries={entries} onChanged={reload} />}
 
-        {!entries ? <div aria-busy="true" style={{ minHeight: 200 }} /> : books.length === 0 ? (
+        {!entries ? <CardSkeleton height={260} /> : books.length === 0 ? (
           <div className="empty">
             <p className="h2">No books finished in {year} yet</p>
             <Link href="/add" className="btn" style={{ marginTop: 12 }}>Rank one</Link>
@@ -97,27 +98,27 @@ function Inner() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 24 }}>
               <div className="card card--ink moment" style={{ animationDelay: "0.1s" }}>
                 <div className="stat-big">{books.length}</div>
-                <div style={{ fontWeight: 600, marginTop: 6 }}>books</div>
+                <div style={{ fontWeight: 600, marginTop: 8 }}>books</div>
               </div>
               <div className="card moment" style={{ background: "var(--accent)", borderColor: "var(--accent)", animationDelay: "0.2s" }}>
                 <div className="stat-big">{pages ? pages.toLocaleString() : "—"}</div>
-                <div style={{ fontWeight: 600, marginTop: 6 }}>pages</div>
+                <div style={{ fontWeight: 600, marginTop: 8 }}>pages</div>
               </div>
             </div>
 
-            <section className="card" style={{ marginTop: 10 }}>
+            <section className="card" style={{ marginTop: 12 }}>
               <h2 className="h2">Month by month</h2>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr))", gap: 4, alignItems: "end", height: 90, marginTop: 14 }} role="img" aria-label={`Books per month: ${months.join(", ")}`}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr))", gap: 4, alignItems: "end", height: 90, marginTop: 16 }} role="img" aria-label={`Books per month: ${months.join(", ")}`}>
                 {months.map((n, i) => (
                   <div key={i} style={{ height: `${Math.max(4, (n / maxMonth) * 100)}%`, background: n ? "var(--ink)" : "var(--well)", borderRadius: 4 }} />
                 ))}
               </div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr))", gap: 4, marginTop: 6 }} aria-hidden="true">
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr))", gap: 4, marginTop: 8 }} aria-hidden="true">
                 {MONTHS.map((m, i) => <span key={i} className="m muted" style={{ fontSize: 10, textAlign: "center" }}>{m}</span>)}
               </div>
             </section>
 
-            <section className="card" style={{ marginTop: 10 }}>
+            <section className="card" style={{ marginTop: 12 }}>
               <h2 className="h2">Your top {Math.min(10, top.length)}</h2>
               <ol style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
                 {top.map((e, i) => (
@@ -134,7 +135,7 @@ function Inner() {
             </section>
 
             {genreCounts.length > 0 && (
-              <section className="card" style={{ marginTop: 10 }}>
+              <section className="card" style={{ marginTop: 12 }}>
                 <h2 className="h2">What you read</h2>
                 <div className="stack" style={{ marginTop: 12 }}>
                   {genreCounts.map(([g, n]) => GENRE_BY_KEY[g] && (
@@ -151,20 +152,20 @@ function Inner() {
             )}
 
             {longest?.book.pages && (
-              <Link href={`/book/${longest.book_id}`} className="card" style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center", color: "inherit", textDecoration: "none" }}>
+              <Link href={`/book/${longest.book_id}`} className="card" style={{ marginTop: 12, display: "flex", gap: 14, alignItems: "center", color: "inherit", textDecoration: "none" }}>
                 <Cover book={longest.book} width={56} />
                 <div style={{ minWidth: 0 }}>
                   <div className="eyebrow">Longest read</div>
-                  <div className="d clamp-2" style={{ fontWeight: 700, fontSize: 20, lineHeight: 1.15, letterSpacing: "-0.02em", marginTop: 6 }}>{longest.book.title}</div>
+                  <div className="d clamp-2" style={{ fontWeight: 700, fontSize: 20, lineHeight: 1.15, letterSpacing: "-0.02em", marginTop: 8 }}>{longest.book.title}</div>
                   <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{[longest.book.author, `${longest.book.pages.toLocaleString()} pages`].filter(Boolean).join(" · ")}</div>
                 </div>
               </Link>
             )}
 
             {friends?.closest && (
-              <section className="card" style={{ marginTop: 10, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff" }}>
+              <section className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff" }}>
                 <div className="eyebrow" style={{ color: "#dde1ff" }}>Reading twin</div>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
                   <Avatar profile={friends.closest[0]} size={40} />
                   <div style={{ flex: 1, fontWeight: 600 }}>{displayName(friends.closest[0])}</div>
                   <span className="d" style={{ fontSize: 28, fontWeight: 800 }}>{friends.closest[1]}%</span>

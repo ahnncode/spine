@@ -34,7 +34,7 @@ export function InviteCard({ username, joined, qualified, earned }: { username: 
   const n = Math.min(qualified, 3);
   const waiting = Math.max(0, Math.min(joined, 3) - n);
   return (
-    <section className="card invite-card" style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center" }}>
+    <section className="card invite-card" style={{ marginTop: 12, display: "flex", gap: 14, alignItems: "center" }}>
       <Medallion badge="connector" earned={earned} progress={n / 3} size={60} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700 }}>{earned ? "You’re a Connector" : "Invite 3 friends"}</div>
@@ -47,7 +47,7 @@ export function InviteCard({ username, joined, qualified, earned }: { username: 
               {[0, 1, 2].map((i) => <span key={i} data-on={i < n} data-joined={i >= n && i < n + waiting} />)}
             </div>
             {joined > 0 && (
-              <div style={{ fontSize: 12, marginTop: 6, fontWeight: 600 }}>
+              <div style={{ fontSize: 12, marginTop: 8, fontWeight: 600 }}>
                 {joined} joined{waiting > 0 ? ` · ${waiting === 1 ? "1 still needs" : `${waiting} still need`} to rank 3 books` : ""}
               </div>
             )}

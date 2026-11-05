@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { addToWant, moveToWant, removeEntry, startReading, type Entry } from "@/lib/data";
+import { deferred, markRemoving } from "@/lib/toast";
 import { BookmarkIcon, BookOpenIcon } from "./icons";
 
 /**
@@ -42,6 +43,23 @@ export function BookActions({
 
   const status = entry?.status;
 
+  // Hide it now; the delete happens when the Undo toast goes away.
+  function remove(e: Entry) {
+    markRemoving(e.id, true);
+    void onChange();
+    deferred("Removed from your shelf", {
+      commit: async () => {
+        await removeEntry(e.id).catch(() => {});
+        markRemoving(e.id, false);
+        await onChange();
+      },
+      restore: () => {
+        markRemoving(e.id, false);
+        void onChange();
+      },
+    });
+  }
+
   return (
     <div className="stack">
       {status === "reading" ? (
@@ -68,7 +86,7 @@ export function BookActions({
         </button>
       )}
       {showRemove && entry && (
-        <button className="btn btn--ghost btn--block" disabled={busy} onClick={() => run(() => removeEntry(entry.id))}>
+        <button className="btn btn--ghost btn--block" disabled={busy} onClick={() => remove(entry)}>
           Remove from shelf
         </button>
       )}

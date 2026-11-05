@@ -138,7 +138,7 @@ export default function Login() {
                 }}
               />
               {error && <p className="error" role="alert">{error}</p>}
-              <button className="btn btn--block" style={{ marginTop: 14 }} disabled={verifying || code.length < 6}>
+              <button className="btn btn--block" style={{ marginTop: 16 }} disabled={verifying || code.length < 6}>
                 {verifying ? "Signing in…" : "Sign in with code"}
               </button>
             </form>
@@ -150,7 +150,7 @@ export default function Login() {
           <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Start your shelf.</h1>
             <p className="lede">No password. We&rsquo;ll email you a link to sign in or create your account.</p>
-            <div className="field" style={{ marginTop: 28 }}>
+            <div className="field" style={{ marginTop: 32 }}>
               <label htmlFor="email">Email</label>
               <input
                 id="email"

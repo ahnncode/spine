@@ -91,13 +91,13 @@ export function ThoughtsEditor({
         {...mention.fieldProps}
       />
       {mention.picker}
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 10 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 10, marginTop: 12 }}>
         <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer", minHeight: 44 }}>
           <input type="checkbox" checked={spoiler} onChange={(e) => { setSpoiler(e.target.checked); setSaved(false); }} style={{ width: 20, height: 20, accentColor: "var(--ink)" }} />
           Contains spoilers
         </label>
       </div>
-      {showDate && <div style={{ marginTop: 10 }}>
+      {showDate && <div style={{ marginTop: 12 }}>
         <FinishedPicker value={finished} onChange={pickDate} />
         {dateNote && <p className="muted" role="status" style={{ margin: "6px 0 0", fontSize: 12 }}>{dateNote}</p>}
       </div>}

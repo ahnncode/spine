@@ -10,6 +10,7 @@ import { FollowButton } from "@/components/FollowButton";
 import { BackIcon, LockIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { fetchProfileByUsername, followList, type FollowPerson, type Profile } from "@/lib/data";
+import { RowsSkeleton } from "@/components/Skeleton";
 
 type Kind = "followers" | "following";
 
@@ -62,11 +63,11 @@ function Inner() {
         {owner === null ? (
           <div className="empty"><p className="h2">No reader called @{username}</p></div>
         ) : !owner ? (
-          <div aria-busy="true" style={{ minHeight: 200 }} />
+          <RowsSkeleton avatar count={6} label="Loading" />
         ) : (
           <>
             <h1 className="h1" style={{ marginTop: 12 }}>{isMe ? "Your people" : <Name profile={owner} markSize={18} />}</h1>
-            <div className="segmented" role="tablist" style={{ marginTop: 14 }}>
+            <div className="segmented" role="tablist" style={{ marginTop: 16 }}>
               {(["followers", "following"] as Kind[]).map((k) => (
                 <button key={k} role="tab" aria-selected={kind === k} onClick={() => setKind(k)}>
                   {k === "followers" ? "Followers" : "Following"}
@@ -76,7 +77,7 @@ function Inner() {
             </div>
 
             {people === undefined ? (
-              <div aria-busy="true" style={{ minHeight: 160 }} />
+              <RowsSkeleton avatar count={6} label="Loading" />
             ) : people === null ? (
               <div className="empty" style={{ marginTop: 16 }}>
                 <LockIcon size={20} />

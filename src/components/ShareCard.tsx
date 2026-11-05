@@ -75,7 +75,7 @@ function ShareCardSheet({ query, filename, onClose }: { query: string; filename:
             <div className="share-card-loading" aria-busy="true"><span className="skeleton" style={{ width: "100%", height: "100%", borderRadius: 16 }} /></div>
           )}
         </div>
-        <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
+        <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
           {canShareFile && <button className="btn" style={{ flex: 1 }} onClick={share}>Share</button>}
           {url && (
             <a className={canShareFile ? "btn btn--quiet" : "btn"} style={{ flex: 1 }} href={url} download={`${filename}.png`}>Save image</a>

@@ -9,6 +9,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { useShelf } from "@/components/useShelf";
 import { countHeadToHeads, logMatchup, rankEntries, recordMatchup, type Entry, type RankedEntry } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const ROUNDS = 10;
 
@@ -99,7 +100,7 @@ function Sharpen() {
           <span style={{ width: 44 }} />
         </div>
 
-        {!entries && <div aria-busy="true" className="spacer" />}
+        {!entries && <CardSkeleton height={240} />}
 
         {entries && !finished && !candidatesLeft && round === 0 && (
           <div className="empty">
@@ -158,7 +159,7 @@ function Sharpen() {
                 Keep going · {rough} rough
               </button>
             )}
-            <Link href="/shelf" className={`btn btn--block ${rough > 0 ? "btn--ghost" : ""}`} style={{ marginTop: 6 }}>
+            <Link href="/shelf" className={`btn btn--block ${rough > 0 ? "btn--ghost" : ""}`} style={{ marginTop: 8 }}>
               See your shelf
             </Link>
           </>

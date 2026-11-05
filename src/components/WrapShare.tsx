@@ -11,7 +11,7 @@ export function WrapShareButton({ year }: { year: number }) {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button className="btn btn--block" style={{ marginTop: 18 }} onClick={() => setOpen(true)}>
+      <button className="btn btn--block" style={{ marginTop: 20 }} onClick={() => setOpen(true)}>
         <ShareIcon size={16} /> Share your year as slides
       </button>
       {open && <WrapShareSheet year={year} onClose={() => setOpen(false)} />}
@@ -68,7 +68,7 @@ function WrapShareSheet({ year, onClose }: { year: number; onClose: () => void }
               : SLIDES.map((n) => <span key={n} className="wrap-slide skeleton" aria-busy="true" />)}
         </div>
         {slides && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
             {canShare && (
               <button className="btn btn--block" onClick={() => navigator.share({ files }).catch(() => {})}>Share all 4</button>
             )}

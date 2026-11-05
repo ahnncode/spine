@@ -15,6 +15,8 @@ import { Cover } from "./Cover";
 import { MoreIcon } from "./icons";
 import { ScoreChip } from "./ScoreChip";
 import { HeartButton, NoteText, TagList } from "./Social";
+import { deferred } from "@/lib/toast";
+import { CardSkeleton } from "@/components/Skeleton";
 
 const ago = timeAgo;
 
@@ -34,6 +36,8 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
   const [error, setError] = useState<string | null>(null);
   const [menuFor, setMenuFor] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const shown = comments.filter((c) => !hidden.has(c.id));
 
   const load = useCallback(async () => {
     const [e, cs, uid, h] = await Promise.all([
@@ -68,10 +72,16 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
     }
   }
 
-  async function remove(id: string) {
+  function remove(id: string) {
     setMenuFor(null);
-    await deleteComment(id).catch(() => {});
-    await load();
+    setHidden((h) => new Set(h).add(id));
+    deferred("Comment deleted", {
+      commit: async () => {
+        await deleteComment(id).catch(() => {});
+        await load();
+      },
+      restore: () => setHidden((h) => { const n = new Set(h); n.delete(id); return n; }),
+    });
   }
 
   async function flag(id: string) {
@@ -86,7 +96,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Comments" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        {entry === undefined && <div aria-busy="true" style={{ minHeight: 160 }} />}
+        {entry === undefined && <CardSkeleton height={120} />}
         {entry === null && <p className="muted">This post isn’t available.</p>}
         {entry && (
           <>
@@ -114,10 +124,10 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
               {hearts && <HeartButton type="entry" id={entry.id} initial={hearts} />}
             </div>
 
-            <h3 className="h2" style={{ marginTop: 18 }}>{comments.length ? `${comments.length} comment${comments.length === 1 ? "" : "s"}` : "No comments yet"}</h3>
+            <h3 className="h2" style={{ marginTop: 20 }}>{shown.length ? `${shown.length} comment${shown.length === 1 ? "" : "s"}` : "No comments yet"}</h3>
             {notice && <p className="notice" role="status" style={{ marginTop: 8 }}>{notice}</p>}
             <div>
-              {comments.map((c) => {
+              {shown.map((c) => {
                 const p = people.get(c.user_id);
                 const canDelete = c.user_id === me || c.target_owner === me;
                 return (

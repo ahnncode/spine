@@ -43,10 +43,17 @@ export function Cover({ book, width, className }: Props) {
           alt=""
           loading="lazy"
           key={url}
+          decoding="async"
+          // Already cached (e.g. loaded before hydration): show it without waiting for onLoad.
+          ref={(img) => {
+            if (img?.complete && img.naturalWidth >= 10) img.dataset.loaded = "1";
+          }}
           onError={fail}
           onLoad={(e) => {
+            const img = e.currentTarget as HTMLImageElement;
             // Open Library sometimes returns a 1×1 placeholder.
-            if ((e.currentTarget as HTMLImageElement).naturalWidth < 10) fail();
+            if (img.naturalWidth < 10) fail();
+            else img.dataset.loaded = "1"; // fades in over the coloured block
           }}
         />
       ) : width < 56 ? (

@@ -116,7 +116,7 @@ export default function Landing() {
               <p>{f.p}</p>
             </div>
           ))}
-          <h2 className="h2" style={{ marginTop: 28 }}>Questions</h2>
+          <h2 className="h2" style={{ marginTop: 32 }}>Questions</h2>
           {FAQ.map((q) => (
             <details key={q.q} className="landing-faq">
               <summary>{q.q}</summary>

@@ -15,6 +15,7 @@ import { Cover } from "./Cover";
 import { AddFriendIcon, ArrowIcon, BookmarkIcon, BookOpenIcon, ScanIcon, SearchIcon } from "./icons";
 import { TabBar } from "./TabBar";
 import { useShelf } from "./useShelf";
+import { RowsSkeleton } from "@/components/Skeleton";
 
 export function SearchScreen({ mode }: { mode: "discover" | "add" }) {
   return (
@@ -173,7 +174,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
         {error && <p className="error" role="alert">{error}</p>}
 
         {onShelf.length > 0 && (
-          <section aria-label="On your shelf" style={{ marginTop: 10 }}>
+          <section aria-label="On your shelf" style={{ marginTop: 12 }}>
             <h2 className="eyebrow" style={{ margin: "6px 0 0" }}>On your shelf</h2>
             <ul style={{ listStyle: "none", margin: "2px 0 0", padding: 0 }}>
               {onShelf.map((e) => (
@@ -199,7 +200,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             <>
               {reading.length > 0 && (
                 <>
-                  <h2 className="h2" style={{ marginTop: 22 }}>Finished one of these?</h2>
+                  <h2 className="h2" style={{ marginTop: 24 }}>Finished one of these?</h2>
                   <ul style={{ listStyle: "none", margin: "4px 0 0", padding: 0 }}>
                     {reading.map((e) => (
                       <li key={e.id}>
@@ -295,12 +296,12 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
                   {[picked.author, picked.year, picked.pages ? `${picked.pages} pages` : null].filter(Boolean).join(" · ")}
                 </p>
-                <button className="btn btn--ghost" style={{ minHeight: 36, padding: 0, marginTop: 6, fontSize: 14, color: "var(--cobalt-ink)" }} disabled={busy} onClick={() => act(picked, "page")}>
+                <button className="btn btn--ghost" style={{ minHeight: 36, padding: 0, marginTop: 8, fontSize: 14, color: "var(--cobalt-ink)" }} disabled={busy} onClick={() => act(picked, "page")}>
                   See friends &amp; scores →
                 </button>
               </div>
             </div>
-            <div className="stack" style={{ marginTop: 18 }}>
+            <div className="stack" style={{ marginTop: 20 }}>
               <button className="btn btn--block" disabled={busy} onClick={() => act(picked, "rank")}>
                 {pickedEntry?.status === "ranked" ? "Re-rank it" : pickedEntry?.status === "reading" ? "Finished — rank it" : "I’ve read it — rank it"}
               </button>
@@ -335,14 +336,14 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
         <p className="d" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", margin: "6px 0 0", lineHeight: 1.05 }}>
           Rank {left} more book{left === 1 ? "" : "s"} to unlock picks made for your taste.
         </p>
-        <div className="bar" style={{ marginTop: 14, background: "#2a2a2a" }}>
+        <div className="bar" style={{ marginTop: 16, background: "#2a2a2a" }}>
           <span style={{ width: `${(rankedCount / TASTE_UNLOCK) * 100}%`, background: "var(--accent)" }} />
         </div>
-        <Link href="/add" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--ink)" }}>Rank a book</Link>
+        <Link href="/add" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--black)" }}>Rank a book</Link>
       </div>
     );
   }
-  if (!recs) return <div aria-busy="true" style={{ minHeight: 120 }} />;
+  if (!recs) return <RowsSkeleton count={3} label="Loading picks for you" />;
   if (!recs.length) {
     return (
       <div className="empty">
@@ -353,7 +354,7 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
   }
   return (
     <>
-      <h2 className="h2" style={{ marginTop: 22 }}>For you</h2>
+      <h2 className="h2" style={{ marginTop: 24 }}>For you</h2>
       <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>Loved by readers who rank like you</p>
       <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
         {recs.map((r) => (

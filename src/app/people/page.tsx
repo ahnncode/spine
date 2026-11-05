@@ -9,6 +9,7 @@ import { FollowButton } from "@/components/FollowButton";
 import { BackIcon, SearchIcon, ShareIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { fetchFollowing, fetchProfiles, inviteUrl, searchProfiles, similarReaders, type Profile } from "@/lib/data";
+import { RowsSkeleton } from "@/components/Skeleton";
 
 export default function PeoplePage() {
   return (
@@ -113,8 +114,8 @@ function People() {
                 <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>Share your profile so they can follow you</span>
               </span>
             </button>
-            <h2 className="h2" style={{ marginTop: 22 }}>Readers like you</h2>
-            {!similar ? <div aria-busy="true" style={{ minHeight: 80 }} /> : similar.length ? (
+            <h2 className="h2" style={{ marginTop: 24 }}>Readers like you</h2>
+            {!similar ? <RowsSkeleton avatar count={2} label="Finding readers like you" /> : similar.length ? (
               <div>{similar.map((s) => row(s.profile, `${s.match}% match`))}</div>
             ) : (
               <p className="muted" style={{ fontSize: 14 }}>Once you and other readers have ranked a few of the same books, your closest matches show up here.</p>
@@ -179,7 +180,7 @@ function InviteSomeone({ query, username, compact = false }: { query: string; us
 
   if (compact) {
     return (
-      <button className="btn btn--ghost" style={{ marginTop: 10, paddingLeft: 0, fontSize: 14 }} onClick={share}>
+      <button className="btn btn--ghost" style={{ marginTop: 12, paddingLeft: 0, fontSize: 14 }} onClick={share}>
         {copied ? "Invite copied" : "Don’t see them? Send an invite →"}
       </button>
     );

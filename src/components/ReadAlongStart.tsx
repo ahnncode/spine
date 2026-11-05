@@ -114,7 +114,7 @@ export function ReadAlongStart({
           </div>
         </div>
 
-        <input className="input" style={{ width: "100%", marginTop: 14 }} placeholder="Search people you follow" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search people you follow" />
+        <input className="input" style={{ width: "100%", marginTop: 16 }} placeholder="Search people you follow" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search people you follow" />
 
         <ul className="pick-list" aria-label="People you follow">
           {people === null && <li className="muted" style={{ padding: 12, fontSize: 14 }}>Loading…</li>}

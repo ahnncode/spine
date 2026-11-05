@@ -17,14 +17,16 @@ export function WantButton({
   initialSaved?: boolean;
   onSaved?: () => void;
 }) {
-  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">(initialSaved ? "saved" : "idle");
+  const [state, setState] = useState<"idle" | "saved" | "error">(initialSaved ? "saved" : "idle");
+  const [popped, setPopped] = useState(false);
 
+  // Optimistic: shows "Saved" straight away, flips back if the save fails.
   async function save() {
-    if (state === "saving" || state === "saved") return;
-    setState("saving");
+    if (state === "saved") return;
+    setState("saved");
+    setPopped(true);
     try {
       await addToWant(bookId);
-      setState("saved");
       onSaved?.();
     } catch {
       setState("error");
@@ -34,9 +36,8 @@ export function WantButton({
   const label = state === "saved" ? "Saved" : state === "error" ? "Try again" : "Save";
   return (
     <button
-      className="action-btn"
+      className="action-btn" data-pop={popped && state === "saved" ? "on" : undefined}
       onClick={save}
-      disabled={state === "saving"}
       aria-pressed={state === "saved"}
       aria-label={state === "saved" ? "Saved to want to read" : "Save to want to read"}
       style={state === "saved" ? { color: "var(--cobalt-ink)", background: "var(--cobalt-soft)" } : undefined}

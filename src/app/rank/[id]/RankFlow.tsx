@@ -23,6 +23,7 @@ import {
 } from "@/lib/placement";
 import { clearQueue, shiftQueue } from "@/lib/queue";
 import { activityDates, readInYear, weeklyStreak } from "@/lib/stats";
+import { Burst, buzz } from "@/components/Burst";
 
 export function RankFlow() {
   return (
@@ -188,6 +189,7 @@ function Flow() {
   function step(next: Placement, b: Bucket, sorted: RankedEntry[]) {
     setPlacement(next);
     if (next.phase === "done") {
+      buzz(18);
       countHeadToHeads(next.steps);
       finish(b, next.result as number, sorted);
     }
@@ -272,10 +274,10 @@ function Flow() {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, paddingTop: 10 }}>
             <p className="eyebrow" style={{ marginBottom: 18 }}>{label}</p>
             <Cover book={book} width={168} />
-            <h1 className="h1" style={{ fontSize: 32, marginTop: 22, textAlign: "center", letterSpacing: "-0.03em" }}>{book.title}</h1>
+            <h1 className="h1" style={{ fontSize: 32, marginTop: 24, textAlign: "center", letterSpacing: "-0.03em" }}>{book.title}</h1>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 15 }}>{book.author}</p>
             {current && (
-              <span className="pill" style={{ marginTop: 10 }}>
+              <span className="pill" style={{ marginTop: 12 }}>
                 Now #{current.rank} · {formatScore(current.score)}
               </span>
             )}
@@ -310,7 +312,7 @@ function Flow() {
             <p className="muted" style={{ margin: "8px 0 0", fontSize: 14, lineHeight: 1.45 }}>
               Your first {MANUAL_SCORE_BOOKS} books set the scale. After that, quick head-to-heads place each new book and score it around these.
             </p>
-            <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 26 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 18, marginTop: 24 }}>
               <Cover book={book} width={84} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="versus__title">{book.title}</div>
@@ -327,7 +329,7 @@ function Flow() {
               step={0.1}
               value={manual}
               onChange={(e) => setManual(Math.round(Number(e.target.value) * 10) / 10)}
-              style={{ width: "100%", marginTop: 22, accentColor: "var(--accent)", height: 32 }}
+              style={{ width: "100%", marginTop: 24, accentColor: "var(--accent)", height: 32 }}
             />
             <div className="m muted" style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
               <span>{formatScore(BUCKETS[bucket].range[0])}</span>
@@ -346,7 +348,7 @@ function Flow() {
             )}
             <div className="spacer" style={{ minHeight: 24 }} />
             <button className="btn btn--block" onClick={saveManual}>Save {formatScore(manual)}</button>
-            <button className="btn btn--ghost btn--block" style={{ marginTop: 6 }} onClick={() => setPhase("bucket")}>Back</button>
+            <button className="btn btn--ghost btn--block" style={{ marginTop: 8 }} onClick={() => setPhase("bucket")}>Back</button>
           </>
         )}
 
@@ -402,7 +404,10 @@ function Flow() {
           <>
             <p className="eyebrow" style={{ marginTop: 8 }}>Placed on your shelf</p>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: 4 }} aria-live="polite">
-              <div className="big-rank reveal-rank">#{result.me.rank}</div>
+              <div className="big-rank reveal-rank" style={{ position: "relative" }}>
+                #{result.me.rank}
+                <Burst pieces={result.me.rank <= 3 || result.badges.length ? 28 : 14} spread={result.me.rank <= 3 ? 170 : 110} delay={0.2} />
+              </div>
               <div className="reveal-chip" style={{ marginBottom: 6 }}>
                 <ScoreChip score={result.me.score} bucket={result.me.bucket} size={68} />
               </div>
@@ -454,14 +459,14 @@ function Flow() {
                 <Link href={`/rank/${queueLeft[0]}`} className="btn btn--block">
                   Next book · {queueLeft.length} to go
                 </Link>
-                <Link href="/shelf" className="btn btn--ghost btn--block" style={{ marginTop: 6 }} onClick={() => clearQueue()}>
+                <Link href="/shelf" className="btn btn--ghost btn--block" style={{ marginTop: 8 }} onClick={() => clearQueue()}>
                   Finish later
                 </Link>
               </>
             ) : (
               <>
                 <Link href="/shelf" className="btn btn--block">See your shelf</Link>
-                <Link href="/add" className="btn btn--ghost btn--block" style={{ marginTop: 6 }}>Rank another</Link>
+                <Link href="/add" className="btn btn--ghost btn--block" style={{ marginTop: 8 }}>Rank another</Link>
               </>
             )}
           </>

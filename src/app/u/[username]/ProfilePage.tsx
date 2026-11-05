@@ -24,6 +24,7 @@ import {
 } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
 import { passport, readInYear } from "@/lib/stats";
+import { ProfileSkeleton } from "@/components/Skeleton";
 
 
 export function ProfilePage() {
@@ -130,7 +131,7 @@ function Inner() {
         <div className="topbar">
           <button className="icon-btn" aria-label="Back" onClick={() => router.back()}><BackIcon size={20} /></button>
         </div>
-        {!data ? <div aria-busy="true" style={{ minHeight: 200 }} /> : (
+        {!data ? <ProfileSkeleton /> : (
           <>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
               <Avatar profile={data.profile} size={64} />
@@ -146,7 +147,7 @@ function Inner() {
                     <>{data.counts.followers} {data.counts.followers === 1 ? "follower" : "followers"} · {data.counts.following} following</>
                   )}
                 </div>
-                {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
+                {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 8 }}><EarlyPill /></div>}
               </div>
               {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} onChange={(following) => setData((d) => (d ? { ...d, following, mutual: following && Boolean(d.theyFollow) } : d))} />}
               <div style={{ position: "relative" }}>
@@ -163,7 +164,7 @@ function Inner() {
             </div>
             {!data.blocked && data.profile.bio && <Blurb text={data.profile.bio} name={displayName(data.profile)} />}
             {!data.blocked && data.following && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 16 }}>
                 <PokeButton userId={data.profile.id} name={displayName(data.profile)} />
                 <span className="muted" style={{ fontSize: 12, lineHeight: 1.3 }}>
                   {reading.length ? `See how ${displayName(data.profile).split(" ")[0]} is doing with ${reading[0].book.title}` : "Give them a nudge to pick up a book"} · once a day
@@ -214,13 +215,13 @@ function Inner() {
                   </>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 18 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 20 }}>
                   <div className="stat"><div className="stat__n">{ranked.length}</div><div className="stat__l">ranked</div></div>
                   <div className="stat"><div className="stat__n">{readInYear(ranked, new Date().getFullYear()).length}</div><div className="stat__l">this year</div></div>
                   <div className="stat"><div className="stat__n">{stamps}</div><div className="stat__l">genre stamps</div></div>
                 </div>
 
-                <div className="card" style={{ marginTop: 10, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
+                <div className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
                   <div className="d stat-big" style={{ fontSize: 44 }}>{data.match?.match != null ? `${data.match.match}%` : "—"}</div>
                   <div style={{ fontSize: 14, lineHeight: 1.35 }}>
                     <strong>Taste match</strong>
@@ -236,13 +237,13 @@ function Inner() {
                       label="Share"
                       filename={`readread-taste-${data.profile.username}`}
                       className="btn"
-                      style={{ marginLeft: "auto", minHeight: 36, fontSize: 13, padding: "0 12px", background: "#fff", color: "var(--cobalt-ink)" }}
+                      style={{ marginLeft: "auto", minHeight: 36, fontSize: 13, padding: "0 12px", background: "#fff", color: "#1d2ba8" }}
                     />
                   )}
                 </div>
 
                 {disagree.length > 0 && (
-                  <section className="card" style={{ marginTop: 10 }}>
+                  <section className="card" style={{ marginTop: 12 }}>
                     <h2 className="h2">Where you disagree</h2>
                     {disagree.map(({ e, mine, diff }) => (
                       <Link key={e.id} href={`/book/${e.book_id}`} className="book-row" style={{ borderBottom: 0 }}>

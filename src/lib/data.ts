@@ -6,6 +6,7 @@ import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "
 import { findAppleAuthor } from "./applecovers";
 import { authorToCheck, lookup } from "./openlibrary";
 import { supabase } from "./supabase";
+import { isRemoving } from "./toast";
 
 export type Status = "ranked" | "want" | "unsorted" | "reading";
 
@@ -93,7 +94,8 @@ export async function fetchShelf(userId?: string): Promise<Entry[]> {
     all.push(...((data as unknown as Entry[]) || []));
     if (!data || data.length < 1000) break;
   }
-  return all;
+  // Books removed a moment ago (still inside their Undo window) stay hidden.
+  return userId ? all : all.filter((e) => !isRemoving(e.id));
 }
 
 /** Ranked entries in overall order (loved → fine → not for me), with scores. */

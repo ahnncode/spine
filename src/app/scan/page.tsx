@@ -145,7 +145,7 @@ function Scanner() {
           </p>
         </div>
 
-        <form onSubmit={submitManual} style={{ display: "flex", gap: 8, marginTop: 14 }}>
+        <form onSubmit={submitManual} style={{ display: "flex", gap: 8, marginTop: 16 }}>
           <label htmlFor="isbn" className="visually-hidden">ISBN</label>
           <input id="isbn" className="input" style={{ flex: 1 }} inputMode="numeric" placeholder="Or type the ISBN" value={manual} onChange={(e) => setManual(e.target.value)} />
           <button className="btn" style={{ minHeight: 52 }}>Find</button>
@@ -163,7 +163,7 @@ function Scanner() {
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{[found.author, found.year].filter(Boolean).join(" · ")}</p>
               </div>
             </div>
-            <div className="stack" style={{ marginTop: 18 }}>
+            <div className="stack" style={{ marginTop: 20 }}>
               <button className="btn btn--block" disabled={busy} onClick={() => act("rank")}>I’ve read it — rank it</button>
               <button className="btn btn--outline btn--block" disabled={busy} onClick={() => act("reading")}><BookOpenIcon size={18} /> Reading it now</button>
               <button className="btn btn--quiet btn--block" disabled={busy} onClick={() => act("want")}><BookmarkIcon size={16} /> Want to read</button>

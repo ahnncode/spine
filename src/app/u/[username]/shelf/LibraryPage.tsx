@@ -13,6 +13,7 @@ import { WantButton } from "@/components/WantButton";
 import { fetchMyBlocks, fetchProfileByUsername, fetchShelf, rankEntries, type Entry, type Profile, type RankedEntry } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { BUCKETS, formatScore, type Bucket } from "@/lib/ranking";
+import { RowsSkeleton } from "@/components/Skeleton";
 
 export function LibraryPage() {
   return (
@@ -138,7 +139,7 @@ function Inner() {
         <div className="topbar">
           <button className="icon-btn" aria-label="Back" onClick={() => router.back()}><BackIcon size={20} /></button>
         </div>
-        {!data ? <div aria-busy="true" style={{ minHeight: 200 }} /> : (
+        {!data ? <RowsSkeleton count={6} label="Loading shelf" /> : (
           <>
             <p className="eyebrow" style={{ marginTop: 8 }}>
               <Link href={`/u/${data.profile.username}`} style={{ color: "inherit", textDecoration: "none" }}>@{data.profile.username}</Link>
@@ -198,7 +199,7 @@ function Inner() {
                   </div>
                 )}
 
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14, gap: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 16, gap: 10 }}>
                   <span className="m muted" style={{ fontSize: 12 }}>
                     {shown.length} {shown.length === 1 ? "book" : "books"}
                     {filtersOn && <> · <button className="link-btn" onClick={clear}>Clear filters</button></>}

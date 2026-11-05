@@ -20,11 +20,13 @@ import { InstallHint } from "@/components/InstallHint";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
-  commentCounts, feedReadAlongs, feedUser, fetchBooks, fetchFeed, type FeedReadAlong, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches, unreadCount,
+  commentCounts, feedReadAlongs, feedUser, fetchBooks, fetchFeed, type FeedReadAlong, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches,
   type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType,
 } from "@/lib/data";
 import type { Book } from "@/lib/books";
 import { formatScore } from "@/lib/ranking";
+import { FeedSkeleton } from "@/components/Skeleton";
+import { useUnread } from "@/components/useUnread";
 
 export default function FeedPage() {
   return (
@@ -54,7 +56,7 @@ function Feed() {
   const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [thread, setThread] = useState<string | null>(null);
-  const [unread, setUnread] = useState(0);
+  const unread = useUnread();
   // "Following" is friends' activity; "You" is everything you've posted.
   const [scope, setScope] = useState<"following" | "you">("following");
   const [cache, setCache] = useState<Partial<Record<"following" | "you", Loaded>>>({});
@@ -93,9 +95,6 @@ function Feed() {
     })().catch((e) => setError(e instanceof Error ? e.message : "Couldn’t load your feed"));
   }, [scope, profile, cache]);
 
-  useEffect(() => {
-    unreadCount().then(setUnread).catch(() => {});
-  }, []);
 
   const mine = useMemo(() => new Map(rankEntries(entries || []).map((e) => [e.book_id, e])), [entries]);
   const myStatus = useMemo(() => new Map((entries || []).map((e) => [e.book_id, e.status])), [entries]);
@@ -125,18 +124,18 @@ function Feed() {
 
         {streak.weeks > 0 && !streak.activeThisWeek && (
           reading[0] ? (
-            <button className="notice" style={{ display: "block", width: "100%", textAlign: "left", border: 0, marginTop: 14 }} onClick={() => setChecking(reading[0])}>
+            <button className="notice" style={{ display: "block", width: "100%", textAlign: "left", border: 0, marginTop: 16 }} onClick={() => setChecking(reading[0])}>
               <strong>Keep your {streak.weeks}-week streak.</strong> Check in on {reading[0].book.title} before Sunday.
             </button>
           ) : (
-            <Link href="/add" className="notice" style={{ display: "block", marginTop: 14, textDecoration: "none" }}>
+            <Link href="/add" className="notice" style={{ display: "block", marginTop: 16, textDecoration: "none" }}>
               <strong>Keep your {streak.weeks}-week streak.</strong> Start or rank a book before Sunday.
             </Link>
           )
         )}
 
         {reading.length > 0 && (
-          <section aria-label="Your reading" style={{ marginTop: 14 }}>
+          <section aria-label="Your reading" style={{ marginTop: 16 }}>
             <div className="reading-strip" style={{ marginTop: 0 }}>
               {reading.map((e) => (
                 <div key={e.id} className="reading-card" style={{ width: 230, flexDirection: "row", alignItems: "center", textAlign: "left" }}>
@@ -147,7 +146,7 @@ function Feed() {
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ fontSize: 14, color: "inherit", textDecoration: "none", display: "block" }}>{e.book.title}</Link>
                     <button className="reading-card__checkin" onClick={() => setChecking(e)} aria-label={`Check in on ${e.book.title}`}>
-                      <span className="bar" style={{ display: "block", height: 5, marginTop: 6 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
+                      <span className="bar" style={{ display: "block", height: 5, marginTop: 8 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
                       <span className="m muted" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
                         {e.progress_pct != null ? `${e.progress_pct}% · ` : ""}<span style={{ color: "var(--cobalt-ink)", fontWeight: 700 }}>Check in</span>
                       </span>
@@ -165,7 +164,7 @@ function Feed() {
         </div>
 
         {error && <p className="error" role="alert">{error}</p>}
-        {!data && !error && <div aria-busy="true" style={{ minHeight: 240 }} />}
+        {!data && !error && <FeedSkeleton />}
 
         {data && data.items.length === 0 && data.together.length === 0 && scope === "you" && (
           <div className="empty">
@@ -185,7 +184,7 @@ function Feed() {
                 ? "When people you follow rank or start books, it shows up here."
                 : "Follow people to see what they’re reading, how they rank it, and how your taste compares."}
             </p>
-            <Link href="/people" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--ink)" }}>
+            <Link href="/people" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--black)" }}>
               Find people to follow
             </Link>
           </div>
@@ -233,7 +232,7 @@ function Feed() {
                       <div className="feed-card__title">{book.title}</div>
                       <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{book.author}</div>
                       {item.kind === "ranked" && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 12 }}>
                           <ScoreChip score={item.entry.score} bucket={item.entry.bucket} size={40} />
                           <span style={{ fontSize: 13, lineHeight: 1.3 }}>
                             #{item.entry.overall_rank} on {isMe ? "your" : "their"} shelf
@@ -251,7 +250,7 @@ function Feed() {
                         </div>
                       )}
                       {item.kind === "checkin" && item.checkin.progress_pct != null && (
-                        <div className="bar" style={{ height: 6, marginTop: 10 }}><span style={{ width: `${item.checkin.progress_pct}%`, background: "var(--accent)" }} /></div>
+                        <div className="bar" style={{ height: 6, marginTop: 12 }}><span style={{ width: `${item.checkin.progress_pct}%`, background: "var(--accent)" }} /></div>
                       )}
                     </div>
                   </Link>
