@@ -108,7 +108,11 @@ function Scanner() {
     try {
       const id = await ensureBook(found);
       if (what === "rank") return router.push(`/rank/${id}`);
-      await (what === "reading" ? startReading(id) : addToWant(id));
+      if (what === "reading") {
+        await startReading(id);
+        return router.push(`/book/${id}?checkin=1`);
+      }
+      await addToWant(id);
       router.push("/shelf");
     } catch {
       setBusy(false);

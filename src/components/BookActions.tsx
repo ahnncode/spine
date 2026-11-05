@@ -15,11 +15,14 @@ export function BookActions({
   entry,
   onChange,
   showRemove = true,
+  onStartedReading,
 }: {
   bookId: string;
   entry: Entry | null | undefined;
   onChange: () => void | Promise<void>;
   showRemove?: boolean;
+  /** Right after "Reading it now": e.g. open the first check-in. */
+  onStartedReading?: () => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +53,7 @@ export function BookActions({
       )}
 
       {(!status || status === "want") && (
-        <button className="btn btn--outline btn--block" disabled={busy} onClick={() => run(() => startReading(bookId))}>
+        <button className="btn btn--outline btn--block" disabled={busy} onClick={() => run(async () => { await startReading(bookId); onStartedReading?.(); })}>
           <BookOpenIcon size={18} /> Reading it now
         </button>
       )}

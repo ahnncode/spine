@@ -30,6 +30,7 @@ import { GENRE_BY_KEY } from "@/lib/genres";
 import { BookSummary } from "@/components/BookSummary";
 import { ElsewhereRatings } from "@/components/ElsewhereRatings";
 import { FinishedPicker } from "@/components/FinishedPicker";
+import { CheckInSheet } from "@/components/CheckInSheet";
 import { formatScore } from "@/lib/ranking";
 
 export function BookPage() {
@@ -56,6 +57,12 @@ function Inner() {
   const [social, setSocial] = useState<Social | null>(null);
   const [thread, setThread] = useState<string | null>(null);
   const [dating, setDating] = useState(false);
+  // Opens the first check-in right after you start a book (also via ?checkin=1).
+  const [checkIn, setCheckIn] = useState(false);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of the URL
+    if (new URLSearchParams(window.location.search).get("checkin") === "1") setCheckIn(true);
+  }, []);
   const [diary, setDiary] = useState<Checkin[]>([]);
   const [editing, setEditing] = useState(false);
   const [fixing, setFixing] = useState(false);
@@ -314,7 +321,7 @@ function Inner() {
             )}
 
             <div style={{ marginTop: 22 }}>
-              <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove={Boolean(mine)} />
+              <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove={Boolean(mine)} onStartedReading={() => setCheckIn(true)} />
             </div>
           </div>
         )}
@@ -324,6 +331,9 @@ function Inner() {
         <FixDetails book={book} onClose={() => setFixing(false)} onSaved={(title, author) => { setBook({ ...book, title, author }); setFixing(false); }} />
       )}
       {starting && book && <ReadAlongStart book={book} onClose={() => setStarting(false)} />}
+      {checkIn && mine?.status === "reading" && (
+        <CheckInSheet entry={mine} onClose={() => setCheckIn(false)} onDone={async () => { await loadShelf(); setCheckIn(false); }} />
+      )}
       <TabBar />
     </div>
   );

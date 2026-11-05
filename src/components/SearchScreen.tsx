@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dedupeKey, type Book, type BookInput } from "@/lib/books";
-import { addToWant, ensureBook, recommendations, startReading, type Entry } from "@/lib/data";
+import { addToWant, ensureBook, fetchShelf, recommendations, startReading, type Entry } from "@/lib/data";
 import { WeeklyPicks } from "@/components/WeeklyPicks";
+import { CheckInSheet } from "@/components/CheckInSheet";
 import { searchBooks } from "@/lib/openlibrary";
 import { formatScore } from "@/lib/ranking";
 import { TASTE_UNLOCK } from "@/lib/stats";
@@ -31,6 +32,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [picked, setPicked] = useState<BookInput | null>(null);
+  const [checking, setChecking] = useState<Entry | null>(null);
   const [busy, setBusy] = useState(false);
   const [recs, setRecs] = useState<Array<{ book: Book; predicted: number; basis: number }> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -94,8 +96,17 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
       const id = entryFor(book)?.book_id ?? (await ensureBook(book));
       if (what === "rank") return router.push(`/rank/${id}`);
       if (what === "page") return router.push(`/book/${id}`);
-      if (what === "reading") await startReading(id);
-      else await addToWant(id);
+      if (what === "reading") {
+        await startReading(id);
+        // Straight into the first check-in: where you are, how it's going.
+        const shelf = await fetchShelf();
+        const started = shelf.find((e) => e.book_id === id && e.status === "reading");
+        await reload();
+        setPicked(null);
+        if (started) setChecking(started);
+        return;
+      }
+      await addToWant(id);
       await reload();
       setPicked(null);
     } catch (e) {
@@ -306,6 +317,9 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             </div>
           </div>
         </div>
+      )}
+      {checking && (
+        <CheckInSheet entry={checking} onClose={() => setChecking(null)} onDone={async () => { await reload(); setChecking(null); }} />
       )}
       <TabBar />
     </div>

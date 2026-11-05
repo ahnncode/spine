@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Cover } from "@/components/Cover";
 import { addToWant, fetchWeeklyPicks, respondToPick, revealPick, startReading, type WeeklyPick, type WeeklyPicks as Picks } from "@/lib/data";
@@ -140,6 +141,7 @@ function PickBody({ pick, dark = false }: { pick: WeeklyPick; dark?: boolean }) 
 
 function PickActions({ pick, onChange, dark = false }: { pick: WeeklyPick; onChange: (p: Partial<WeeklyPick>) => void; dark?: boolean }) {
   const [busy, setBusy] = useState(false);
+  const router = useRouter();
   const b = pick.book!;
 
   async function act(r: "want" | "reading" | "skip") {
@@ -148,6 +150,10 @@ function PickActions({ pick, onChange, dark = false }: { pick: WeeklyPick; onCha
       if (r === "want") await addToWant(b.id);
       if (r === "reading") await startReading(b.id);
       await respondToPick(pick.id, r);
+      if (r === "reading") {
+        router.push(`/book/${b.id}?checkin=1`);
+        return;
+      }
       onChange({ response: r });
     } finally {
       setBusy(false);
