@@ -5,7 +5,7 @@ export type Rarity = "common" | "uncommon" | "rare" | "legendary";
 export type Glyph =
   | "book" | "box" | "bookmark" | "shelf" | "seal" | "worm" | "hundred" | "card" | "brick" | "pages" | "mountain"
   | "flame" | "leaf" | "infinity" | "sun" | "target" | "calendar" | "compass" | "globe" | "hourglass" | "quill"
-  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club";
+  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle";
 
 export interface BadgeDef {
   key: string;
@@ -39,6 +39,7 @@ export const BADGES: BadgeDef[] = [
   { key: "daily_pages", name: "Daily Pages", how: "Check in 7 days in a row", category: "consistency", rarity: "uncommon", glyph: "sun", unit: "day" },
   { key: "goal_getter", name: "Goal Getter", how: "Hit your yearly reading goal", category: "consistency", rarity: "rare", glyph: "target" },
   { key: "every_month", name: "Every Month", how: "Finish a book in all 12 months of a year", category: "consistency", rarity: "rare", glyph: "calendar" },
+  { key: "scrooge", name: "Scrooge", how: "Log reading on Christmas Day. Bah, humbug.", category: "consistency", rarity: "rare", glyph: "candle" },
 
   { key: "explorer", name: "Explorer", how: "Rank books from 5 genres", category: "breadth", rarity: "common", glyph: "compass", unit: "genre" },
   { key: "full_passport", name: "Full Passport", how: "Rank books from all 12 genres", category: "breadth", rarity: "rare", glyph: "globe", unit: "genre" },
