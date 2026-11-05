@@ -38,6 +38,7 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
           url: `https://readread.app/book/${book.id}`,
           ...(book.author ? { author: { "@type": "Person", name: book.author } } : {}),
           ...(book.isbn13 ? { isbn: book.isbn13 } : {}),
+          ...(book.description ? { description: book.description } : {}),
           ...(book.pages ? { numberOfPages: book.pages } : {}),
           ...(book.year ? { datePublished: String(book.year) } : {}),
           ...(book.avg_score != null && book.readers > 0
@@ -60,6 +61,12 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
             <span key={g} className="pill" style={{ background: GENRE_BY_KEY[g].bg, color: GENRE_BY_KEY[g].fg }}>{GENRE_BY_KEY[g].label}</span>
           ))}
         </div>
+      )}
+
+      {book.description && (
+        <section style={{ marginTop: 14 }} aria-label="About this book">
+          <p className="book-summary">{book.description}</p>
+        </section>
       )}
 
       <section className="card" style={{ marginTop: 18, display: "flex", gap: 16, alignItems: "center" }}>

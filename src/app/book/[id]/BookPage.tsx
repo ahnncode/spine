@@ -27,6 +27,7 @@ import {
   rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry,
 } from "@/lib/data";
 import { GENRE_BY_KEY } from "@/lib/genres";
+import { BookSummary } from "@/components/BookSummary";
 import { formatScore } from "@/lib/ranking";
 
 export function BookPage() {
@@ -144,6 +145,8 @@ function Inner() {
                 ))}
               </div>
             )}
+
+            <BookSummary book={book} />
 
             {readAlong ? (
               <Link href={`/together/${readAlong.id}`} className="card ra-banner">

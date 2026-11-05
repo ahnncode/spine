@@ -667,3 +667,7 @@ button.stamp--locked { border: 1.5px dashed #bdbcb6; }
 }
 .pick-card--revealed { animation: rise 0.45s ease-out; }
 @media (prefers-reduced-motion: reduce) { .mystery-cover span, .pick-card--revealed { animation: none; } }
+
+/* ---------- About this book ---------- */
+.book-summary { margin: 0; font-family: var(--font-serif); font-size: 17px; line-height: 1.5; color: var(--ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+.book-summary--clamped { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }

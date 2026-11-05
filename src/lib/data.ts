@@ -191,6 +191,22 @@ export async function fetchBooks(ids: string[]): Promise<Book[]> {
   return (data as Book[]) || [];
 }
 
+/** A book's "about" blurb, if we've looked it up (`checked`: when we last looked). */
+export async function fetchBookDescription(bookId: string): Promise<{ description: string | null; source: string | null; checked: string } | null> {
+  const { data, error } = await supabase()
+    .from("book_descriptions")
+    .select("description, source, checked_at")
+    .eq("book_id", bookId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? { description: data.description, source: data.source, checked: data.checked_at } : null;
+}
+
+export async function saveBookDescription(bookId: string, text: string | null, source: "openlibrary" | "apple" | null): Promise<void> {
+  const { error } = await supabase().rpc("set_book_description", { p_book: bookId, p_text: text, p_source: source });
+  if (error) throw error;
+}
+
 /** Fill in cover, genres and year on a catalog book (only where missing). */
 export async function enrichBook(id: string, raw: BookInput): Promise<void> {
   const b = sanitizeBook(raw);

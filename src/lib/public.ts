@@ -18,6 +18,8 @@ export interface PublicBook extends PublicBookCard {
   year: number | null;
   pages: number | null;
   genres: string[];
+  /** "About this book", once someone has looked it up. */
+  description?: string | null;
   avg_score: number | null;
   readers: number;
   loved: number;
