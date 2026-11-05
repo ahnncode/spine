@@ -32,7 +32,7 @@ function Slide({ n, bg, fg, children }: { n: number; bg: string; fg: string; chi
   return (
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: bg, color: fg, padding: "80px 80px 64px", fontFamily: "Geist" }}>
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>{children}</div>
-      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "GeistMono", fontSize: 22, color: quiet }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "Geist", fontWeight: 600, fontSize: 22, color: quiet }}>
         <span>{n}/{WRAP_SLIDES}</span>
         <span>readread</span>
       </div>
@@ -41,7 +41,12 @@ function Slide({ n, bg, fg, children }: { n: number; bg: string; fg: string; chi
 }
 
 const big = (size: number, extra: Record<string, string | number> = {}) => ({
-  display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: size, letterSpacing: "-0.055em", lineHeight: 0.9, ...extra,
+  display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: size, letterSpacing: "-0.015em", lineHeight: 0.9, ...extra,
+});
+
+/** Slide headings in the header face. */
+const head = (size: number, extra: Record<string, string | number> = {}) => ({
+  display: "flex", fontFamily: "Gloock", fontWeight: 400, fontSize: size, letterSpacing: "-0.015em", lineHeight: 0.95, ...extra,
 });
 
 export function wrapSlide(slide: number, d: WrapData): ReactNode {
@@ -56,7 +61,7 @@ export function wrapSlide(slide: number, d: WrapData): ReactNode {
       <Slide n={1} bg={INK} fg="#FFFFFF">
         <div style={{ display: "flex", fontSize: 34, color: "#C9C8C2" }}>{clamp(d.name, 28)}&apos;s year in books</div>
         <div style={big(260, { marginTop: 18 })}>{year}</div>
-        {d.soFar && <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 30, color: ACCENT, marginTop: 6 }}>SO FAR</div>}
+        {d.soFar && <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 30, color: ACCENT, marginTop: 6 }}>SO FAR</div>}
         <div style={{ display: "flex", gap: 60, marginTop: 50 }}>
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={big(120)}>{books.length}</div>
@@ -84,15 +89,15 @@ export function wrapSlide(slide: number, d: WrapData): ReactNode {
     const top = books.slice(0, 5);
     return (
       <Slide n={2} bg={GROUND} fg={INK}>
-        <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 28, color: ACCENT, letterSpacing: "0.06em" }}>THE BEST OF {label.toUpperCase()}</div>
-        <div style={big(96, { marginTop: 14 })}>my top {top.length}</div>
+        <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 28, color: ACCENT, letterSpacing: "0.06em" }}>THE BEST OF {label.toUpperCase()}</div>
+        <div style={head(96, { marginTop: 14 })}>my top {top.length}</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 22, marginTop: 50 }}>
           {top.map((b, i) => (
             <div key={b.book.title} style={{ display: "flex", alignItems: "center", gap: 28 }}>
-              <div style={{ display: "flex", width: 56, fontFamily: "Bricolage", fontWeight: 800, fontSize: 52, color: i === 0 ? INK : MUTED }}>{i + 1}</div>
+              <div style={{ display: "flex", width: 56, fontFamily: "Brygada", fontWeight: 700, fontSize: 52, color: i === 0 ? INK : MUTED }}>{i + 1}</div>
               <OgCover book={b.book} src={covers[i]} width={i === 0 ? 110 : 80} />
               <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 700, fontSize: i === 0 ? 46 : 38, lineHeight: 1.02, letterSpacing: "-0.02em" }}>{clamp(b.book.title, 30)}</div>
+                <div style={{ display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: i === 0 ? 46 : 38, lineHeight: 1.02, letterSpacing: "-0.02em" }}>{clamp(b.book.title, 30)}</div>
                 <div style={{ display: "flex", fontSize: 26, color: MUTED, marginTop: 4 }}>{clamp(b.book.author ?? "", 32)}</div>
               </div>
               <ScoreDisc score={Number(b.score)} size={i === 0 ? 96 : 78} top={i < 3} />
@@ -111,14 +116,14 @@ export function wrapSlide(slide: number, d: WrapData): ReactNode {
     const shortest = [...books].filter((b) => b.book.pages).sort((a, b) => (a.book.pages ?? 0) - (b.book.pages ?? 0))[0];
     return (
       <Slide n={3} bg={ACCENT} fg={INK}>
-        <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 28, letterSpacing: "0.06em" }}>MONTH BY MONTH</div>
-        <div style={big(96, { marginTop: 14 })}>how it went</div>
+        <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 28, letterSpacing: "0.06em" }}>MONTH BY MONTH</div>
+        <div style={head(96, { marginTop: 14 })}>how it went</div>
         <div style={{ display: "flex", alignItems: "flex-end", gap: 14, height: 520, marginTop: 56 }}>
           {counts.map((c, i) => (
             <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, gap: 12 }}>
-              {c > 0 && <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 24 }}>{c}</div>}
+              {c > 0 && <div style={{ display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: 24 }}>{c}</div>}
               <div style={{ display: "flex", width: "100%", height: Math.max(10, (c / max) * 430), borderRadius: 10, background: c ? INK : "rgba(17,17,17,0.18)" }} />
-              <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 22 }}>{MONTHS[i][0]}</div>
+              <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 22 }}>{MONTHS[i][0]}</div>
             </div>
           ))}
         </div>
@@ -143,8 +148,8 @@ export function wrapSlide(slide: number, d: WrapData): ReactNode {
   const loved = books.filter((b) => Number(b.score) >= 6.7).length;
   return (
     <Slide n={4} bg={COBALT} fg="#FFFFFF">
-      <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 28, letterSpacing: "0.06em", color: "#E7E9FD" }}>WHAT I READ</div>
-      <div style={big(96, { marginTop: 14 })}>{genreCounts[0] ? `mostly ${GENRE_BY_KEY[genreCounts[0][0]].label.toLowerCase()}` : "a bit of everything"}</div>
+      <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 28, letterSpacing: "0.06em", color: "#E7E9FD" }}>WHAT I READ</div>
+      <div style={head(96, { marginTop: 14 })}>{genreCounts[0] ? `mostly ${GENRE_BY_KEY[genreCounts[0][0]].label.toLowerCase()}` : "a bit of everything"}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 30, marginTop: 70 }}>
         {genreCounts.map(([g, n]) => (
           <div key={g} style={{ display: "flex", alignItems: "center", gap: 24 }}>
@@ -152,7 +157,7 @@ export function wrapSlide(slide: number, d: WrapData): ReactNode {
             <div style={{ display: "flex", flex: 1, height: 52 }}>
               <div style={{ display: "flex", width: `${(n / maxG) * 100}%`, height: 52, borderRadius: 10, background: GENRE_BY_KEY[g].bg === COBALT ? "#FFFFFF" : GENRE_BY_KEY[g].bg }} />
             </div>
-            <div style={{ display: "flex", width: 60, justifyContent: "flex-end", fontFamily: "GeistMono", fontSize: 30 }}>{n}</div>
+            <div style={{ display: "flex", width: 60, justifyContent: "flex-end", fontFamily: "Brygada", fontWeight: 700, fontSize: 30 }}>{n}</div>
           </div>
         ))}
       </div>

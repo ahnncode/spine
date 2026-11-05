@@ -45,7 +45,7 @@ function Frame({ children, footer }: { children: React.ReactNode; footer: string
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", background: GROUND, padding: "72px 72px 60px", fontFamily: "Geist", color: INK }}>
       <Wordmark s={48} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>{children}</div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "GeistMono", fontSize: 24, color: MUTED }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontFamily: "Geist", fontWeight: 600, fontSize: 24, color: MUTED }}>
         <span>{footer}</span>
         <span style={{ color: ACCENT }}>rank books, not stars</span>
       </div>
@@ -77,16 +77,16 @@ export async function GET(req: NextRequest) {
       (
         <Frame footer={me?.username ? `readread.app/u/${me.username}` : "readread.app"}>
           <div style={{ display: "flex", flexDirection: "column", marginTop: 40 }}>
-            <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 26, color: ACCENT, letterSpacing: "0.08em" }}>MY TOP {rows.length || 10}</div>
-            <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: 64, letterSpacing: "-0.04em", marginTop: 6 }}>{clamp(nameOf(me), 24)}</div>
+            <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 26, color: ACCENT, letterSpacing: "0.08em" }}>MY TOP {rows.length || 10}</div>
+            <div style={{ display: "flex", fontFamily: "Gloock", fontWeight: 400, fontSize: 64, letterSpacing: "-0.015em", marginTop: 6 }}>{clamp(nameOf(me), 24)}</div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", marginTop: 24, gap: 10 }}>
             {rows.map((r, i) => (
               <div key={r.book_id} style={{ display: "flex", alignItems: "center", gap: 22 }}>
-                <div style={{ display: "flex", width: 46, fontFamily: "Bricolage", fontWeight: 800, fontSize: 38, color: i < 3 ? INK : MUTED }}>{i + 1}</div>
+                <div style={{ display: "flex", width: 46, fontFamily: "Brygada", fontWeight: 700, fontSize: 38, color: i < 3 ? INK : MUTED }}>{i + 1}</div>
                 <OgCover book={r.book} src={covers[i]} width={50} />
                 <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-                  <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 700, fontSize: 32, lineHeight: 1.05 }}>{clamp(r.book.title, 34)}</div>
+                  <div style={{ display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: 32, lineHeight: 1.05 }}>{clamp(r.book.title, 34)}</div>
                   <div style={{ display: "flex", fontSize: 22, color: MUTED, marginTop: 2 }}>{clamp(r.book.author ?? "", 36)}</div>
                 </div>
                 <ScoreDisc score={Number(r.score)} size={66} top={i < 3} />
@@ -121,21 +121,21 @@ export async function GET(req: NextRequest) {
         <Frame footer="readread.app">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", marginTop: 70, gap: 0 }}>
             <OgAvatar name={nameOf(me)} icon={me?.avatar_icon ?? null} color={me?.avatar_color ?? null} size={190} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 250, height: 250, borderRadius: 125, background: "#2D3FE0", color: "#fff", margin: "0 -30px", border: `10px solid ${GROUND}`, fontFamily: "Bricolage", fontWeight: 800, fontSize: 96, letterSpacing: "-0.04em" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 250, height: 250, borderRadius: 125, background: "#2D3FE0", color: "#fff", margin: "0 -30px", border: `10px solid ${GROUND}`, fontFamily: "Brygada", fontWeight: 700, fontSize: 96, letterSpacing: "-0.015em" }}>
               {pct}%
             </div>
             <OgAvatar name={nameOf(them)} icon={them.avatar_icon} color={them.avatar_color} size={190} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 40 }}>
-            <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: 70, letterSpacing: "-0.04em", textAlign: "center" }}>
+            <div style={{ display: "flex", fontFamily: "Gloock", fontWeight: 400, fontSize: 70, letterSpacing: "-0.015em", textAlign: "center" }}>
               {clamp(`${first(me)} & ${first(them)}`, 26)}
             </div>
-            <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 700, fontSize: 48, color: ACCENT, marginTop: 4 }}>are {label}</div>
+            <div style={{ display: "flex", fontFamily: "Gloock", fontWeight: 400, fontSize: 48, color: ACCENT, marginTop: 4 }}>are {label}</div>
             <div style={{ display: "flex", fontSize: 26, color: MUTED, marginTop: 12 }}>from {match.overlap} books we&apos;ve both ranked</div>
           </div>
           {both.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "auto", marginBottom: 40 }}>
-              <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 24, color: MUTED, letterSpacing: "0.08em" }}>WE BOTH LOVED</div>
+              <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 24, color: MUTED, letterSpacing: "0.08em" }}>WE BOTH LOVED</div>
               <div style={{ display: "flex", gap: 28, marginTop: 20 }}>
                 {both.map((r, i) => <OgCover key={r.book_id} book={r.book} src={covers[i]} width={170} />)}
               </div>
@@ -184,8 +184,8 @@ export async function GET(req: NextRequest) {
         <div style={{ display: "flex", gap: 40, alignItems: "flex-end", marginTop: 56 }}>
           <OgCover book={r.book} src={cover} width={250} />
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 26, color: ACCENT, letterSpacing: "0.08em" }}>THE VERDICT</div>
-            <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: 60, lineHeight: 1, letterSpacing: "-0.04em", marginTop: 10 }}>{clamp(r.book.title, 40)}</div>
+            <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 26, color: ACCENT, letterSpacing: "0.08em" }}>THE VERDICT</div>
+            <div style={{ display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: 60, lineHeight: 1, letterSpacing: "-0.015em", marginTop: 10 }}>{clamp(r.book.title, 40)}</div>
             <div style={{ display: "flex", fontSize: 28, color: MUTED, marginTop: 10 }}>{clamp(r.book.author ?? "", 40)}</div>
           </div>
         </div>
@@ -194,16 +194,16 @@ export async function GET(req: NextRequest) {
             const who = byId.get(p.user_id) ?? null;
             return (
               <div key={p.user_id} style={{ display: "flex", alignItems: "center", gap: 22 }}>
-                <div style={{ display: "flex", width: 40, fontFamily: "GeistMono", fontSize: 28, color: MUTED }}>{i + 1}</div>
+                <div style={{ display: "flex", width: 40, fontFamily: "Brygada", fontWeight: 700, fontSize: 28, color: MUTED }}>{i + 1}</div>
                 <OgAvatar name={nameOf(who)} icon={who?.avatar_icon ?? null} color={who?.avatar_color ?? null} size={76} />
-                <div style={{ display: "flex", flex: 1, fontFamily: "Bricolage", fontWeight: 700, fontSize: 38 }}>{clamp(nameOf(who), 22)}</div>
+                <div style={{ display: "flex", flex: 1, fontFamily: "Gloock", fontWeight: 400, fontSize: 38 }}>{clamp(nameOf(who), 22)}</div>
                 <ScoreDisc score={Number(p.score)} size={84} top={i === 0} />
               </div>
             );
           })}
         </div>
         <div style={{ display: "flex", marginTop: "auto", marginBottom: 36, fontSize: 30 }}>
-          Group average <span style={{ fontFamily: "GeistMono", marginLeft: 12 }}>{avg >= 10 ? "10" : avg.toFixed(1)}</span>
+          Group average <span style={{ fontFamily: "Brygada", fontWeight: 700, marginLeft: 12 }}>{avg >= 10 ? "10" : avg.toFixed(1)}</span>
         </div>
       </Frame>
     ),

@@ -13,19 +13,23 @@ export const GROUND = "#F7F7F5";
 export const ACCENT = "#FF5A1F";
 export const MUTED = "#5E5E5A";
 
-let fontsPromise: Promise<{ name: string; data: Buffer; weight: 400 | 700 | 800; style: "normal" }[]> | null = null;
+type OgFont = { name: string; data: Buffer; weight: 400 | 500 | 600 | 700; style: "normal" };
+let fontsPromise: Promise<OgFont[]> | null = null;
+/** Gloock for headers, Brygada 1918 for book titles and numbers, Geist for text. */
 export function ogFonts() {
   const font = (name: string) => readFile(join(process.cwd(), "assets/fonts", name));
   fontsPromise ??= Promise.all([
-    font("bricolage-grotesque-latin-800-normal.woff"),
-    font("bricolage-grotesque-latin-700-normal.woff"),
+    font("gloock-latin-400-normal.woff"),
+    font("brygada-1918-latin-500-normal.woff"),
+    font("brygada-1918-latin-700-normal.woff"),
     font("geist-latin-400-normal.woff"),
-    font("geist-mono-latin-700-normal.woff"),
-  ]).then(([d8, d7, body, mono]) => [
-    { name: "Bricolage", data: d8, weight: 800 as const, style: "normal" as const },
-    { name: "Bricolage", data: d7, weight: 700 as const, style: "normal" as const },
-    { name: "Geist", data: body, weight: 400 as const, style: "normal" as const },
-    { name: "GeistMono", data: mono, weight: 700 as const, style: "normal" as const },
+    font("geist-latin-600-normal.woff"),
+  ]).then(([gloock, b5, b7, g4, g6]) => [
+    { name: "Gloock", data: gloock, weight: 400 as const, style: "normal" as const },
+    { name: "Brygada", data: b5, weight: 500 as const, style: "normal" as const },
+    { name: "Brygada", data: b7, weight: 700 as const, style: "normal" as const },
+    { name: "Geist", data: g4, weight: 400 as const, style: "normal" as const },
+    { name: "Geist", data: g6, weight: 600 as const, style: "normal" as const },
   ]);
   return fontsPromise;
 }
@@ -45,7 +49,7 @@ export function Wordmark({ s = 40 }: { s?: number }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: s * 0.3 }}>
       <Mark s={s} />
-      <div style={{ fontFamily: "Bricolage", fontWeight: 800, fontSize: s * 0.8, letterSpacing: "-0.05em", color: INK }}>readread</div>
+      <div style={{ fontFamily: "Gloock", fontWeight: 400, fontSize: s * 0.8, letterSpacing: "-0.015em", color: INK }}>readread</div>
     </div>
   );
 }
@@ -81,7 +85,7 @@ export function OgCover({ book, src, width }: { book: PublicBookCard; src: strin
   const size = Math.max(10, Math.min(width * 0.15, (width * 0.74) / (longest * 0.6)));
   return (
     <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width, height, background: bg, color: fg, borderRadius: radius, boxShadow: shadow, padding: width * 0.1 }}>
-      <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: size, lineHeight: 1.02, letterSpacing: "-0.03em" }}>{book.title}</div>
+      <div style={{ display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: size, lineHeight: 1.02, letterSpacing: "-0.01em" }}>{book.title}</div>
       <div style={{ display: "flex", fontFamily: "Geist", fontSize: Math.max(8, width * 0.07), opacity: 0.8 }}>{book.author ?? ""}</div>
     </div>
   );
@@ -90,7 +94,7 @@ export function OgCover({ book, src, width }: { book: PublicBookCard; src: strin
 export function ScoreDisc({ score, size, top = true }: { score: number; size: number; top?: boolean }) {
   const text = score >= 10 ? "10" : score.toFixed(1);
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: size / 2, background: top ? ACCENT : INK, color: top ? INK : "#FFFFFF", fontFamily: "GeistMono", fontSize: size * 0.34 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: size / 2, background: top ? ACCENT : INK, color: top ? INK : "#FFFFFF", fontFamily: "Brygada", fontWeight: 700, fontSize: size * 0.34 }}>
       {text}
     </div>
   );
@@ -111,7 +115,7 @@ export function OgAvatar({ name, icon, color, size }: { name: string; icon: stri
   const parts = name.trim().split(/\s+/);
   const initials = ((parts[0]?.[0] ?? "") + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase() || "?";
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: size / 2, background: c?.bg ?? "#2D3FE0", color: c?.fg ?? "#FFFFFF", fontFamily: "Bricolage", fontWeight: 800, fontSize: size * 0.36 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: size, height: size, borderRadius: size / 2, background: c?.bg ?? "#2D3FE0", color: c?.fg ?? "#FFFFFF", fontFamily: "Gloock", fontWeight: 400, fontSize: size * 0.36 }}>
       {initials}
     </div>
   );

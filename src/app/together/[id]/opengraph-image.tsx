@@ -18,10 +18,10 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <div style={{ display: "flex", flexDirection: "column", flex: 1, height: "100%" }}>
           <Wordmark s={44} />
           <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}>
-            <div style={{ display: "flex", fontFamily: "GeistMono", fontSize: 22, color: ACCENT, letterSpacing: "0.08em" }}>
+            <div style={{ display: "flex", fontFamily: "Geist", fontWeight: 600, fontSize: 22, color: ACCENT, letterSpacing: "0.08em" }}>
               {card?.revealed ? "THE VERDICT IS IN" : "READING TOGETHER"}
             </div>
-            <div style={{ display: "flex", marginTop: 14, fontFamily: "Bricolage", fontWeight: 800, fontSize: 68, lineHeight: 0.98, letterSpacing: "-0.04em" }}>{card ? clamp(card.title, 60) : "A read-along"}</div>
+            <div style={{ display: "flex", marginTop: 14, fontFamily: "Brygada", fontWeight: 700, fontSize: 68, lineHeight: 0.98, letterSpacing: "-0.015em" }}>{card ? clamp(card.title, 60) : "A read-along"}</div>
             {card?.author && <div style={{ display: "flex", marginTop: 14, fontSize: 30, color: MUTED }}>{clamp(card.author, 50)}</div>}
           </div>
           <div style={{ display: "flex", marginTop: "auto", fontSize: 26 }}>

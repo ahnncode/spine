@@ -43,39 +43,59 @@ export function BadgeSheet({ status, onClose, theirs = false }: { status: BadgeS
   );
 }
 
-/** Your full badge case: earned ones first, then what you're closest to. */
+/**
+ * Your badges: the ones you've earned plus one "next up", instead of a wall
+ * of locked medals. Everything else is one tap away.
+ */
 export function BadgeCase({ statuses }: { statuses: BadgeStatus[] | null }) {
   const [open, setOpen] = useState<BadgeStatus | null>(null);
   const [all, setAll] = useState(false);
-  const list = statuses ? sortForCase(statuses) : BADGES.map((b) => ({ key: b.key, progress: 0, goal: 1, earned: null, fresh: false }));
-  const earnedCount = list.filter((s) => s.earned).length;
-  const shown = all ? list : list.slice(0, 8);
+  if (!statuses) return null;
+  const list = sortForCase(statuses);
+  const earned = list.filter((s) => s.earned);
+  const next = list
+    .filter((s) => !s.earned && !BADGE[s.key]?.secret)
+    .sort((a, b) => fraction(b) - fraction(a))[0];
+  const shown = all ? list : earned.length >= 3 ? earned.slice(0, 8) : earned;
+
+  const cell = (s: BadgeStatus) => {
+    const def = BADGE[s.key];
+    const got = Boolean(s.earned);
+    const hidden = Boolean(def.secret) && !got;
+    const label = hidden ? null : progressLabel(def, s);
+    return (
+      <button key={s.key} className="badge-cell" data-locked={!got} onClick={() => setOpen(s)}
+        aria-label={hidden ? "Secret badge" : `${def.name}. ${got ? "Earned" : label ?? def.how}`}>
+        <Medallion badge={s.key} earned={got} progress={fraction(s)} size={58} />
+        <span className="badge-cell__name">{hidden ? "???" : def.name}</span>
+        {!got && label && <span className="badge-cell__sub m">{Math.min(s.progress, s.goal).toLocaleString()}/{s.goal.toLocaleString()}</span>}
+      </button>
+    );
+  };
 
   return (
-    <section className="card" id="badges" style={{ marginTop: 12 }}>
+    <section id="badges" style={{ marginTop: 32 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-        <h2 className="h2">Badges</h2>
-        <span className="m muted" style={{ fontSize: 12 }}>{statuses ? `${earnedCount} of ${BADGES.length}` : " "}</span>
+        <h2 className="section-title">Badges</h2>
+        <button className="link-btn" style={{ fontSize: 13 }} onClick={() => setAll(!all)}>
+          {all ? "Show fewer" : earned.length ? `${earned.length} earned · see all` : "See all"}
+        </button>
       </div>
-      <div className="badge-grid" aria-busy={!statuses}>
-        {shown.map((s) => {
-          const def = BADGE[s.key];
-          const earned = Boolean(s.earned);
-          const hidden = Boolean(def.secret) && !earned;
-          const label = hidden ? null : progressLabel(def, s);
-          return (
-            <button key={s.key} className="badge-cell" data-locked={!earned} onClick={() => setOpen(s)}
-              aria-label={hidden ? "Secret badge" : `${def.name}. ${earned ? "Earned" : label ?? def.how}`}>
-              <Medallion badge={s.key} earned={earned} progress={fraction(s)} size={58} />
-              <span className="badge-cell__name">{hidden ? "???" : def.name}</span>
-              {!earned && label && <span className="badge-cell__sub m">{Math.min(s.progress, s.goal).toLocaleString()}/{s.goal.toLocaleString()}</span>}
-            </button>
-          );
-        })}
-      </div>
-      {list.length > 8 && (
-        <button className="btn btn--quiet btn--block" style={{ marginTop: 16, minHeight: 40, fontSize: 14 }} onClick={() => setAll(!all)}>
-          {all ? "Show fewer" : `See all ${list.length}`}
+      {shown.length > 0 && <div className="badge-grid">{shown.map(cell)}</div>}
+      {!all && earned.length > 8 && (
+        <button className="link-btn" style={{ marginTop: 10, fontSize: 13 }} onClick={() => setAll(true)}>+{earned.length - 8} more</button>
+      )}
+      {!all && next && (
+        <button className="next-badge" onClick={() => setOpen(next)} aria-label={`Next up: ${BADGE[next.key].name}. ${BADGE[next.key].how}`}>
+          <Medallion badge={next.key} earned={false} progress={fraction(next)} size={48} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span className="eyebrow" style={{ display: "block" }}>Next up</span>
+            <span style={{ display: "block", fontWeight: 600, fontSize: 15, marginTop: 2 }}>{BADGE[next.key].name}</span>
+            <span className="muted" style={{ display: "block", fontSize: 13, marginTop: 2 }}>
+              {progressLabel(BADGE[next.key], next) ?? BADGE[next.key].how}
+            </span>
+          </span>
+          <span className="next-badge__bar" aria-hidden="true"><span style={{ width: `${Math.round(fraction(next) * 100)}%` }} /></span>
         </button>
       )}
       {open && <BadgeSheet status={open} onClose={() => setOpen(null)} />}

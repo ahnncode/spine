@@ -514,7 +514,8 @@ img { display: block; max-width: 100%; }
   background: var(--panel); color: #fff; font-size: 14px; font-weight: 600;
 }
 .badge-earned-pill small { color: #c9c8c2; font-weight: 500; font-size: 12px; }
-.invite-card { background: var(--amber); border-color: var(--amber); }
+/* Amber in both themes, so its own ink stays dark. */
+.invite-card { background: var(--amber); border-color: var(--amber); --ink: #111111; --ink-2: #2b2b29; --muted: #4a4a46; --on-ink: #ffffff; --line-2: rgba(17,17,17,0.22); --well: rgba(255,255,255,0.55); --surface: #fff7e0; color: var(--ink); }
 .dots { display: flex; gap: 6px; }
 .dots span { width: 10px; height: 10px; border-radius: 5px; background: var(--line-2); }
 .dots span[data-on="true"] { background: var(--ink); }
@@ -837,3 +838,16 @@ div.stats-panel__half { cursor: default; }
 .link-group__row + .link-group__row { border-top: 1px solid var(--line); }
 /* The cover colour carries on, fainter, behind the title, then fades into the page. */
 .book-hero__fade { padding: 20px 20px 0; background: linear-gradient(to bottom, color-mix(in srgb, var(--tint) var(--tint-fade), var(--ground)) 0, var(--ground) 220px); }
+
+/* One "next up" badge instead of a wall of locked ones. */
+.next-badge { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; margin-top: 14px; padding: 14px 16px 18px; text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); cursor: pointer; overflow: hidden; }
+.next-badge__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--well); }
+.next-badge__bar span { display: block; height: 100%; background: var(--accent); }
+
+/* Rank result: the cover's colour behind the big number, and the new row settles in. */
+.placed__panel { margin: 4px -4px 0; padding: 16px 18px 18px; border-radius: var(--radius-l); background: color-mix(in srgb, var(--tint) var(--tint-fade), var(--ground)); }
+.placed .mini-row--new { background: color-mix(in srgb, var(--tint) 22%, var(--surface)); animation: settle 0.6s 0.45s cubic-bezier(.25,1.35,.45,1) both; position: relative; z-index: 1; box-shadow: 0 10px 20px -16px rgba(0,0,0,0.5); }
+.placed .mini-row--new + .mini-row { animation: nudge 0.5s 0.6s cubic-bezier(.3,1.2,.5,1) both; }
+@keyframes settle { 0% { transform: translateY(-26px) scale(1.04); opacity: 0; } 55% { opacity: 1; } 100% { transform: none; opacity: 1; } }
+@keyframes nudge { 0% { transform: translateY(-12px); } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .placed .mini-row--new, .placed .mini-row--new + .mini-row { animation: none; } }

@@ -24,6 +24,7 @@ import {
 import { clearQueue, shiftQueue } from "@/lib/queue";
 import { activityDates, readInYear, weeklyStreak } from "@/lib/stats";
 import { Burst, buzz } from "@/components/Burst";
+import { useCoverTint } from "@/components/useCoverTint";
 
 export function RankFlow() {
   return (
@@ -103,6 +104,7 @@ function Flow() {
   const { id } = useParams<{ id: string }>();
   const [phase, setPhase] = useState<Phase>("loading");
   const [book, setBook] = useState<Book | null>(null);
+  const tint = useCoverTint(book);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [bucket, setBucket] = useState<Bucket | null>(null);
   const [list, setList] = useState<RankedEntry[]>([]);
@@ -401,8 +403,9 @@ function Flow() {
         )}
 
         {phase === "done" && book && result && (
-          <>
-            <p className="eyebrow" style={{ marginTop: 8 }}>Placed on your shelf</p>
+          <div className="placed" style={{ ["--tint" as string]: tint ?? "var(--accent)" }}>
+            <div className="placed__panel">
+            <p className="eyebrow" style={{ margin: 0 }}>Placed on your shelf</p>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 14, marginTop: 4 }} aria-live="polite">
               <div className="big-rank reveal-rank" style={{ position: "relative" }}>
                 #{result.me.rank}
@@ -411,6 +414,7 @@ function Flow() {
               <div className="reveal-chip" style={{ marginBottom: 6 }}>
                 <ScoreChip score={result.me.score} bucket={result.me.bucket} size={68} />
               </div>
+            </div>
             </div>
             <p className="moment" style={{ margin: "18px 0 0", fontSize: 17, lineHeight: 1.4, animationDelay: "0.25s" }}>
               {sentence(book.title, result)}
@@ -469,7 +473,7 @@ function Flow() {
                 <Link href="/add" className="btn btn--ghost btn--block" style={{ marginTop: 8 }}>Rank another</Link>
               </>
             )}
-          </>
+          </div>
         )}
       </main>
     </div>

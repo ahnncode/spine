@@ -20,7 +20,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
         <div style={{ display: "flex", flexDirection: "column", flex: 1, height: "100%" }}>
           <Wordmark s={44} />
           <div style={{ display: "flex", flexDirection: "column", marginTop: "auto" }}>
-            <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 800, fontSize: titleSize, lineHeight: 0.98, letterSpacing: "-0.04em" }}>{title}</div>
+            <div style={{ display: "flex", fontFamily: "Brygada", fontWeight: 700, fontSize: titleSize, lineHeight: 0.98, letterSpacing: "-0.015em" }}>{title}</div>
             {book?.author && <div style={{ display: "flex", marginTop: 16, fontSize: 32, color: MUTED }}>{clamp(book.author, 50)}</div>}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 22, marginTop: "auto" }}>
@@ -28,7 +28,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               <>
                 <ScoreDisc score={book.avg_score} size={84} top={book.avg_score >= 6.7} />
                 <div style={{ display: "flex", flexDirection: "column" }}>
-                  <div style={{ display: "flex", fontFamily: "Bricolage", fontWeight: 700, fontSize: 30 }}>readread score</div>
+                  <div style={{ display: "flex", fontFamily: "Gloock", fontWeight: 400, fontSize: 30 }}>readread score</div>
                   <div style={{ display: "flex", fontSize: 22, color: MUTED }}>
                     {book.readers} reader{book.readers === 1 ? "" : "s"} · {book.readers ? Math.round((book.loved / book.readers) * 100) : 0}% loved it
                   </div>
