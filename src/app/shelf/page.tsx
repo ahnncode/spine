@@ -217,6 +217,7 @@ function Shelf() {
                 {editingThoughts ? (
                   <ThoughtsEditor
                     entry={sheet}
+                    genres={sheet.book.genres}
                     compact
                     onSaved={async () => { await reload(); setEditingThoughts(false); setSheet(null); }}
                     onDateSaved={reload}

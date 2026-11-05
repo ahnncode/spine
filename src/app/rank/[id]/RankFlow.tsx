@@ -385,7 +385,7 @@ function Flow() {
                 </li>
               ))}
             </ol>
-            <ThoughtsEditor entry={result.me} showDate={false} />
+            <ThoughtsEditor entry={result.me} genres={book.genres} showDate={false} />
             <div className="spacer" style={{ minHeight: 24 }} />
             {queueLeft.length > 0 ? (
               <>

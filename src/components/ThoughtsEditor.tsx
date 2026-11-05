@@ -4,7 +4,8 @@ import { useMentionPicker } from "@/components/Mentions";
 import { useState } from "react";
 import { saveFinishedOn, saveThoughts, type Entry } from "@/lib/data";
 import { FinishedPicker } from "@/components/FinishedPicker";
-import { NOTE_MAX, REVIEW_TAGS } from "@/lib/thoughts";
+import { GENRE_BY_KEY } from "@/lib/genres";
+import { NOTE_MAX, TAG_LABEL, tagsFor, type Tag } from "@/lib/thoughts";
 
 /**
  * Optional thoughts on a finished book: quick tags, a short review with a
@@ -12,12 +13,15 @@ import { NOTE_MAX, REVIEW_TAGS } from "@/lib/thoughts";
  */
 export function ThoughtsEditor({
   entry,
+  genres,
   onSaved,
   onDateSaved,
   compact = false,
   showDate = true,
 }: {
   entry: Pick<Entry, "id" | "note" | "tags" | "note_spoiler" | "finished_on">;
+  /** The book's genres: its main one picks the genre tags. */
+  genres?: string[] | null;
   onSaved?: () => void | Promise<void>;
   /** After the finish date saves on its own (the editor stays open). */
   onDateSaved?: () => void | Promise<void>;
@@ -69,15 +73,34 @@ export function ThoughtsEditor({
     }
   }
 
+  const { genre, genreTags, core } = tagsFor(genres);
+  // Tags picked before (say, under another genre) stay visible so they can be removed.
+  const shownKeys = new Set([...genreTags, ...core].map((t) => t.key));
+  const extra: Tag[] = tags.filter((k) => !shownKeys.has(k) && TAG_LABEL[k]).map((k) => ({ key: k, label: TAG_LABEL[k] }));
+  const chip = (className: string) =>
+    function TagChip(t: Tag) {
+      return (
+        <button key={t.key} type="button" className={className} aria-pressed={tags.includes(t.key)} onClick={() => toggle(t.key)}>
+          {t.label}
+        </button>
+      );
+    };
+
   return (
     <div className={compact ? "" : "card"} style={{ marginTop: compact ? 0 : 18 }}>
       {!compact && <h2 className="h2">Any thoughts? <span className="muted" style={{ fontWeight: 500 }}>Optional</span></h2>}
-      <div className="tag-list" style={{ marginTop: compact ? 0 : 12 }} role="group" aria-label="Quick tags">
-        {REVIEW_TAGS.map((t) => (
-          <button key={t.key} type="button" className="tag-chip" aria-pressed={tags.includes(t.key)} onClick={() => toggle(t.key)}>
-            {t.label}
-          </button>
-        ))}
+      {genreTags.length > 0 && genre && (
+        <>
+          <p className="eyebrow" style={{ margin: compact ? "0 0 8px" : "12px 0 8px" }}>For {GENRE_BY_KEY[genre]?.label.toLowerCase() ?? genre}</p>
+          <div className="tag-list" role="group" aria-label={`Tags for ${GENRE_BY_KEY[genre]?.label ?? genre}`}
+            style={{ ["--g" as string]: GENRE_BY_KEY[genre]?.bg ?? "var(--cobalt)", ["--g-fg" as string]: GENRE_BY_KEY[genre]?.fg ?? "#fff" }}>
+            {genreTags.map(chip("tag-chip tag-chip--genre"))}
+          </div>
+        </>
+      )}
+      {genreTags.length > 0 && <p className="eyebrow" style={{ margin: "14px 0 8px" }}>Any book</p>}
+      <div className="tag-list" style={{ marginTop: genreTags.length || compact ? 0 : 12 }} role="group" aria-label="Quick tags">
+        {[...core, ...extra].map(chip("tag-chip"))}
       </div>
       <label htmlFor={`note-${entry.id}`} className="visually-hidden">Your thoughts</label>
       <textarea

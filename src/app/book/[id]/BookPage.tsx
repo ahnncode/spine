@@ -285,7 +285,7 @@ function Inner() {
                 <h2 className="h2">Your thoughts</h2>
                 {editing ? (
                   <div style={{ marginTop: 12 }}>
-                    <ThoughtsEditor entry={mine} compact onSaved={async () => { await loadShelf(); setEditing(false); }} onDateSaved={loadShelf} />
+                    <ThoughtsEditor entry={mine} genres={book?.genres} compact onSaved={async () => { await loadShelf(); setEditing(false); }} onDateSaved={loadShelf} />
                   </div>
                 ) : (
                   <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 8 }}>

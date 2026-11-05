@@ -854,3 +854,7 @@ div.stats-panel__half { cursor: default; }
 button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-weight: 600; font-size: 15px; text-align: left; color: inherit; cursor: pointer; }
 .link-group > button.link-group__row:first-child { border-top: 0; }
 .new-pill { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--black); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 2px; }
+
+/* Genre tags take the genre's colour (the same one its generated covers use). */
+.tag-chip--genre { background: color-mix(in srgb, var(--g) 13%, var(--surface)); border-color: transparent; color: color-mix(in srgb, var(--g) 75%, var(--ink)); }
+.tag-chip--genre[aria-pressed="true"] { background: var(--g); border-color: var(--g); color: var(--g-fg); }
