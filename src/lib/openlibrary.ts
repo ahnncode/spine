@@ -128,6 +128,44 @@ function tidy(docs: OLDoc[], query: string): BookInput[] {
 
 const cache = new Map<string, BookInput[]>();
 
+const words = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((w) => w.length > 1);
+/** Every word of the query appears in the book's title or author. */
+function covers(b: BookInput, q: string[]): boolean {
+  const have = new Set(words(`${b.title} ${b.author ?? ""}`));
+  return q.length > 0 && q.every((w) => have.has(w));
+}
+
+/**
+ * Apple Books' catalogue, for books Open Library doesn't have yet (new
+ * releases especially). Companion books like summaries are left out.
+ */
+async function appleSearch(q: string, signal?: AbortSignal): Promise<BookInput[]> {
+  const params = new URLSearchParams({ term: q, media: "ebook", entity: "ebook", limit: "10", country: "us" });
+  const res = await fetch(`https://itunes.apple.com/search?${params}`, { signal });
+  if (!res.ok) return [];
+  const { results } = (await res.json()) as { results?: Array<{ trackName?: string; artistName?: string; releaseDate?: string; artworkUrl100?: string }> };
+  return (results ?? [])
+    .filter((r) => r.trackName && r.artistName && !/\b(summary|study guide|workbook|analysis|sparknotes|cliffsnotes)\b/i.test(r.trackName))
+    .map((r) => ({
+      title: cleanTitle(r.trackName!),
+      author: r.artistName!.split(/\s*(?:&|,| and )\s*/)[0],
+      year: r.releaseDate ? Number(r.releaseDate.slice(0, 4)) : null,
+      cover_url: r.artworkUrl100 ? r.artworkUrl100.replace(/\/\d+x\d+bb\.(jpg|png)$/, "/400x600bb.jpg") : null,
+    }));
+}
+
+/** Add Apple's finds that Open Library is missing: first if Open Library has nothing that fits the query. */
+function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInput[] {
+  const seen = new Set(ol.map((b) => dedupeKey(b.title, b.author)));
+  const extra = apple.filter((b) => !seen.has(dedupeKey(b.title, b.author)));
+  if (!extra.length) return ol;
+  const q = words(query);
+  const olFits = ol.some((b) => covers(b, q));
+  const fits = extra.filter((b) => covers(b, q));
+  if (!olFits && fits.length) return [...fits.slice(0, 3), ...ol, ...extra.filter((b) => !fits.includes(b)).slice(0, 2)];
+  return [...ol, ...extra.slice(0, 3)];
+}
+
 /**
  * Search in two passes: a quick one that answers in a few hundred
  * milliseconds, then a slower one with English editions (titles and covers)
@@ -148,9 +186,10 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
       if (!finalDone) onResults?.(tidy(docs, q), false);
     })
     .catch(() => {});
-  const english = search({ q, limit: "25" }, signal, ENGLISH_FIELDS).then((docs) => {
+  const apple = appleSearch(q, signal).catch(() => [] as BookInput[]);
+  const english = search({ q, limit: "25" }, signal, ENGLISH_FIELDS).then(async (docs) => {
     finalDone = true;
-    const books = tidy(docs, q);
+    const books = withApple(tidy(docs, q), await apple, q);
     cache.set(key, books);
     if (cache.size > 50) cache.delete(cache.keys().next().value!);
     onResults?.(books, true);
@@ -162,7 +201,7 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
     // The English pass failed: keep whatever the quick pass found.
     await quick;
     if (signal?.aborted) throw e;
-    const fallback = await search({ q, limit: "15" }, signal, QUICK_FIELDS).then((docs) => tidy(docs, q));
+    const fallback = withApple(await search({ q, limit: "15" }, signal, QUICK_FIELDS).then((docs) => tidy(docs, q)).catch(() => []), await apple, q);
     onResults?.(fallback, true);
     return fallback;
   }
