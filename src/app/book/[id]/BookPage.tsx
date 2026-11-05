@@ -33,6 +33,7 @@ import { FinishedPicker } from "@/components/FinishedPicker";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { formatScore } from "@/lib/ranking";
 import { BookSkeleton } from "@/components/Skeleton";
+import { useCoverTint } from "@/components/useCoverTint";
 
 export function BookPage() {
   return (
@@ -103,6 +104,7 @@ function Inner() {
     };
   }, [id, loadShelf]);
 
+  const tint = useCoverTint(book);
   const mine = useMemo(() => entries?.find((e) => e.book_id === id) ?? null, [entries, id]);
   const myRanked = useMemo(() => (entries ? rankEntries(entries).find((e) => e.book_id === id) : undefined), [entries, id]);
 
@@ -127,7 +129,7 @@ function Inner() {
   return (
     <div className="app">
       <main className="screen" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
-        <div style={{ background: "var(--hero-book)", padding: "14px 16px 26px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <div className="book-hero" style={{ background: tint ? `color-mix(in srgb, ${tint} var(--tint-mix), var(--ground))` : "var(--well)" }}>
           <div style={{ alignSelf: "stretch" }}>
             <button className="icon-btn" style={{ background: "color-mix(in srgb, var(--surface) 72%, transparent)" }} aria-label="Back" onClick={() => router.back()}>
               <BackIcon size={20} />
@@ -368,7 +370,7 @@ function FixDetails({ book, onClose, onSaved }: { book: Book; onClose: () => voi
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Fix book details" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Fix book details</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Fix book details</h2>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>Book info comes from Open Library, which sometimes has typos.</p>
         <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="fix-title">Title</label>

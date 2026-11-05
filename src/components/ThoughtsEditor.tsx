@@ -46,7 +46,7 @@ export function ThoughtsEditor({
       await onDateSaved?.();
     } catch {
       setFinished(before);
-      setDateNote("Couldn’t save the date — try again");
+      setDateNote("Couldn’t save the date. Try again?");
     }
   }
 

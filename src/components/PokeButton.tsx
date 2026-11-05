@@ -36,7 +36,7 @@ export function PokeButton({ userId, name }: { userId: string; name: string }) {
       onClick={send}
       disabled={state !== "idle"}
       aria-label={state === "idle" ? `Poke ${name} about their reading` : label}
-      title={state === "idle" ? "Check in on their reading — once a day" : undefined}
+      title={state === "idle" ? "Nudge them about their book. Once a day." : undefined}
     >
       <PokeIcon size={16} />
       <span>{label}</span>

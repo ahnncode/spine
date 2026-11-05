@@ -30,6 +30,7 @@ import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, s
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
+import { ReadingCard } from "@/components/ReadingCard";
 
 export default function YouPage() {
   return (
@@ -155,80 +156,87 @@ function You() {
           <Blurb text={profile.bio} name={displayName(profile)} onEdit={() => setEditing(true)} />
         ) : (
           <button className="blurb blurb--empty" onClick={() => setEditing(true)}>
-            + Add a blurb — a line or two about you as a reader
+            + Add a line about you as a reader
           </button>
         )}
 
         {reading.length > 0 && (
           <section aria-label="Reading now">
-            <h2 className="h2" style={{ marginTop: 20 }}>Reading now</h2>
+            <h2 className="section-title" style={{ marginTop: 28 }}>Reading now</h2>
             <div className="reading-strip">
               {reading.map((e) => (
-                <div key={e.id} className="reading-card reading-card--row">
-                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`} style={{ flexShrink: 0 }}>
-                    <Cover book={e.book} width={56} />
-                  </Link>
-                  <div className="reading-card__main">
-                    <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none", minHeight: 0 }}>{e.book.title}</Link>
-                    {(() => {
-                      const ra = activeFor(readAlongs, e.book_id, profile?.id);
-                      return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
-                    })()}
-                    <div style={{ marginTop: "auto" }} aria-label={e.progress_pct != null ? `${e.progress_pct}% read` : "Not checked in yet"}>
-                      <div className="reading-card__bar"><span style={{ width: `${e.progress_pct ?? 0}%` }} /></div>
-                      <div className="m muted" style={{ fontSize: 12, marginTop: 4 }}>{e.progress_pct != null ? `${e.progress_pct}%` : "Just started"}</div>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <button className="small-btn" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} onClick={() => setChecking(e)}>Check in</button>
-                      <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)", whiteSpace: "nowrap" }}>Rank it</Link>
-                    </div>
-                  </div>
-                </div>
+                <ReadingCard key={e.id} entry={e} onCheckIn={() => setChecking(e)}
+                  extra={(() => {
+                    const ra = activeFor(readAlongs, e.book_id, profile?.id);
+                    return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
+                  })()} />
               ))}
             </div>
           </section>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 20 }}>
-          <button className="card card--ink" style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 10 }} onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
-            <svg width="76" height="76" viewBox="0 0 80 80" aria-hidden="true">
-              <circle cx="40" cy="40" r="34" fill="none" stroke="#2a2a2a" strokeWidth="8" />
+        {ranked.length > 0 && (
+          <section aria-label="Your top three" style={{ marginTop: 28 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+              <h2 className="section-title">Your top three</h2>
+              {ranked.length >= 3 && (
+                <ShareCardButton query="kind=top" label="Share top 10" filename="readread-top-10" className="link-btn" style={{ fontSize: 13 }} />
+              )}
+            </div>
+            <div className="top3-open">
+              {ranked.slice(0, 3).map((e) => (
+                <Link key={e.id} href={`/book/${e.book_id}`} className="top3-open__item" aria-label={`#${e.rank} ${e.book.title}`}>
+                  <span className="top3-open__rank">{e.rank}</span>
+                  <Cover book={e.book} width={e.rank === 1 ? 112 : 92} />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div className="card card--ink stats-panel">
+          <button className="stats-panel__half" onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
+            <svg width="64" height="64" viewBox="0 0 80 80" aria-hidden="true">
+              <circle cx="40" cy="40" r="34" fill="none" stroke="#3a3a37" strokeWidth="8" />
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round"
                 strokeDasharray={`${C * pct} ${C}`} transform="rotate(-90 40 40)" />
-              <text x="40" y="47" textAnchor="middle" fill="#fff" fontFamily="var(--font-display)" fontSize="22" fontWeight="800">{thisYear}</text>
+              <text x="40" y="48" textAnchor="middle" fill="#fff" fontFamily="var(--font-book)" fontSize="26" fontWeight="700">{thisYear}</text>
             </svg>
-            <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{year} {goal ? "goal" : "so far"}</div>
-              <div style={{ fontSize: 12, color: "#c9c8c2" }}>
-                {goal ? (thisYear >= goal ? "Goal reached" : `${goal - thisYear} to go of ${goal}`) : "Tap to set a goal"}
-              </div>
-            </div>
+            <span>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 600 }}>{goal ? `${year} goal` : `In ${year}`}</span>
+              <span style={{ display: "block", fontSize: 12, color: "#c9c8c2", marginTop: 2 }}>
+                {goal ? (thisYear >= goal ? "Goal reached" : `${goal - thisYear} to go`) : "Set a goal"}
+              </span>
+            </span>
           </button>
-          <div className="card" style={{ background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: 10 }}>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-              <span className="stat-big">{streak.weeks}</span>
-              <span style={{ fontSize: 14, fontWeight: 600 }}>week{streak.weeks === 1 ? "" : "s"}</span>
-            </div>
-            <div className="streak-grid" aria-hidden="true">
+          <span className="stats-panel__rule" aria-hidden="true" />
+          <div className="stats-panel__half" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+            <span style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+              <span className="d" style={{ fontSize: 30, fontWeight: 800, lineHeight: 1 }}>{streak.weeks}</span>
+              <span style={{ fontSize: 13, fontWeight: 600 }}>week streak</span>
+            </span>
+            <span className="streak-grid" aria-hidden="true">
               {streak.recent.map((on, i) => <span key={i} data-on={on} data-now={i === 11} />)}
-            </div>
-            <div style={{ fontSize: 12, color: "#dde1ff" }}>
-              {streak.activeThisWeek ? "Streak safe this week" : streak.weeks ? "Check in on a book this week to keep it" : "Check in on what you’re reading to start one"}
-            </div>
+            </span>
+            <span style={{ fontSize: 12, color: "#c9c8c2" }}>
+              {streak.activeThisWeek ? "Safe this week" : streak.weeks ? "Check in this week to keep it" : "Check in to start one"}
+            </span>
           </div>
         </div>
 
         {ranked.length < TASTE_UNLOCK && (
-          <Link href="/add" className="card" style={{ display: "block", marginTop: 12, textDecoration: "none" }}>
-            <div style={{ fontWeight: 600 }}>Taste match unlocks at {TASTE_UNLOCK} ranked</div>
-            <div className="bar" style={{ marginTop: 12 }}><span style={{ width: `${(ranked.length / TASTE_UNLOCK) * 100}%`, background: "var(--cobalt)" }} /></div>
-            <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>{TASTE_UNLOCK - ranked.length} to go — then see who reads like you and get picks for your taste</div>
+          <Link href="/add" className="unlock-row">
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span style={{ display: "block", fontSize: 14, fontWeight: 600 }}>Rank {TASTE_UNLOCK - ranked.length} more to find your reading twin</span>
+              <span className="bar" style={{ display: "block", marginTop: 8 }}><span style={{ width: `${(ranked.length / TASTE_UNLOCK) * 100}%`, background: "var(--cobalt)" }} /></span>
+            </span>
+            <ArrowIcon size={18} />
           </Link>
         )}
 
-        <section className="card" style={{ marginTop: 12 }}>
+        <section style={{ marginTop: 32 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <h2 className="h2">Genre passport</h2>
+            <h2 className="section-title">Genre passport</h2>
             <span className="m muted" style={{ fontSize: 12 }}>{earnedStamps} of {stamps.length} stamps</span>
           </div>
           <div className="stamp-grid">
@@ -252,7 +260,7 @@ function You() {
           )}
           {noGenre.length > 0 ? (
             <button className="link-btn" style={{ marginTop: 12, fontSize: 13, display: "block" }} onClick={openSorting}>
-              {noGenre.length} book{noGenre.length === 1 ? "" : "s"} without a genre — sort {noGenre.length === 1 ? "it" : "them"}
+              {noGenre.length} book{noGenre.length === 1 ? "" : "s"} without a genre. Sort {noGenre.length === 1 ? "it" : "them"}
             </button>
           ) : sortedByMe.length > 0 ? (
             <button className="link-btn" style={{ marginTop: 12, fontSize: 13, display: "block" }} onClick={openSorting}>
@@ -265,13 +273,13 @@ function You() {
         </section>
 
         {readAlongs.length > 0 && (
-          <section className="card" style={{ marginTop: 12 }}>
-            <h2 className="h2">Reading together</h2>
+          <section style={{ marginTop: 32 }}>
+            <h2 className="section-title">Reading together</h2>
             {readAlongs.slice(0, 6).map((ra) => {
               const mineState = ra.members.find((m) => m.user_id === profile?.id)?.state;
               const others = ra.members.filter((m) => m.state === "joined" && m.user_id !== profile?.id);
               return (
-                <Link key={ra.id} href={`/together/${ra.id}`} className="book-row" style={{ borderBottom: 0 }}>
+                <Link key={ra.id} href={`/together/${ra.id}`} className="book-row">
                   <Cover book={ra.book} width={36} />
                   <span className="book-row__body">
                     <span className="book-row__title" style={{ display: "block", fontSize: 15 }}>{ra.book.title}</span>
@@ -299,26 +307,7 @@ function You() {
           <InviteCard username={profile.username} joined={invites?.joined ?? 0} qualified={invites?.qualified ?? connector?.progress ?? 0} earned={Boolean(connector?.earned)} />
         )}
 
-        {ranked.length > 0 && (
-          <section className="card" style={{ marginTop: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-              <h2 className="h2">Your top three</h2>
-              {ranked.length >= 3 && (
-                <ShareCardButton query="kind=top" label="Share top 10" filename="readread-top-10" className="btn btn--quiet" style={{ minHeight: 36, fontSize: 13, padding: "0 12px" }} />
-              )}
-            </div>
-            <div style={{ display: "flex", gap: 14, marginTop: 16 }}>
-              {ranked.slice(0, 3).map((e) => (
-                <Link key={e.id} href={`/book/${e.book_id}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }} aria-label={`#${e.rank} ${e.book.title}`}>
-                  <Cover book={e.book} width={88} />
-                  <div className="m" style={{ fontSize: 12, fontWeight: 700, marginTop: 8 }}>#{e.rank}</div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="stack" style={{ marginTop: 12 }}>
+        <nav className="link-group" aria-label="More">
           {[
             ...(profile?.username ? [{ href: `/u/${profile.username}/shelf`, label: "Your whole library" }] : []),
             { href: `/wrap/${year}`, label: `Your ${year} in books` },
@@ -326,12 +315,12 @@ function You() {
             { href: "/import", label: "Import from Goodreads or StoryGraph" },
             { href: "/sharpen", label: "Sharpen your ranking" },
           ].map((l) => (
-            <Link key={l.href} href={l.href} className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
-              <span style={{ fontWeight: 600 }}>{l.label}</span>
+            <Link key={l.href} href={l.href} className="link-group__row">
+              <span>{l.label}</span>
               <ArrowIcon size={18} />
             </Link>
           ))}
-        </div>
+        </nav>
 
         <button className="btn btn--ghost btn--block" style={{ marginTop: 20 }} onClick={signOut}>
           Sign out
@@ -350,7 +339,7 @@ function You() {
                 <span className="m" style={{ fontWeight: 700, fontSize: 18 }}>{openStamp.count}</span>
               </span>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em" }}>{openStamp.label}</h2>
+                <h2 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em" }}>{openStamp.label}</h2>
                 <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>
                   {openStamp.count ? `${openStamp.count} ranked · best first` : "No stamp yet"}
                 </p>
@@ -409,7 +398,7 @@ function You() {
         <div className="sheet-backdrop" onClick={() => { setSorting(false); if (Object.keys(picked).length) reload(); }}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label="Pick genres" onClick={(e) => e.stopPropagation()}>
             <div className="sheet__grab" />
-            <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Pick a genre</h2>
+            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Pick a genre</h2>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>We couldn&rsquo;t find these in the catalogue. Your pick counts toward your passport, and you can change it anytime.</p>
             <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, maxHeight: "60vh", overflowY: "auto" }}>
               {sortList.map((e) => (
@@ -520,7 +509,7 @@ function EditProfile({
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Edit profile" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Edit profile</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Edit profile</h2>
         <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="pname">Name</label>
           <input id="pname" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
@@ -550,7 +539,7 @@ function EditProfile({
           <span>
             <span style={{ fontWeight: 600, display: "block" }}>Show my profile on the web</span>
             <span className="muted" style={{ fontSize: 13 }}>
-              Anyone with your link — and search engines — can see your name, picture, blurb, top 10, reading now and badges, without an account.
+              Anyone with your link can see your name, picture, blurb, top 10, what you&rsquo;re reading and badges. So can search engines.
             </span>
           </span>
         </label>

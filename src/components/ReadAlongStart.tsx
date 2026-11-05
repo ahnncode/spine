@@ -101,7 +101,7 @@ export function ReadAlongStart({
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <Cover book={book} width={44} />
           <div style={{ minWidth: 0 }}>
-            <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>
+            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>
               {readAlongId ? "Invite more friends" : "Read with friends"}
             </h2>
             <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>

@@ -80,10 +80,10 @@ function Inner() {
           <Link href="/you" className="icon-btn" aria-label="Back"><BackIcon size={20} /></Link>
           <button className="icon-btn" aria-label="Share your year" onClick={share}><ShareIcon size={18} /></button>
         </div>
-        {shared && <p className="notice" role="status">Copied — paste it anywhere.</p>}
+        {shared && <p className="notice" role="status">Copied. Paste it anywhere.</p>}
 
         <p className="eyebrow" style={{ marginTop: 20 }}>{displayName(profile)}&rsquo;s year in books</p>
-        <h1 className="d moment" style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.06em", lineHeight: 0.85, margin: "8px 0 0" }}>{year}</h1>
+        <h1 className="g moment" style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 0.85, margin: "8px 0 0" }}>{year}</h1>
 
         {entries && <MissingDates entries={entries} onChanged={reload} />}
 
@@ -156,7 +156,7 @@ function Inner() {
                 <Cover book={longest.book} width={56} />
                 <div style={{ minWidth: 0 }}>
                   <div className="eyebrow">Longest read</div>
-                  <div className="d clamp-2" style={{ fontWeight: 700, fontSize: 20, lineHeight: 1.15, letterSpacing: "-0.02em", marginTop: 8 }}>{longest.book.title}</div>
+                  <div className="d clamp-2" style={{ fontWeight: 700, fontSize: 20, lineHeight: 1.15, letterSpacing: "-0.01em", marginTop: 8 }}>{longest.book.title}</div>
                   <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{[longest.book.author, `${longest.book.pages.toLocaleString()} pages`].filter(Boolean).join(" · ")}</div>
                 </div>
               </Link>

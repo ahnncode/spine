@@ -60,7 +60,7 @@ export default function Login() {
     setError(null);
     const { error } = await supabase().auth.verifyOtp({ email: email.trim(), token, type: "email" });
     setVerifying(false);
-    if (error) setError(/expired|invalid/i.test(error.message) ? "That code didn’t work — it may have expired. Check the newest email, or send a new one." : error.message);
+    if (error) setError(/expired|invalid/i.test(error.message) ? "That code didn’t work. It may have expired, so check your newest email or send a new one." : error.message);
     // On success the session listener above sends them on.
   }
 

@@ -57,7 +57,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           </Link>
           <div style={{ minWidth: 0 }}>
             <p className="eyebrow">{doneToday ? "Checked in today" : "Reading check-in"}</p>
-            <h2 className="d" style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+            <h2 className="d" style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
               <Link href={`/book/${entry.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{entry.book.title}</Link>
             </h2>
             <Link href={`/book/${entry.book_id}`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
@@ -69,7 +69,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
         <div style={{ marginTop: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <label htmlFor="progress" style={{ fontWeight: 600, fontSize: 14 }}>How far are you?</label>
-            <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em" }}>{pct}%</span>
+            <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{pct}%</span>
           </div>
           <input
             id="progress"
@@ -116,7 +116,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
             {busy ? "Saving…" : doneToday ? "Update progress" : "Check in"}
           </button>
           {pct >= 100 ? (
-            <Link href={`/rank/${entry.book_id}`} className="btn btn--outline btn--block">Finished — rank it</Link>
+            <Link href={`/rank/${entry.book_id}`} className="btn btn--outline btn--block">Done? Rank it</Link>
           ) : (
             <button className="btn btn--quiet btn--block" disabled={busy || (doneToday && !note.trim() && !vibe)} onClick={() => save(false)}>
               Just read a bit, skip progress

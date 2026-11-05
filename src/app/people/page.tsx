@@ -53,7 +53,7 @@ function People() {
   async function invite() {
     // The invite link credits you when they join; one string so iOS shows the link once.
     const url = me?.username ? inviteUrl(me.username) : window.location.origin;
-    const text = `I’m ranking books on readread — come see how our taste compares. ${url}`;
+    const text = `I’m ranking books on readread. Come see if our taste matches: ${url}`;
     try {
       if (navigator.share) await navigator.share({ text });
       else {
@@ -148,7 +148,7 @@ function InviteSomeone({ query, username, compact = false }: { query: string; us
   const first = contact.kind === "name" ? contact.value.split(/\s+/)[0] : "";
   // Friendly, with the name if they typed one (lowercase "hey" reads like a text).
   const greeting = first && first.length <= 20 && /^[\p{L}'-]+$/u.test(first) ? `hey ${first}! ` : "";
-  const message = `${greeting}I’m ranking my books on readread — join me and we can compare taste: ${url}`;
+  const message = `${greeting}I’m ranking my books on readread. Join me and we can compare taste: ${url}`;
 
   async function share() {
     try {

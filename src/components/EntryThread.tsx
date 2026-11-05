@@ -87,7 +87,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
   async function flag(id: string) {
     setMenuFor(null);
     await report("comment", id).catch(() => {});
-    setNotice("Thanks — we’ll take a look.");
+    setNotice("Thanks. We’ll take a look.");
   }
 
   const owner = entry ? people.get(entry.user_id) : undefined;

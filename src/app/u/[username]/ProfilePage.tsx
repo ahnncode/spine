@@ -77,7 +77,7 @@ function Inner() {
     setMenu(false);
     const reason = window.prompt("What’s wrong with this profile? (optional)") ?? undefined;
     await report("profile", data.profile.id, reason).catch(() => {});
-    setNotice("Thanks — we’ll take a look.");
+    setNotice("Thanks. We’ll take a look.");
   }
 
   useEffect(() => {
@@ -228,7 +228,7 @@ function Inner() {
                     <div style={{ color: "#dde1ff", fontSize: 13 }}>
                       {data.match?.match != null
                         ? `From ${data.match.overlap} books you’ve both ranked`
-                        : `You’ve ranked ${shared.length} of the same books — 3 needed`}
+                        : `You’ve ranked ${shared.length} of the same books. You need 3`}
                     </div>
                   </div>
                   {data.match?.match != null && data.profile.username && (
@@ -280,7 +280,7 @@ function Inner() {
                     <h2 className="h2">Their favorites you haven&rsquo;t read</h2>
                     <p className="muted" style={{ fontSize: 13, margin: "2px 0 0" }}>
                       {data.match?.match != null && data.match.match >= 70
-                        ? `You match ${data.match.match}% — these are good bets.`
+                        ? `You match ${data.match.match}%, so these are good bets.`
                         : "Their highest-ranked books that aren’t on your shelf yet."}
                     </p>
                     <div className="cover-strip">

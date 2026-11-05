@@ -141,7 +141,7 @@ function Scanner() {
           )}
           {camError && <p style={{ color: "#fff", padding: 24, margin: 0, lineHeight: 1.45 }}>{camError}</p>}
           <p aria-live="polite" style={{ position: "absolute", bottom: 14, left: 0, right: 0, textAlign: "center", color: "#fff", fontSize: 14, margin: 0 }}>
-            {lookingUp ? "Looking it up…" : miss ? `No match for ${miss} — try another or type it` : camError ? "" : "Point at the barcode on the back"}
+            {lookingUp ? "Looking it up…" : miss ? `Couldn’t find ${miss}. Try again or type it` : camError ? "" : "Point at the barcode on the back"}
           </p>
         </div>
 
@@ -159,12 +159,12 @@ function Scanner() {
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
               <Cover book={found} width={96} />
               <div style={{ minWidth: 0 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{found.title}</h2>
+                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>{found.title}</h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{[found.author, found.year].filter(Boolean).join(" · ")}</p>
               </div>
             </div>
             <div className="stack" style={{ marginTop: 20 }}>
-              <button className="btn btn--block" disabled={busy} onClick={() => act("rank")}>I’ve read it — rank it</button>
+              <button className="btn btn--block" disabled={busy} onClick={() => act("rank")}>I’ve read it</button>
               <button className="btn btn--outline btn--block" disabled={busy} onClick={() => act("reading")}><BookOpenIcon size={18} /> Reading it now</button>
               <button className="btn btn--quiet btn--block" disabled={busy} onClick={() => act("want")}><BookmarkIcon size={16} /> Want to read</button>
               <button className="btn btn--ghost btn--block" disabled={busy} onClick={again}>Scan another</button>

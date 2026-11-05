@@ -11,7 +11,7 @@ export function InviteCard({ username, joined, qualified, earned }: { username: 
   const url = inviteUrl(username);
 
   async function share() {
-    const text = "I’m ranking my books on readread — come compare taste with me.";
+    const text = "I’m ranking my books on readread. Come see if our taste matches.";
     try {
       if (navigator.share) {
         // One string, not text + url: iOS treats those as two items, so
@@ -39,7 +39,7 @@ export function InviteCard({ username, joined, qualified, earned }: { username: 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontWeight: 700 }}>{earned ? "You’re a Connector" : "Invite 3 friends"}</div>
         <div style={{ fontSize: 13, marginTop: 2, lineHeight: 1.35 }}>
-          {earned ? "Keep sharing — every friend makes your feed better." : "When 3 friends join with your link and rank 3 books each, you earn Connector."}
+          {earned ? "Keep them coming. Every friend makes your feed better." : "Get 3 friends to join and rank 3 books each, and you earn Connector."}
         </div>
         {!earned && (
           <>

@@ -8,7 +8,7 @@ type Props = { params: Promise<{ id: string }>; children: ReactNode };
 export async function generateMetadata({ params }: Omit<Props, "children">): Promise<Metadata> {
   const { id } = await params;
   const card = await getReadAlongCard(id);
-  const title = card ? `Reading ${card.title} together — readread` : "A read-along on readread";
+  const title = card ? `Reading ${card.title} together · readread` : "A read-along on readread";
   const description = card
     ? `${card.readers} reader${card.readers === 1 ? "" : "s"} reading ${card.title}${card.author ? ` by ${card.author}` : ""} together on readread.`
     : "Read a book with friends on readread.";

@@ -33,7 +33,7 @@ export function AvatarPicker({
     if (key && !iconUnlocked(key, earned)) {
       const def = AVATAR_ICONS.find((i) => i.key === key)!;
       const badge = BADGE[def.unlock!];
-      setHint(`${def.label} unlocks with the ${badge.name} badge — ${badge.how.charAt(0).toLowerCase()}${badge.how.slice(1)}.`);
+      setHint(`${def.label} unlocks with the ${badge.name} badge. ${badge.how}.`);
       return;
     }
     setHint(null);
@@ -61,7 +61,7 @@ export function AvatarPicker({
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Avatar profile={preview} size={84} />
           <div>
-            <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em" }}>Profile picture</h2>
+            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Profile picture</h2>
             <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>Pick an icon and a color. Earn badges to unlock more.</p>
           </div>
         </div>

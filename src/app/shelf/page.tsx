@@ -21,6 +21,7 @@ import { useStreak } from "@/components/useStreak";
 import { rankEntries, type Entry, type RankedEntry } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { RowsSkeleton } from "@/components/Skeleton";
+import { ReadingCard } from "@/components/ReadingCard";
 
 export default function ShelfPage() {
   return (
@@ -97,24 +98,11 @@ function Shelf() {
             </div>
             <div className="reading-strip">
               {reading.map((e) => (
-                <div key={e.id} className="reading-card">
-                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`}>
-                    <Cover book={e.book} width={64} />
-                  </Link>
-                  <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none" }}>{e.book.title}</Link>
-                  {(() => {
+                <ReadingCard key={e.id} entry={e} onCheckIn={() => setChecking(e)}
+                  extra={(() => {
                     const ra = activeFor(readAlongs, e.book_id, profile?.id);
                     return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
-                  })()}
-                  {e.progress_pct != null && (
-                    <div style={{ width: "100%" }} aria-label={`${e.progress_pct}% read`}>
-                      <div className="bar" style={{ height: 6 }}><span style={{ width: `${e.progress_pct}%`, background: "var(--accent)" }} /></div>
-                      <div className="m muted" style={{ fontSize: 11, marginTop: 4 }}>{e.progress_pct}%</div>
-                    </div>
-                  )}
-                  <button className="small-btn" onClick={() => setChecking(e)}>Check in</button>
-                  <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)" }}>Finished? Rank it</Link>
-                </div>
+                  })()} />
               ))}
             </div>
           </section>
@@ -135,7 +123,7 @@ function Shelf() {
         {entries && entries.length === 0 && (
           <div className="empty">
             <p className="h2">Your shelf is empty</p>
-            <p style={{ margin: "0 0 20px", fontSize: 14 }}>Bring your Goodreads or StoryGraph history, or rank the last book you finished.</p>
+            <p style={{ margin: "0 0 20px", fontSize: 14 }}>Rank the last book you finished, or bring your Goodreads or StoryGraph history.</p>
             <div className="stack">
               <Link href="/import" className="btn btn--block">Import your library</Link>
               <Link href="/start" className="btn btn--outline btn--block">Pick books you&rsquo;ve read</Link>
@@ -156,7 +144,7 @@ function Shelf() {
             )}
             {roughCount > 1 && (
               <Link href="/sharpen" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 16, textDecoration: "none" }}>
-                <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-display)", fontWeight: 800 }}>
+                <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-book)", fontWeight: 800 }}>
                   {roughCount > 99 ? "99+" : roughCount}
                 </span>
                 <span style={{ flex: 1 }}>
@@ -214,7 +202,7 @@ function Shelf() {
                 <Cover book={sheet.book} width={84} />
               </Link>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
                   <Link href={`/book/${sheet.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{sheet.book.title}</Link>
                 </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{sheet.book.author}</p>

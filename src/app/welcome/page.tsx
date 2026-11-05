@@ -103,7 +103,7 @@ function Welcome() {
             {!valid
               ? "3–20 lowercase letters, numbers or underscores"
               : taken
-                ? `@${username} is taken — try another`
+                ? `@${username} is taken. Try another?`
                 : availability?.name === username
                   ? `@${username} is available`
                   : "Checking…"}

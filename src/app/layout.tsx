@@ -9,14 +9,14 @@ const description =
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://readread.app"),
-  title: "readread — rank books, not stars",
+  title: "readread: rank books, not stars",
   description,
   applicationName: "readread",
   keywords: ["book tracker", "Goodreads alternative", "StoryGraph alternative", "rank books", "reading tracker", "book ranking app", "book club app", "reading log"],
   alternates: { canonical: "/" },
   appleWebApp: { title: "readread", capable: true, statusBarStyle: "default" },
-  openGraph: { type: "website", siteName: "readread", url: "/", title: "readread — rank books, not stars", description },
-  twitter: { card: "summary_large_image", title: "readread — rank books, not stars", description },
+  openGraph: { type: "website", siteName: "readread", url: "/", title: "readread: rank books, not stars", description },
+  twitter: { card: "summary_large_image", title: "readread: rank books, not stars", description },
 };
 
 export const viewport: Viewport = {
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Geist:wght@400..700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Gloock&family=Brygada+1918:ital,wght@0,400..700;1,400..700&family=Geist:wght@400..700&display=swap"
         />
       </head>
       <body>

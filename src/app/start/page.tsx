@@ -143,7 +143,7 @@ function Start() {
     <div className="app">
       <main className="screen screen--flow" style={{ paddingBottom: 120 }}>
         <span className="wordmark">readread</span>
-        <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Let&rsquo;s build your shelf.</h1>
+        <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>What have you been reading?</h1>
 
         <Link href="/import" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 24, textDecoration: "none" }}>
           <span className="icon-btn" style={{ background: "#2a2a2a", color: "#fff", borderRadius: 12 }}><FileIcon /></span>

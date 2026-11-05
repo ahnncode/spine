@@ -290,7 +290,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                 <Cover book={picked} width={96} />
               </button>
               <div style={{ minWidth: 0 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
                   <button type="button" className="link-plain" onClick={() => act(picked, "page")} disabled={busy}>{picked.title}</button>
                 </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
@@ -303,7 +303,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             </div>
             <div className="stack" style={{ marginTop: 20 }}>
               <button className="btn btn--block" disabled={busy} onClick={() => act(picked, "rank")}>
-                {pickedEntry?.status === "ranked" ? "Re-rank it" : pickedEntry?.status === "reading" ? "Finished — rank it" : "I’ve read it — rank it"}
+                {pickedEntry?.status === "ranked" ? "Re-rank it" : pickedEntry?.status === "reading" ? "Done? Rank it" : "I’ve read it"}
               </button>
               {(!pickedEntry || pickedEntry.status === "want") && (
                 <button className="btn btn--outline btn--block" disabled={busy} onClick={() => act(picked, "reading")}>
@@ -333,7 +333,7 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
     return (
       <div className="card card--ink" style={{ marginTop: 20 }}>
         <div className="eyebrow" style={{ color: "#c9c8c2" }}>For you</div>
-        <p className="d" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", margin: "6px 0 0", lineHeight: 1.05 }}>
+        <p className="g" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", margin: "6px 0 0", lineHeight: 1.05 }}>
           Rank {left} more book{left === 1 ? "" : "s"} to unlock picks made for your taste.
         </p>
         <div className="bar" style={{ marginTop: 16, background: "#2a2a2a" }}>
@@ -348,7 +348,7 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
     return (
       <div className="empty">
         <p className="h2">Picks are warming up</p>
-        <p style={{ margin: 0, fontSize: 14 }}>As more readers rank books you&rsquo;ve read, we&rsquo;ll find what they loved that you haven&rsquo;t.</p>
+        <p style={{ margin: 0, fontSize: 14 }}>Once more people rank books you&rsquo;ve read, we&rsquo;ll find the ones they loved that you haven&rsquo;t got to.</p>
       </div>
     );
   }

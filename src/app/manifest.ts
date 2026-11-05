@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 /** Lets people add readread to their home screen like an app. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "readread — rank books, not stars",
+    name: "readread: rank books, not stars",
     short_name: "readread",
     description: "Rank what you read with quick head-to-heads, and see what your friends can't put down.",
     start_url: "/feed",

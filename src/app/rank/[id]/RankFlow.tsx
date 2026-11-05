@@ -69,11 +69,11 @@ function momentsFor(before: Entry[], after: Entry[], bookId: string, checkinDays
   const prevMe = prev.find((e) => e.book_id === bookId);
 
   if (me.rank === 1 && prev[0]?.book_id !== bookId && next.length > 1) {
-    out.push({ text: `New #1 — dethroned ${prev[0]?.book.title ?? "your old favorite"}`, tone: "hot" });
+    out.push({ text: `New #1. Dethroned ${prev[0]?.book.title ?? "your old favorite"}`, tone: "hot" });
   } else if (me.rank <= 10 && next.length > 10 && (!prevMe || prevMe.rank > 10)) {
     const nextTop = new Set(next.slice(0, 10).map((e) => e.book_id));
     const out10 = prev.slice(0, 10).find((e) => !nextTop.has(e.book_id));
-    out.push({ text: out10 ? `Top 10 — knocked out ${out10.book.title}` : "Straight into your top 10", tone: "hot" });
+    out.push({ text: out10 ? `Top 10. Bye, ${out10.book.title}` : "Straight into your top 10", tone: "hot" });
   } else if (prevMe && prevMe.rank !== me.rank) {
     const diff = prevMe.rank - me.rank;
     out.push({ text: diff > 0 ? `Up ${diff} from #${prevMe.rank}` : `Down ${-diff} from #${prevMe.rank}`, tone: "plain" });
@@ -488,7 +488,7 @@ function sentence(title: string, r: Result): string {
   const sameAbove = r.above && r.above.bucket === r.me.bucket ? r.above : null;
   const sameBelow = r.below && r.below.bucket === r.me.bucket ? r.below : null;
   const pos = `#${r.bucketPos + 1} of the ${r.bucketCount} ${group}`;
-  if (!sameAbove && sameBelow) return `${title} takes the top spot of the ${r.bucketCount} ${group} — edging out ${sameBelow.book.title}.`;
+  if (!sameAbove && sameBelow) return `${title} takes the top spot of the ${r.bucketCount} ${group}, just ahead of ${sameBelow.book.title}.`;
   if (sameAbove && !sameBelow) return `${title} is ${pos}, just after ${sameAbove.book.title}.`;
   if (sameAbove && sameBelow) return `${title} is ${pos}, between ${sameAbove.book.title} and ${sameBelow.book.title}.`;
   return `${title} is ${pos}.`;

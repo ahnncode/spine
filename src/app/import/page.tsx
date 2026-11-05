@@ -108,10 +108,10 @@ function Importer() {
             <h1 className="h1 h1--xl" style={{ marginTop: 30 }}>Your shelf is in.</h1>
             <p className="lede">
               {result.added} books added{result.skipped ? `, ${result.skipped} were already on your shelf` : ""}{result.dated ? ` (${result.dated} of those got their finish date filled in)` : ""}. Your
-              starred books are roughly in order — a few quick matchups will make the ranking yours.
+              starred books are roughly in order. A few quick matchups will make the ranking yours.
             </p>
             <div className="card card--ink" style={{ marginTop: 24, display: "flex", gap: 14 }}>
-              <div className="d score score--top" style={{ width: 44, height: 44, fontSize: 18, fontWeight: 800, fontFamily: "var(--font-display)" }}>
+              <div className="d score score--top" style={{ width: 44, height: 44, fontSize: 18, fontWeight: 800, fontFamily: "var(--font-book)" }}>
                 {summary.loved}
               </div>
               <div>
@@ -210,7 +210,7 @@ function Importer() {
                 </div>
                 {summary.unrated > 0 && (
                   <p className="muted" style={{ fontSize: 13, margin: "12px 0 0" }}>
-                    {summary.unrated} read but unrated — they&rsquo;ll wait in &ldquo;To rank&rdquo; for you.
+                    {summary.unrated} read but unrated. They&rsquo;ll wait in &ldquo;To rank&rdquo;.
                   </p>
                 )}
               </div>

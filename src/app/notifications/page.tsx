@@ -57,14 +57,14 @@ function Inner() {
 
   function describe(n: Notification): string {
     if (n.kind === "follow") return "started following you";
-    if (n.kind === "poke") return "poked you — how’s your reading going?";
+    if (n.kind === "poke") return "poked you. How’s the book going?";
     if (n.kind === "read_along") {
       const title = data?.readAlongs.get(n.target_id ?? "")?.book.title;
       const on = title ? ` ${title}` : " a book";
       if (n.detail === "invite") return `invited you to read${on} together`;
       if (n.detail === "joined") return `joined your read-along of${on}`;
       if (n.detail === "message") return `posted in your read-along of${on}`;
-      if (n.detail === "verdict") return `finished${on} — the verdict is in`;
+      if (n.detail === "verdict") return `finished${on}. The verdict is in`;
       return `updated your read-along of${on}`;
     }
     if (n.kind === "mention") {
@@ -94,7 +94,7 @@ function Inner() {
         {data && data.items.length === 0 && (
           <div className="empty">
             <p className="h2">Nothing yet</p>
-            <p style={{ margin: 0, fontSize: 14 }}>Hearts, comments, mentions, pokes, new followers, badges and your weekly picks show up here.</p>
+            <p style={{ margin: 0, fontSize: 14 }}>When a friend hearts, comments or pokes you, it lands here.</p>
           </div>
         )}
         {data && data.items.length > 0 && (

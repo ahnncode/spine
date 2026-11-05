@@ -47,7 +47,7 @@ export function JoinPage() {
             </h1>
             <p className="lede" style={{ fontSize: 17 }}>
               readread turns every book you finish into a quick head-to-head, so you end up with an honest ranked shelf
-              {first ? <> — and a taste match with {first}.</> : "."}
+              {first ? <>, plus your taste match with {first}.</> : "."}
             </p>
 
             <ul style={{ listStyle: "none", padding: 0, margin: "26px 0 0", display: "grid", gap: 14 }}>

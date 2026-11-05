@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const top = p.top.slice(0, 3).map((b) => b.title).join(", ");
   const description = p.bio || (top ? `${name}'s top books: ${top}. ${p.ranked} ranked on readread.` : `${name} is ranking books on readread.`);
   return {
-    title: `${name} (@${p.username}) — readread`,
+    title: `${name} (@${p.username}) · readread`,
     description,
     alternates: { canonical: `/u/${p.username}` },
     openGraph: { title: `${name} on readread`, description, type: "profile", url: `/u/${p.username}` },

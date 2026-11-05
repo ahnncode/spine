@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalPage } from "@/components/LegalPage";
 import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Terms — readread" };
+export const metadata: Metadata = { title: "Terms · readread" };
 
 export default function Terms() {
   return (

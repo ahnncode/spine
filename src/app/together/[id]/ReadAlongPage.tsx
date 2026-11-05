@@ -221,7 +221,7 @@ function Inner() {
                   {displayName(data.people.get(verdict[0].user_id)).split(" ")[0]} loved it most
                   {verdict[0].score! - verdict[verdict.length - 1].score! >= 2
                     ? `, ${displayName(data.people.get(verdict[verdict.length - 1].user_id)).split(" ")[0]} not so much`
-                    : " — you mostly agree"}
+                    : ". You mostly agree"}
                   . Group average {formatScore(verdict.reduce((s, p) => s + (p.score ?? 0), 0) / verdict.length)}.
                 </p>
                 <ShareCardButton
@@ -294,7 +294,7 @@ function Inner() {
                 </div>
               )}
               {myState === "joined" && !data.ra.revealed_at && joined.length >= 2 && (
-                <p className="muted" style={{ fontSize: 12, margin: "10px 0 0" }}>Scores stay hidden until everyone has ranked it — then the verdict appears here.</p>
+                <p className="muted" style={{ fontSize: 12, margin: "10px 0 0" }}>Scores stay hidden until everyone&rsquo;s ranked it. Then the verdict shows up here.</p>
               )}
             </section>
 
@@ -336,7 +336,7 @@ function Inner() {
                           </div>
                           {hidden ? (
                             <div className="ra-hidden">
-                              Written at {m.progress_pct}% — you&rsquo;re at {myPct}%.{" "}
+                              Written at {m.progress_pct}%. You&rsquo;re at {myPct}%.{" "}
                               <button className="link-btn" style={{ fontSize: 13 }} onClick={() => setRevealed((r) => new Set(r).add(m.id))}>Show anyway</button>
                             </div>
                           ) : (

@@ -169,20 +169,20 @@ function Feed() {
         {data && data.items.length === 0 && data.together.length === 0 && scope === "you" && (
           <div className="empty">
             <p className="h2">Nothing posted yet</p>
-            <p style={{ margin: "0 0 16px", fontSize: 14 }}>Rank a book or check in on what you&rsquo;re reading, and it shows up here with any hearts and comments.</p>
+            <p style={{ margin: "0 0 16px", fontSize: 14 }}>Rank a book or check in, and it&rsquo;ll show up here.</p>
             <Link href="/add" className="btn">Rank a book</Link>
           </div>
         )}
 
         {data && data.items.length === 0 && data.together.length === 0 && scope === "following" && (
           <div className="card card--ink" style={{ marginTop: 16 }}>
-            <p className="d" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05, margin: 0 }}>
-              {data.following ? "Quiet in here." : "Reading’s better with friends."}
+            <p className="g" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05, margin: 0 }}>
+              {data.following ? "Quiet in here." : "Your feed needs friends."}
             </p>
             <p style={{ color: "#c9c8c2", fontSize: 14, lineHeight: 1.45, margin: "10px 0 0" }}>
               {data.following
                 ? "When people you follow rank or start books, it shows up here."
-                : "Follow people to see what they’re reading, how they rank it, and how your taste compares."}
+                : "Follow a few people and you’ll see what they’re reading and how they rank it."}
             </p>
             <Link href="/people" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--black)" }}>
               Find people to follow
@@ -241,8 +241,8 @@ function Feed() {
                                 <br />
                                 <span className="muted">
                                   {Math.abs(myEntry.score - item.entry.score) >= 2
-                                    ? `You disagree — your ${formatScore(myEntry.score)}`
-                                    : `You agree — your ${formatScore(myEntry.score)}`}
+                                    ? `You disagree. You gave it ${formatScore(myEntry.score)}`
+                                    : `You agree. You gave it ${formatScore(myEntry.score)}`}
                                 </span>
                               </>
                             )}

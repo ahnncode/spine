@@ -63,10 +63,10 @@ export function BookActions({
   return (
     <div className="stack">
       {status === "reading" ? (
-        <Link href={`/rank/${bookId}`} className="btn btn--block">Finished — rank it</Link>
+        <Link href={`/rank/${bookId}`} className="btn btn--block">Done? Rank it</Link>
       ) : (
         <Link href={`/rank/${bookId}`} className="btn btn--block">
-          {status === "ranked" ? "Re-rank" : "I’ve read it — rank it"}
+          {status === "ranked" ? "Re-rank" : "I’ve read it"}
         </Link>
       )}
 

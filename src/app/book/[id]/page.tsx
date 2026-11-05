@@ -20,7 +20,7 @@ function snippet(text: string, max: number): string {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const book = await getPublicBook(id);
-  if (!book) return { title: "Book — readread" };
+  if (!book) return { title: "Book · readread" };
   const by = book.author ? ` by ${book.author}` : "";
   const score = book.avg_score != null ? ` readread score ${formatScore(book.avg_score)} from ${book.readers} reader${book.readers === 1 ? "" : "s"}.` : "";
   // Lead with what the book is about when we have it; search results show this.
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? `${about}${score}`
     : `${book.title}${by} on readread.${score} Rank it against the books you've read and compare taste with friends.`;
   return {
-    title: `${book.title}${by} — readread`,
+    title: `${book.title}${by} · readread`,
     description,
     alternates: { canonical: `/book/${book.id}` },
     openGraph: { title: `${book.title}${by}`, description, type: "book", url: `/book/${book.id}` },

@@ -16,7 +16,7 @@ const SAMPLE = [
 
 const FEATURES = [
   { h: "A Goodreads alternative built on rankings", p: "Stars drift. readread asks one easy question instead: which did you like more? Every book you finish lands in the right spot on your shelf, with a score from 0 to 10 that stays honest." },
-  { h: "See what your friends are reading", p: "Follow friends, see their rankings and check-ins, and find out your taste match — plus the books you disagree on most." },
+  { h: "See what your friends are reading", p: "Follow friends, see their rankings and check-ins, and find out your taste match, plus the books you fight about most." },
   { h: "Read together, spoiler-free", p: "Start a read-along for any book: everyone's progress in one place, a discussion that hides anything past where you are, and a score reveal when you've all finished." },
   { h: "Bring your Goodreads or StoryGraph library", p: "Upload your export and your ratings become a starting ranking in seconds. Then sharpen it with quick head-to-heads." },
   { h: "Streaks, badges and your year in books", p: "Check in as you read to keep a weekly streak, collect a genre passport and 32 badges (plus a few secret ones), and get a yearly recap of everything you read." },
@@ -82,7 +82,7 @@ export default function Landing() {
         </h1>
         <p className="lede" style={{ fontSize: 17 }}>
           Every book you finish goes head-to-head with ones you&rsquo;ve read. A few taps later you have an honest,
-          ranked shelf — and a score that actually means something.
+          ranked shelf, with a score that actually means something.
         </p>
 
         <ol className="mini-list" style={{ listStyle: "none", margin: "28px 0 0" }} aria-label="Example ranked shelf">

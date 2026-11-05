@@ -98,7 +98,7 @@ function MysteryCard({ pick, onChange }: { pick: WeeklyPick; onChange: (p: Parti
       <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
         <div className="mystery-cover" aria-hidden="true"><span>?</span></div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+          <p className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
             {pick.predicted != null ? <>You&rsquo;d probably give it a {formatScore(pick.predicted)}</> : "A book we think you’ll love"}
           </p>
           {pick.reason && <p style={{ margin: "6px 0 0", fontSize: 13, color: "#c9c8c2" }}>{pick.reason}</p>}
@@ -131,7 +131,7 @@ function PickBody({ pick, dark = false }: { pick: WeeklyPick; dark?: boolean }) 
     <Link href={`/book/${b.id}`} style={{ display: "flex", gap: 14, marginTop: 12, color: "inherit", textDecoration: "none" }}>
       <Cover book={b} width={72} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="d" style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.08 }}>{b.title}</div>
+        <div className="d" style={{ fontSize: 20, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.08 }}>{b.title}</div>
         <div style={{ fontSize: 14, marginTop: 2, color: dark ? "#c9c8c2" : "var(--muted)" }}>{b.author}</div>
         {pick.reason && <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.4, color: dark ? "#c9c8c2" : "var(--ink-2)" }}>{pick.reason}</p>}
       </div>
@@ -161,7 +161,7 @@ function PickActions({ pick, onChange, dark = false }: { pick: WeeklyPick; onCha
   }
 
   if (pick.response) {
-    const text = { want: "Saved to want to read", reading: "On your currently reading", skip: "Skipped — new picks Monday" }[pick.response];
+    const text = { want: "Saved for later", reading: "Added to reading now", skip: "Skipped. New picks Monday" }[pick.response];
     return <p className="m" style={{ margin: "14px 0 0", fontSize: 13, color: dark ? "#c9c8c2" : "var(--muted)" }}>✓ {text}</p>;
   }
   const quiet = dark ? { background: "transparent", color: "#fff", border: "1px solid #444" } : undefined;
