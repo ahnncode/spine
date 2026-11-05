@@ -274,10 +274,12 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
           <div className="sheet" role="dialog" aria-modal="true" aria-label={picked.title} onClick={(e) => e.stopPropagation()}>
             <div className="sheet__grab" />
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
-              <Cover book={picked} width={96} />
+              <button type="button" onClick={() => act(picked, "page")} disabled={busy} aria-label={`${picked.title}: book page`} style={{ background: "none", border: 0, padding: 0, cursor: "pointer", flexShrink: 0 }}>
+                <Cover book={picked} width={96} />
+              </button>
               <div style={{ minWidth: 0 }}>
                 <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
-                  {picked.title}
+                  <button type="button" className="link-plain" onClick={() => act(picked, "page")} disabled={busy}>{picked.title}</button>
                 </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
                   {[picked.author, picked.year, picked.pages ? `${picked.pages} pages` : null].filter(Boolean).join(" · ")}
