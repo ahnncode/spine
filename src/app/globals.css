@@ -335,7 +335,9 @@ img { display: block; max-width: 100%; }
   max-height: 92dvh; overflow-y: auto;
   animation: sheet-up 0.22s ease-out;
 }
-.sheet__grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 0 auto 14px; }
+.sheet__grab { position: relative; width: 40px; height: 5px; border-radius: 3px; background: var(--line-2); margin: 0 auto 14px; cursor: grab; touch-action: none; }
+/* A bigger invisible target around the handle. */
+.sheet__grab::after { content: ""; position: absolute; inset: -14px -60px; }
 @keyframes sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {

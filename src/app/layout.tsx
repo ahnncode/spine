@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/Auth";
+import { SheetSwipe } from "@/components/SheetSwipe";
 import "./globals.css";
 
 const description =
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <SheetSwipe />
       </body>
     </html>
   );
