@@ -55,8 +55,6 @@ export function round1(n: number): number {
   return Math.round(n * 10 + (n >= 0 ? 1e-9 : -1e-9)) / 10;
 }
 
-/** How many of your first books get a score you set yourself. */
-export const MANUAL_SCORE_BOOKS = 3;
 
 export function formatScore(n: number): string {
   return n.toFixed(1);
