@@ -38,6 +38,7 @@ describe("toDate", () => {
     expect(toDate("2026/3/14")).toBe("2026-03-14");
     expect(toDate("2026-03-14")).toBe("2026-03-14");
     expect(toDate("3/14/2026")).toBe("2026-03-14");
+    expect(toDate("2026/03")).toBe("2026-03-01");
     expect(toDate("")).toBeNull();
   });
 });

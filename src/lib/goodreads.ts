@@ -60,6 +60,9 @@ export function toDate(raw: string | undefined): string | null {
   // 2026/03/14 or 2026-03-14 (Goodreads, StoryGraph)
   let m = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
   if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  // 2026/03: Goodreads lets you save a read date with no day. Keep the month.
+  m = s.match(/^(\d{4})[/-](\d{1,2})$/);
+  if (m && Number(m[2]) >= 1 && Number(m[2]) <= 12) return `${m[1]}-${m[2].padStart(2, "0")}-01`;
   // 3/14/2026 (some spreadsheet re-saves)
   m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
