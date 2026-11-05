@@ -1,11 +1,12 @@
 /** The badge case. Keys match refresh_badges() in the database. */
 
-export type BadgeCategory = "start" | "depth" | "consistency" | "breadth" | "taste" | "social";
+export type BadgeCategory = "start" | "depth" | "consistency" | "breadth" | "taste" | "social" | "secret";
 export type Rarity = "common" | "uncommon" | "rare" | "legendary";
 export type Glyph =
   | "book" | "box" | "bookmark" | "shelf" | "seal" | "worm" | "hundred" | "card" | "brick" | "pages" | "mountain"
   | "flame" | "leaf" | "infinity" | "sun" | "target" | "calendar" | "compass" | "globe" | "hourglass" | "quill"
-  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle";
+  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle"
+  | "leap" | "pumpkin" | "anchor" | "abc" | "coffee" | "crystal" | "glasses" | "knock" | "spark";
 
 export interface BadgeDef {
   key: string;
@@ -17,6 +18,8 @@ export interface BadgeDef {
   glyph: Glyph;
   /** Unit for progress ("12 of 50 books"). Omitted for yes/no badges. */
   unit?: string;
+  /** Hidden until earned: no name, no hint, no progress. */
+  secret?: boolean;
 }
 
 export const BADGES: BadgeDef[] = [
@@ -57,6 +60,18 @@ export const BADGES: BadgeDef[] = [
   { key: "conversation_starter", name: "Conversation Starter", how: "Get 10 comments on your rankings", category: "social", rarity: "uncommon", glyph: "chat", unit: "comment" },
   { key: "connector", name: "Connector", how: "Invite 3 friends who each rank 3 books", category: "social", rarity: "rare", glyph: "link", unit: "friend" },
   { key: "book_club", name: "Book Club", how: "Finish a read-along with friends", category: "social", rarity: "uncommon", glyph: "club" },
+
+  // Secret: shown as "?" until earned.
+  { key: "leap_reader", name: "Leap Reader", how: "Logged reading on February 29", category: "secret", rarity: "legendary", glyph: "leap", secret: true },
+  { key: "trick_or_read", name: "Trick or Read", how: "Finished a horror book on Halloween", category: "secret", rarity: "rare", glyph: "pumpkin", secret: true },
+  { key: "sunk_cost", name: "Sunk Cost", how: "Read 500+ pages of a book, then ranked it “not for me”", category: "secret", rarity: "rare", glyph: "anchor", secret: true },
+  { key: "alphabet_soup", name: "Alphabet Soup", how: "Ranked books whose titles start with every letter, A to Z", category: "secret", rarity: "legendary", glyph: "abc", secret: true },
+  { key: "one_sitting", name: "One Sitting", how: "Started and finished a 400+ page book on the same day", category: "secret", rarity: "legendary", glyph: "coffee", secret: true },
+  { key: "long_goodbye", name: "The Long Goodbye", how: "Finished a book a year or more after starting it", category: "secret", rarity: "rare", glyph: "hourglass", secret: true },
+  { key: "called_it", name: "Called It", how: "Loved your weekly mystery pick", category: "secret", rarity: "rare", glyph: "crystal", secret: true },
+  { key: "very_meta", name: "Very Meta", how: "Ranked a book about books", category: "secret", rarity: "rare", glyph: "glasses", secret: true },
+  { key: "persistent", name: "Persistent", how: "Poked the same friend 7 days in a row", category: "secret", rarity: "rare", glyph: "knock", secret: true },
+  { key: "mind_meld", name: "Mind Meld", how: "Had the exact same top 3 as someone you follow", category: "secret", rarity: "legendary", glyph: "spark", secret: true },
 ];
 
 export const BADGE: Record<string, BadgeDef> = Object.fromEntries(BADGES.map((b) => [b.key, b]));
@@ -68,6 +83,7 @@ export const CATEGORY_LABEL: Record<BadgeCategory, string> = {
   breadth: "Breadth",
   taste: "Taste",
   social: "Social",
+  secret: "Secret",
 };
 
 /** Medallion face colors per category: [background, glyph]. */
@@ -78,6 +94,7 @@ export const CATEGORY_COLOR: Record<BadgeCategory, [string, string]> = {
   breadth: ["#0F5257", "#E6F2EF"],
   taste: ["#7A2E4D", "#FCE9F0"],
   social: ["#F2C14E", "#111111"],
+  secret: ["#2A1F4F", "#F2C14E"],
 };
 
 export const RARITY_LABEL: Record<Rarity, string> = {
@@ -133,6 +150,10 @@ export function sortForCase(statuses: BadgeStatus[]): BadgeStatus[] {
         return RARITY_RANK[BADGE[a.key].rarity] - RARITY_RANK[BADGE[b.key].rarity] || b.earned.localeCompare(a.earned);
       if (a.earned) return -1;
       if (b.earned) return 1;
+      // Locked secrets go last, and give nothing away.
+      const sa = Boolean(BADGE[a.key].secret), sb = Boolean(BADGE[b.key].secret);
+      if (sa !== sb) return sa ? 1 : -1;
+      if (sa) return 0;
       const fa = fraction(a), fb = fraction(b);
       if (fa !== fb) return fb - fa;
       return (order.get(a.key) ?? 0) - (order.get(b.key) ?? 0);

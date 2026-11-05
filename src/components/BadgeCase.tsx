@@ -15,7 +15,8 @@ export function BadgeSheet({ status, onClose, theirs = false }: { status: BadgeS
   const def = BADGE[status.key];
   if (!def) return null;
   const earned = Boolean(status.earned);
-  const label = progressLabel(def, status);
+  const hidden = Boolean(def.secret) && !earned;
+  const label = hidden ? null : progressLabel(def, status);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={def.name} onClick={(e) => e.stopPropagation()} style={{ textAlign: "center" }}>
@@ -23,9 +24,9 @@ export function BadgeSheet({ status, onClose, theirs = false }: { status: BadgeS
         <div className={earned ? "medal-pop" : undefined} style={{ display: "flex", justifyContent: "center", marginTop: 8 }}>
           <Medallion badge={def.key} earned={earned} progress={fraction(status)} size={112} />
         </div>
-        <p className="eyebrow" style={{ marginTop: 14 }}>{RARITY_LABEL[def.rarity]} · {CATEGORY_LABEL[def.category]}</p>
-        <h2 className="d" style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em" }}>{def.name}</h2>
-        <p style={{ margin: "8px 0 0", fontSize: 15, color: "var(--ink-2)" }}>{def.how}</p>
+        <p className="eyebrow" style={{ marginTop: 14 }}>{hidden ? "Secret" : `${RARITY_LABEL[def.rarity]} · ${CATEGORY_LABEL[def.category]}`}</p>
+        <h2 className="d" style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 800, letterSpacing: "-0.03em" }}>{hidden ? "???" : def.name}</h2>
+        <p style={{ margin: "8px 0 0", fontSize: 15, color: "var(--ink-2)" }}>{hidden ? "A secret badge. You’ll know it when you earn it." : def.how}</p>
         {earned ? (
           <p className="m muted" style={{ fontSize: 13, marginTop: 14 }}>{theirs ? "Earned" : "You earned this"} {earnedOn(status.earned!)}</p>
         ) : (
@@ -60,12 +61,13 @@ export function BadgeCase({ statuses }: { statuses: BadgeStatus[] | null }) {
         {shown.map((s) => {
           const def = BADGE[s.key];
           const earned = Boolean(s.earned);
-          const label = progressLabel(def, s);
+          const hidden = Boolean(def.secret) && !earned;
+          const label = hidden ? null : progressLabel(def, s);
           return (
             <button key={s.key} className="badge-cell" data-locked={!earned} onClick={() => setOpen(s)}
-              aria-label={`${def.name}. ${earned ? "Earned" : label ?? def.how}`}>
+              aria-label={hidden ? "Secret badge" : `${def.name}. ${earned ? "Earned" : label ?? def.how}`}>
               <Medallion badge={s.key} earned={earned} progress={fraction(s)} size={58} />
-              <span className="badge-cell__name">{def.name}</span>
+              <span className="badge-cell__name">{hidden ? "???" : def.name}</span>
               {!earned && label && <span className="badge-cell__sub m">{Math.min(s.progress, s.goal).toLocaleString()}/{s.goal.toLocaleString()}</span>}
             </button>
           );

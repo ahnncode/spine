@@ -36,6 +36,15 @@ const G: Record<Glyph, ReactNode> = {
   people: <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM3 20c0-3 3-5 6-5s6 2 6 5M16 11a3 3 0 1 0 0-6M18 15c2 .5 3 2.5 3 5" />,
   chat: <path d="M4 5h16v11H9l-5 4zM8 9.5h8M8 12.5h5" />,
   club: <path d="M4 18V7.5c2.5-1 5-1 7.5.4V19c-2.5-1.4-5-1.4-7.5-1zM20 18V7.5c-2.5-1-5-1-7.5.4V19c2.5-1.4 5-1.4 7.5-1zM8 4.5a1.5 1.5 0 1 0 0-.01M16 4.5a1.5 1.5 0 1 0 0-.01" />,
+  leap: <><path d="M4 6h16v14H4zM4 10h16M8 3v4M16 3v4" /><text x="12" y="17.8" textAnchor="middle" fontSize="6.5" fontWeight="800" fontFamily="var(--font-mono), monospace" stroke="none" fill="currentColor">29</text></>,
+  pumpkin: <path d="M12 7.5c-4.4 0-7 2.7-7 6.3S7.6 20 12 20s7-2.6 7-6.2-2.6-6.3-7-6.3zM12 7.5c0-2 .8-3.2 2.4-3.8M9 8.3c-1.6 2.2-1.6 9 0 11.2M15 8.3c1.6 2.2 1.6 9 0 11.2" />,
+  anchor: <path d="M12 3.5a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM12 7.1V20M8.5 10.5h7M5 13.5c.3 3.8 3.2 6.5 7 6.5s6.7-2.7 7-6.5" />,
+  abc: <text x="12" y="15.2" textAnchor="middle" fontSize="8" fontWeight="800" fontFamily="var(--font-mono), monospace" stroke="none" fill="currentColor">ABC</text>,
+  coffee: <path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5zM16 10.5h1.5a2.5 2.5 0 0 1 0 5H16M8.5 3.5c-.8 1 .8 2 0 3M12 3.5c-.8 1 .8 2 0 3" />,
+  crystal: <><circle cx="12" cy="10.5" r="6" /><path d="M7.5 20h9M9.2 16l-1.2 4M14.8 16l1.2 4M9.5 8.3a3 3 0 0 1 2.5-1.6" /></>,
+  glasses: <path d="M3 13.5a3.5 3.5 0 1 0 7 0 3.5 3.5 0 1 0-7 0M14 13.5a3.5 3.5 0 1 0 7 0 3.5 3.5 0 1 0-7 0M10 13c1.3-.8 2.7-.8 4 0M3.3 12 5.2 7M20.7 12 18.8 7" />,
+  knock: <path d="M9.5 11V5a1.5 1.5 0 0 1 3 0v6M12.5 10.5V9a1.5 1.5 0 0 1 3 0v2M15.5 10.5a1.5 1.5 0 0 1 3 0V15a5 5 0 0 1-5 5h-1a5 5 0 0 1-4.4-2.7L5.5 13.6a1.5 1.5 0 0 1 2.6-1.4l1.4 1.8M4 5.5l2 1.3M3.5 9.5H6" />,
+  spark: <><circle cx="12" cy="12" r="2.2" /><path d="M12 3v4.5M12 16.5V21M3 12h4.5M16.5 12H21M5.6 5.6l3.1 3.1M15.3 15.3l3.1 3.1M5.6 18.4l3.1-3.1M15.3 8.7l3.1-3.1" /></>,
   candle: <path d="M8 20h8M9 17h6l-.8 3H9.8zM10 10h4v7h-4zM12 4c1.3 1.6 1.6 2.7 0 4.3-1.6-1.6-1.3-2.7 0-4.3z" />,
   link: <path d="M10 14a4 4 0 0 0 5.6 0l3-3a4 4 0 0 0-5.6-5.6L11.5 7M14 10a4 4 0 0 0-5.6 0l-3 3a4 4 0 0 0 5.6 5.6l1.5-1.5" />,
 };
@@ -70,6 +79,8 @@ export function Medallion({
 }) {
   const def = BADGE[badge];
   if (!def) return null;
+  const hidden = Boolean(def.secret) && !earned;
+  if (hidden) progress = 0;
   const [face, ink] = CATEGORY_COLOR[def.category];
   const rarity: Rarity = def.rarity;
   const r = 26;
@@ -96,7 +107,9 @@ export function Medallion({
       )}
       <g transform="translate(18 18) scale(1.1667)" fill="none" stroke={earned ? ink : "var(--muted)"} strokeOpacity={earned ? 1 : 0.6}
         strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={{ color: earned ? ink : "var(--muted)" }}>
-        {G[def.glyph]}
+        {hidden
+          ? <text x="12" y="17" textAnchor="middle" fontSize="15" fontWeight="800" fontFamily="var(--font-display), sans-serif" stroke="none" fill="currentColor">?</text>
+          : G[def.glyph]}
       </g>
     </svg>
   );
