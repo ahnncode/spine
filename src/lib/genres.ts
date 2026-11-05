@@ -22,7 +22,7 @@ export const GENRES: Genre[] = [
   { key: "memoir", label: "Memoir", bg: "#0F5257", fg: "#E8F3F1", match: /biography|autobiography|memoir|personal narratives|biographies/ },
   { key: "science", label: "Science", bg: "#2D3FE0", fg: "#FFFFFF", match: /popular works|^science|science$|physics|biology|evolution|psychology|economics|philosophy/ },
   { key: "poetry", label: "Poetry", bg: "#E9E4DA", fg: "#2A2A2A", match: /poetry|poems|verse/ },
-  { key: "business", label: "Business & self-help", short: "Self-help & biz", bg: "#3A3F7A", fg: "#F1F0FF", match: /self-help|self help|personal growth|self-actualization|business|management|leadership|success|personal finance|finance, personal|investing|investments|productivity|negotiation|entrepreneur|careers?\b|habits|motivation|marketing/ },
+  { key: "business", label: "Business & self-help", short: "Self-help & biz", bg: "#3A3F7A", fg: "#F1F0FF", match: /self-help|self help|personal growth|self-actualization|\bbusiness\b|management|leadership|success in business|\bsuccess$|personal finance|finance, personal|\binvesting\b|\binvestments\b|productivity|negotiation|entrepreneur|career development|\bhabits?\b|motivation \(psychology\)|marketing/ },
   { key: "truecrime", label: "True crime", bg: "#4B5563", fg: "#FDE2D8", match: /true crime|criminal investigation|serial murder|serial killers|murder investigation|criminals|crime.*case studies/ },
   { key: "graphic", label: "Graphic novels", short: "Graphic", bg: "#C2185B", fg: "#FFF0F6", match: /graphic novels?|comic books|comics & graphic|\bmanga\b|^comics\b/ },
   { key: "ya", label: "Young adult", short: "YA", bg: "#5B3FB8", fg: "#F3EEFF", match: /young adult|\bteen(s|agers?)?\b/ },
@@ -37,6 +37,8 @@ const NOISE = /^(nyt:|award:|lexile|age:|grade:|reading level|collectionid|serie
 const NONFICTION = new Set(["history", "memoir", "science", "business", "truecrime", "essays"]);
 /** Signs a book is a novel, so a "crime" subject means a mystery, not true crime. */
 const NOVEL = /fiction|detective and mystery stories|novels?$/;
+/** Any of these among a book's subjects means it's a novel (or stories, or poems). */
+const NOVEL_ANY = /fiction|\bnovels?\b|short stories|^stories$|^classics?$|classic literature|^(english|american|russian|french|german|italian|spanish) literature$|^poetry$/;
 /** National-literature subjects mean "classic" only for older books. */
 const NATIONAL_LIT = /^(english|american|russian|french|german|italian|spanish) literature$/;
 const CLASSIC_BEFORE = 1950;
@@ -50,10 +52,13 @@ export function genresFromSubjects(subjects: string[] | undefined | null, year?:
   const lower = subjects.slice(0, 60).map((s) => s.toLowerCase().trim()).filter((s) => s && !NOISE.test(s));
   const scores = new Map<string, number>();
   const add = (key: string, w: number) => scores.set(key, (scores.get(key) ?? 0) + w);
+  // A novel never lands in a nonfiction genre, whatever its other subjects say
+  // ("Inheritance and succession" on Bleak House is not a business book).
+  const novel = lower.some((s) => NOVEL_ANY.test(s));
   lower.forEach((s, i) => {
     const w = 60 - i;
     for (const g of GENRES) {
-      if (NONFICTION.has(g.key) && s.includes("fiction")) continue;
+      if (NONFICTION.has(g.key) && (novel || s.includes("fiction"))) continue;
       if (g.match.test(s)) add(g.key, w);
     }
     if (NATIONAL_LIT.test(s)) add(year != null && year < CLASSIC_BEFORE ? "classics" : "literary", w);
@@ -95,13 +100,19 @@ const APPLE: Array<[RegExp, string]> = [
 ];
 const APPLE_SKIP = /^(books|fiction|nonfiction|non-fiction|sci-fi & fantasy|kids)$/i;
 
+const APPLE_NOVEL = /fiction|classics|literature|romance|mysteries|thrillers|sci-fi|fantasy|horror|poetry/i;
+
 export function genresFromApple(names: string[] | undefined | null): string[] {
+  const trueCrime = (names ?? []).some((n) => /true crime/i.test(n));
+  const novel = !trueCrime && (names ?? []).some((n) => APPLE_NOVEL.test(n));
   const out: string[] = [];
   for (const n of names ?? []) {
     if (APPLE_SKIP.test(n.trim())) continue;
     const hit = APPLE.find(([re]) => re.test(n));
+    if (hit && novel && NONFICTION.has(hit[1])) continue;
     if (hit && !out.includes(hit[1])) out.push(hit[1]);
     if (out.length >= 3) break;
   }
-  return out;
+  // Apple files true crime next to thrillers; it isn't a mystery novel.
+  return trueCrime ? out.filter((g) => g !== "mystery") : out;
 }

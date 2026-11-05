@@ -27,6 +27,14 @@ describe("genresFromSubjects", () => {
     expect(g).toContain("classics");
     expect(g).not.toContain("mystery");
   });
+  it("never files a novel under a nonfiction genre", () => {
+    const BLEAK_HOUSE = ["Fiction", "Lawyers", "Inheritance and succession", "Trials (Probate wills)", "England", "London (England)", "English literature", "Social classes", "Classic Literature"];
+    const PORTRAIT = ["Americans", "Europe", "Inheritance and succession", "Married women", "Fiction", "Young women", "Psychological fiction"];
+    expect(genresFromSubjects(BLEAK_HOUSE, 1853)).not.toContain("business");
+    expect(genresFromSubjects(BLEAK_HOUSE, 1853)[0]).toBe("classics");
+    expect(genresFromSubjects(PORTRAIT, 1881)).toEqual(["literary"]);
+    expect(genresFromSubjects(["Business", "Success in business", "Novels"], 2019)).not.toContain("business");
+  });
   it("finds the newer genres", () => {
     expect(genresFromSubjects(["Management", "Leadership", "Communication in management", "Interpersonal communication"], 2017)).toEqual(["business"]);
     expect(genresFromSubjects(["Murder", "Kansas", "True crime", "Criminals", "Case studies"], 1966)).toEqual(["truecrime"]);
@@ -38,8 +46,9 @@ describe("genresFromSubjects", () => {
   it("reads Apple's genre names when Open Library can't place a book", async () => {
     const { genresFromApple } = await import("./genres");
     expect(genresFromApple(["Management & Leadership", "Books", "Business & Personal Finance"])).toEqual(["business"]);
-    expect(genresFromApple(["Mysteries & Thrillers", "True Crime"])).toEqual(["mystery", "truecrime"]);
+    expect(genresFromApple(["Mysteries & Thrillers", "True Crime"])).toEqual(["truecrime"]);
     expect(genresFromApple(["Sci-Fi & Fantasy", "Fiction"])).toEqual([]);
+    expect(genresFromApple(["Classics", "Self-Improvement"])).toEqual(["classics"]);
   });
   it("leaves bare children's books and empty lists alone", () => {
     expect(genresFromSubjects(["Fiction", "Juvenile fiction", "Cats"], 2004)).toEqual([]);
