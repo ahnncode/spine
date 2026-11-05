@@ -28,6 +28,7 @@ import {
 } from "@/lib/data";
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { BookSummary } from "@/components/BookSummary";
+import { ElsewhereRatings } from "@/components/ElsewhereRatings";
 import { formatScore } from "@/lib/ranking";
 
 export function BookPage() {
@@ -210,6 +211,7 @@ function Inner() {
                 </div>
               </div>
             </div>
+            <ElsewhereRatings book={book} />
 
             {friends.length > 0 && (
               <>
