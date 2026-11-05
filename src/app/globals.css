@@ -684,3 +684,5 @@ button.stamp--locked { border: 1.5px dashed #bdbcb6; }
 .link-plain { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
 .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: break-word; }
 .action-btn { white-space: nowrap; }
+.reading-card--row { width: 268px; flex-direction: row; align-items: stretch; gap: 12px; }
+.reading-card__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }

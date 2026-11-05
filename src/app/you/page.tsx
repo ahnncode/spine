@@ -157,23 +157,25 @@ function You() {
             <h2 className="h2" style={{ marginTop: 20 }}>Reading now</h2>
             <div className="reading-strip">
               {reading.map((e) => (
-                <div key={e.id} className="reading-card">
-                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`}>
-                    <Cover book={e.book} width={64} />
+                <div key={e.id} className="reading-card reading-card--row">
+                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`} style={{ flexShrink: 0 }}>
+                    <Cover book={e.book} width={56} />
                   </Link>
-                  <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none" }}>{e.book.title}</Link>
-                  {(() => {
-                    const ra = activeFor(readAlongs, e.book_id, profile?.id);
-                    return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
-                  })()}
-                  {e.progress_pct != null && (
-                    <div style={{ width: "100%" }} aria-label={`${e.progress_pct}% read`}>
-                      <div className="reading-card__bar"><span style={{ width: `${e.progress_pct}%` }} /></div>
-                      <div className="m muted" style={{ fontSize: 11, marginTop: 4 }}>{e.progress_pct}%</div>
+                  <div className="reading-card__main">
+                    <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none", minHeight: 0 }}>{e.book.title}</Link>
+                    {(() => {
+                      const ra = activeFor(readAlongs, e.book_id, profile?.id);
+                      return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
+                    })()}
+                    <div style={{ marginTop: "auto" }} aria-label={e.progress_pct != null ? `${e.progress_pct}% read` : "Not checked in yet"}>
+                      <div className="reading-card__bar"><span style={{ width: `${e.progress_pct ?? 0}%` }} /></div>
+                      <div className="m muted" style={{ fontSize: 12, marginTop: 4 }}>{e.progress_pct != null ? `${e.progress_pct}%` : "Just started"}</div>
                     </div>
-                  )}
-                  <button className="small-btn" onClick={() => setChecking(e)}>Check in</button>
-                  <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)" }}>Finished? Rank it</Link>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <button className="small-btn" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} onClick={() => setChecking(e)}>Check in</button>
+                      <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)", whiteSpace: "nowrap" }}>Rank it</Link>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
