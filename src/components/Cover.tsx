@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { coverCandidates, coverColors, dedupeKey, type BookInput } from "@/lib/books";
+import { rescueCover } from "@/lib/coverRescue";
 
 interface Props {
   book: BookInput;
@@ -16,7 +17,11 @@ interface Props {
  */
 export function Cover({ book, width, className }: Props) {
   const height = Math.round(width * 1.5);
-  const candidates = coverCandidates(book, width > 90 ? "L" : "M");
+  const known = coverCandidates(book, width > 90 ? "L" : "M");
+  // A replacement found after every known picture failed (see coverRescue).
+  const [rescued, setRescued] = useState<{ key: string; url: string } | null>(null);
+  const bookKey = dedupeKey(book.title, book.author);
+  const candidates = rescued?.key === bookKey && !known.includes(rescued.url) ? [...known, rescued.url] : known;
   // Index of the image being tried; moves on when one is missing or a placeholder.
   const sig = candidates.join("|");
   const [tried, setTried] = useState({ sig, n: 0 });
@@ -24,8 +29,22 @@ export function Cover({ book, width, className }: Props) {
   const url = candidates[attempt];
   const failed = attempt >= candidates.length;
   const fail = () => setTried({ sig, n: attempt + 1 });
-  const { bg, fg } = coverColors(dedupeKey(book.title, book.author));
+  const { bg, fg } = coverColors(bookKey);
   const showArt = url && !failed;
+
+  // Had pictures, and all of them failed: try to find a working one.
+  const allFailed = failed && known.length > 0 && rescued?.key !== bookKey;
+  useEffect(() => {
+    if (!allFailed) return;
+    let live = true;
+    rescueCover(book).then((u) => {
+      if (live && u) setRescued({ key: bookKey, url: u });
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allFailed, bookKey]);
 
   // Shrink the title so its longest word fits the cover instead of being cut off.
   const longestWord = Math.max(1, ...book.title.split(/\s+/).map((w) => w.length));
