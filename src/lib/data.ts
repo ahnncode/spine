@@ -137,8 +137,19 @@ export async function ensureBooks(inputs: BookInput[]): Promise<Map<string, stri
     const key = dedupeKey(b.title, b.author);
     if (!rows.has(key)) rows.set(key, { ...b, dedupe_key: key });
   }
-  const list = [...rows.values()];
   const ids = new Map<string, string>();
+  // Books we already have under another spelling, an old merged title, or
+  // the same Open Library work: use those instead of making a second copy.
+  const all = [...rows.values()];
+  for (let i = 0; i < all.length; i += 200) {
+    const chunk = all.slice(i, i + 200);
+    const { data } = await supabase().rpc("resolve_books", {
+      p_keys: chunk.map((c) => c.dedupe_key),
+      p_works: chunk.map((c) => c.ol_work_key ?? null),
+    });
+    for (const r of (data ?? []) as { dedupe_key: string; book_id: string | null }[]) if (r.book_id) ids.set(r.dedupe_key, r.book_id);
+  }
+  const list = all.filter((b) => !ids.has(b.dedupe_key));
   // Chunks of 80 keep the lookup URL well under server limits, even with long titles.
   for (let i = 0; i < list.length; i += 80) {
     const chunk = list.slice(i, i + 80);

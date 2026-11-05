@@ -57,6 +57,29 @@ export function dedupeKey(title: string, author: string | null): string {
   return `${main.slice(0, 400)}|${surname.slice(0, 100)}`;
 }
 
+/**
+ * Two dedupe keys that are probably the same book: same surname, and titles
+ * that match word for word where one word may be cut short ("a confed of
+ * dunces" and "a confederacy of dunces"). Numbers must match exactly, so
+ * volume 1 and volume 10 stay apart.
+ */
+export function sameBookKey(a: string, b: string): boolean {
+  if (a === b) return true;
+  const [ta, sa = ""] = a.split("|");
+  const [tb, sb = ""] = b.split("|");
+  if (sa !== sb || !ta || !tb) return false;
+  const wa = ta.split(" ");
+  const wb = tb.split(" ");
+  if (wa.length !== wb.length) return false;
+  return wa.every((x, i) => {
+    const y = wb[i];
+    if (x === y) return true;
+    if (/\d/.test(x) || /\d/.test(y)) return false;
+    const [short, long] = x.length < y.length ? [x, y] : [y, x];
+    return short.length >= 3 && long.startsWith(short);
+  });
+}
+
 const PALETTE: Array<[string, string]> = [
   ["#1F3A5F", "#F2EBDD"],
   ["#3E6B48", "#F4F0E6"],

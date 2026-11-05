@@ -1,5 +1,5 @@
 import { englishAuthorName, isLatin } from "./authors";
-import { cleanTitle, dedupeKey, type BookInput } from "./books";
+import { cleanTitle, dedupeKey, sameBookKey, type BookInput } from "./books";
 import { genresFromApple, genresFromSubjects } from "./genres";
 import { findAppleBook } from "./applecovers";
 
@@ -120,9 +120,12 @@ function tidy(docs: OLDoc[], query: string): BookInput[] {
   for (const { d } of ranked) {
     const book = toBook(d);
     const key = dedupeKey(book.title, book.author);
-    const kept = byKey.get(key);
+    // Near-identical titles too: some entries cut a word short ("A Confed of Dunces").
+    const keptKey = byKey.has(key) ? key : [...byKey.keys()].find((k) => sameBookKey(k, key));
+    const kept = keptKey ? byKey.get(keptKey) : undefined;
     if (kept) {
       if (book.year && (!kept.year || book.year < kept.year)) kept.year = book.year;
+      if (keptKey !== key && key.length > keptKey!.length) kept.title = book.title;
       continue;
     }
     if (byKey.size < 20) byKey.set(key, book);
@@ -162,11 +165,11 @@ async function appleSearch(q: string, signal?: AbortSignal): Promise<BookInput[]
 /** Add Apple's finds that Open Library is missing: first if Open Library has nothing that fits the query. */
 function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInput[] {
   // Apple often lists several editions of one book; keep one, and none Open Library already has.
-  const seen = new Set(ol.map((b) => dedupeKey(b.title, b.author)));
+  const seen = ol.map((b) => dedupeKey(b.title, b.author));
   const extra = apple.filter((b) => {
     const k = dedupeKey(b.title, b.author);
-    if (seen.has(k)) return false;
-    seen.add(k);
+    if (seen.some((s) => sameBookKey(s, k))) return false;
+    seen.push(k);
     return true;
   });
   if (!extra.length) return ol;
