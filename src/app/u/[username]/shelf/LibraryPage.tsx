@@ -207,7 +207,7 @@ function Inner() {
                   <label className="sort-select">
                     <span className="visually-hidden">Sort by</span>
                     <select value={effectiveSort} onChange={(e) => setSort(e.target.value as Sort)}>
-                      {sorts.map((s) => <option key={s} value={s}>{SORT_LABEL[s]}</option>)}
+                      {sorts.map((s) => <option key={s} value={s}>{s === "rank" && isMe ? "My ranking" : SORT_LABEL[s]}</option>)}
                     </select>
                   </label>
                 </div>
