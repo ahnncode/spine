@@ -858,3 +858,6 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 /* Genre tags take the genre's colour (the same one its generated covers use). */
 .tag-chip--genre { background: color-mix(in srgb, var(--g) 13%, var(--surface)); border-color: transparent; color: color-mix(in srgb, var(--g) 75%, var(--ink)); }
 .tag-chip--genre[aria-pressed="true"] { background: var(--g); border-color: var(--g); color: var(--g-fg); }
+
+/* Pick-books progress on the feed: sticks above the tab bar while you scroll the covers. */
+.pick-bar { position: sticky; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px); z-index: 5; margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-l); background: var(--surface); border: 1px solid var(--line); box-shadow: 0 12px 24px -18px rgba(0,0,0,0.5); }

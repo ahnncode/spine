@@ -34,6 +34,7 @@ import { CheckInSheet } from "@/components/CheckInSheet";
 import { formatScore } from "@/lib/ranking";
 import { BookSkeleton } from "@/components/Skeleton";
 import { useCoverTint } from "@/components/useCoverTint";
+import { fixBookYear } from "@/lib/bookYear";
 
 export function BookPage() {
   return (
@@ -107,6 +108,20 @@ function Inner() {
   const tint = useCoverTint(book);
   const mine = useMemo(() => entries?.find((e) => e.book_id === id) ?? null, [entries, id]);
   const myRanked = useMemo(() => (entries ? rankEntries(entries).find((e) => e.book_id === id) : undefined), [entries, id]);
+
+  // On your shelf with a year that may be a reissue's: check for the original.
+  const onShelf = Boolean(mine);
+  useEffect(() => {
+    if (!book || !onShelf) return;
+    let live = true;
+    fixBookYear(book).then((y) => {
+      if (live && y) setBook((b) => (b ? { ...b, year: y } : b));
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [book?.id, onShelf]);
 
   if (book === null) {
     return (

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dedupeKey, type Book, type BookInput } from "@/lib/books";
-import { addToWant, ensureBook, fetchShelf, recommendations, startReading, type Entry } from "@/lib/data";
+import { addToWant, ensureBook, fetchShelf, rankEntries, recommendations, startReading, type Entry } from "@/lib/data";
 import { WeeklyPicks } from "@/components/WeeklyPicks";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { searchBooks } from "@/lib/openlibrary";
@@ -50,6 +50,17 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   const entryFor = (b: BookInput) =>
     byKey.get(dedupeKey(b.title, b.author)) ?? (b.ol_work_key ? byKey.get(`w:${b.ol_work_key}`) : undefined);
   const rankedCount = (entries || []).filter((e) => e.status === "ranked").length;
+  const myRanks = useMemo(() => new Map(rankEntries(entries || []).map((e) => [e.book_id, e])), [entries]);
+
+  // Opening this screen again ("Rank another"): start fresh, not on the last search.
+  // (The app keeps recent screens alive in the background, so state would survive.)
+  useEffect(() => {
+    if (mode !== "add") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuery("");
+    setResults(null);
+    setPicked(null);
+  }, [mode]);
   const reading = (entries || []).filter((e) => e.status === "reading");
 
   useEffect(() => {
@@ -257,7 +268,8 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                   <button
                     className="book-row"
                     style={{ width: "100%", background: "none", border: 0, borderBottom: "1px solid var(--line)", textAlign: "left" }}
-                    onClick={() => setPicked(b)}
+                    // Already ranked: go to its page (re-rank lives there) instead of asking again.
+                    onClick={() => (entry?.status === "ranked" ? act(b, "page") : setPicked(b))}
                   >
                     <Cover book={b} width={44} />
                     <div className="book-row__body">
@@ -266,7 +278,9 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                     </div>
                     {entry && (
                       <span className={`pill ${entry.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>
-                        {{ ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[entry.status]}
+                        {entry.status === "ranked" && myRanks.get(entry.book_id)
+                          ? `#${myRanks.get(entry.book_id)!.rank} · ${formatScore(myRanks.get(entry.book_id)!.score)}`
+                          : { ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[entry.status]}
                       </span>
                     )}
                   </button>

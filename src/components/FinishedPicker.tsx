@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { today } from "@/lib/data";
 
 function formatDay(iso: string): string {
@@ -25,6 +26,21 @@ export function FinishedPicker({
   const t = today();
   const y = today(1);
   const custom = value !== null && value !== t && value !== y;
+  const dateRef = useRef<HTMLInputElement>(null);
+
+  // Open the phone's or browser's own calendar. Desktop Chrome only opens it
+  // from its small calendar icon, so ask for it directly where we can.
+  function openCalendar() {
+    const el = dateRef.current;
+    if (!el) return;
+    try {
+      if (typeof el.showPicker === "function") return el.showPicker();
+    } catch {
+      /* not allowed here: fall back below */
+    }
+    el.focus();
+    el.click();
+  }
 
   return (
     <div role="group" aria-label={label} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -32,18 +48,21 @@ export function FinishedPicker({
       <div className="tag-list">
         <button type="button" className="tag-chip" aria-pressed={value === t} onClick={() => onChange(t)}>Today</button>
         <button type="button" className="tag-chip" aria-pressed={value === y} onClick={() => onChange(y)}>Yesterday</button>
-        {/* A real date field laid over the chip, so tapping it opens the phone's own date picker. */}
-        <label className="tag-chip" data-pressed={custom || undefined} style={{ position: "relative", display: "inline-flex", alignItems: "center", cursor: "pointer" }}>
-          {custom ? formatDay(value) : "Pick a date"}
+        <span style={{ position: "relative", display: "inline-flex" }}>
+          <button type="button" className="tag-chip" aria-pressed={custom} onClick={openCalendar}>
+            {custom ? formatDay(value) : "Pick a date"}
+          </button>
           <input
+            ref={dateRef}
             type="date"
-            aria-label="Pick the date you finished"
+            tabIndex={-1}
+            aria-hidden="true"
             max={t}
             value={custom ? value : ""}
             onChange={(e) => e.target.value && onChange(e.target.value)}
-            style={{ position: "absolute", inset: 0, opacity: 0, width: "100%", height: "100%", cursor: "pointer" }}
+            style={{ position: "absolute", left: 0, bottom: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none", border: 0, padding: 0 }}
           />
-        </label>
+        </span>
         <button type="button" className="tag-chip" aria-pressed={value === null} onClick={() => onChange(null)}>Don&rsquo;t remember</button>
       </div>
     </div>

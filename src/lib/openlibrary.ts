@@ -113,18 +113,21 @@ function tidy(docs: OLDoc[], query: string): BookInput[] {
   const ranked = docs
     .map((d, i) => ({ d, score: rankScore(d, query, i) }))
     .sort((a, b) => b.score - a.score);
-  // One result per title + author.
-  const seen = new Set<string>();
-  const out: BookInput[] = [];
+  // One result per title + author. Open Library often has the same book as
+  // several "works" (reissues, new editions); keep the best-ranked one but the
+  // earliest year any of them gives, so a 1983 novel doesn't say 2014.
+  const byKey = new Map<string, BookInput>();
   for (const { d } of ranked) {
     const book = toBook(d);
     const key = dedupeKey(book.title, book.author);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(book);
-    if (out.length >= 20) break;
+    const kept = byKey.get(key);
+    if (kept) {
+      if (book.year && (!kept.year || book.year < kept.year)) kept.year = book.year;
+      continue;
+    }
+    if (byKey.size < 20) byKey.set(key, book);
   }
-  return out;
+  return [...byKey.values()];
 }
 
 const cache = new Map<string, BookInput[]>();
@@ -150,15 +153,22 @@ async function appleSearch(q: string, signal?: AbortSignal): Promise<BookInput[]
     .map((r) => ({
       title: cleanTitle(r.trackName!),
       author: r.artistName!.split(/\s*(?:&|,| and )\s*/)[0],
-      year: r.releaseDate ? Number(r.releaseDate.slice(0, 4)) : null,
+      // Apple's date is when that ebook came out, not when the book did: leave it out.
+      year: null,
       cover_url: r.artworkUrl100 ? r.artworkUrl100.replace(/\/\d+x\d+bb\.(jpg|png)$/, "/400x600bb.jpg") : null,
     }));
 }
 
 /** Add Apple's finds that Open Library is missing: first if Open Library has nothing that fits the query. */
 function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInput[] {
+  // Apple often lists several editions of one book; keep one, and none Open Library already has.
   const seen = new Set(ol.map((b) => dedupeKey(b.title, b.author)));
-  const extra = apple.filter((b) => !seen.has(dedupeKey(b.title, b.author)));
+  const extra = apple.filter((b) => {
+    const k = dedupeKey(b.title, b.author);
+    if (seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
   if (!extra.length) return ol;
   const q = words(query);
   const olFits = ol.some((b) => covers(b, q));

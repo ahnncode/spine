@@ -27,6 +27,7 @@ import type { Book } from "@/lib/books";
 import { formatScore } from "@/lib/ranking";
 import { FeedSkeleton } from "@/components/Skeleton";
 import { useUnread } from "@/components/useUnread";
+import { PickBooks } from "@/components/PickBooks";
 
 export default function FeedPage() {
   return (
@@ -100,6 +101,8 @@ function Feed() {
   const myStatus = useMemo(() => new Map((entries || []).map((e) => [e.book_id, e.status])), [entries]);
   const { streak, reloadCheckins } = useStreak(entries);
   const reading = (entries || []).filter((e) => e.status === "reading");
+  // Signed up but hasn't ranked or queued anything yet.
+  const newReader = entries !== null && entries !== undefined && !entries.some((e) => e.status === "ranked" || e.status === "unsorted");
 
   return (
     <div className="app">
@@ -158,7 +161,10 @@ function Feed() {
           </section>
         )}
 
-        <div className="segmented" role="tablist" aria-label="Feed" style={{ marginTop: 16 }}>
+        {/* Nothing ranked yet: start with books, not an empty feed. */}
+        {newReader && <PickBooks embedded />}
+
+        <div className="segmented" role="tablist" aria-label="Feed" style={{ marginTop: newReader ? 32 : 16 }}>
           <button role="tab" aria-selected={scope === "following"} onClick={() => setScope("following")}>Following</button>
           <button role="tab" aria-selected={scope === "you"} onClick={() => setScope("you")}>You</button>
         </div>
@@ -166,7 +172,7 @@ function Feed() {
         {error && <p className="error" role="alert">{error}</p>}
         {!data && !error && <FeedSkeleton />}
 
-        {data && data.items.length === 0 && data.together.length === 0 && scope === "you" && (
+        {data && !newReader && data.items.length === 0 && data.together.length === 0 && scope === "you" && (
           <div className="empty">
             <p className="h2">Nothing posted yet</p>
             <p style={{ margin: "0 0 16px", fontSize: 14 }}>Rank a book or check in, and it&rsquo;ll show up here.</p>
@@ -174,7 +180,7 @@ function Feed() {
           </div>
         )}
 
-        {data && data.items.length === 0 && data.together.length === 0 && scope === "following" && (
+        {data && !newReader && data.items.length === 0 && data.together.length === 0 && scope === "following" && (
           <div className="card card--ink" style={{ marginTop: 16 }}>
             <p className="g" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05, margin: 0 }}>
               {data.following ? "Quiet in here." : "Your feed needs friends."}
