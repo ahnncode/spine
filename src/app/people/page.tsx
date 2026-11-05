@@ -88,6 +88,11 @@ function People() {
           <SearchIcon size={20} />
           <label htmlFor="pq" className="visually-hidden">Search by name or username</label>
           <input id="pq" className="input" type="search" placeholder="Name or @username" value={query} onChange={(e) => setQuery(e.target.value)} autoCapitalize="none" autoComplete="off" />
+          {query && (
+            <button type="button" className="search-clear" aria-label="Clear search" onClick={() => { setQuery(""); document.getElementById("pq")?.focus(); }}>
+              <span aria-hidden="true">×</span>
+            </button>
+          )}
         </div>
 
         {shown ? (

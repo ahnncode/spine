@@ -306,7 +306,11 @@ img { display: block; max-width: 100%; }
 /* ---------- Search ---------- */
 .search-box { position: relative; margin-top: 16px; }
 .search-box svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); }
-.search-box .input { width: 100%; padding-left: 46px; }
+.search-box .input { width: 100%; padding-left: 46px; padding-right: 48px; }
+/* Our own clear button, so every browser gets one (and the native one doesn't double up). */
+.search-box input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.search-clear { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; border: 0; background: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.search-clear span { width: 24px; height: 24px; border-radius: 12px; background: var(--muted); color: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 18px; line-height: 1; font-weight: 600; }
 
 /* ---------- Drop zone ---------- */
 .drop {

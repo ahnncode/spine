@@ -143,6 +143,11 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             onChange={(e) => setQuery(e.target.value)}
             autoComplete="off"
           />
+          {query && (
+            <button type="button" className="search-clear" aria-label="Clear search" onClick={() => { setQuery(""); inputRef.current?.focus(); }}>
+              <span aria-hidden="true">×</span>
+            </button>
+          )}
         </div>
 
         {/* "@sam" is a person, not a book: send it to people search. */}
