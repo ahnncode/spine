@@ -862,3 +862,9 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 
 /* Pick-books progress on the feed: sticks above the tab bar while you scroll the covers. */
 .pick-bar { position: sticky; bottom: calc(var(--tabbar-h) + var(--safe-bottom) + 8px); z-index: 5; margin-top: 16px; padding: 12px 14px; border-radius: var(--radius-l); background: var(--surface); border: 1px solid var(--line); box-shadow: 0 12px 24px -18px rgba(0,0,0,0.5); }
+
+/* Read / listened */
+.format-chip { display: inline-flex; align-items: center; gap: 6px; }
+.format-chip__icon { display: inline-flex; gap: 2px; }
+/* The headphones mark in a cover's corner. */
+.cover__listen { position: absolute; right: 5%; bottom: 4%; z-index: 2; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; background: rgba(17,17,17,0.78); color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }

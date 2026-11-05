@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { coverCandidates, coverColors, dedupeKey, type BookInput } from "@/lib/books";
 import { rescueCover } from "@/lib/coverRescue";
+import { HeadphonesGlyph } from "./FormatToggle";
 
 /** How long to wait for a picture before trying the next one. */
 const SLOW_MS = 8000;
@@ -12,13 +13,15 @@ interface Props {
   width: number;
   /** Show the generated title/author even when real art loads (never, by default). */
   className?: string;
+  /** Listened to (audiobook): a small headphones mark in the corner. */
+  listened?: boolean;
 }
 
 /**
  * Real cover art from Open Library when it exists; otherwise a typographic
  * cover in the app's palette so every shelf still looks designed.
  */
-export function Cover({ book, width, className }: Props) {
+export function Cover({ book, width, className, listened }: Props) {
   const height = Math.round(width * 1.5);
   const known = coverCandidates(book, width > 90 ? "L" : "M");
   // A replacement found after every known picture failed (see coverRescue).
@@ -88,6 +91,11 @@ export function Cover({ book, width, className }: Props) {
             </div>
           )}
         </div>
+      )}
+      {listened && width >= 36 && (
+        <span className="cover__listen" style={{ width: Math.round(width * 0.24), height: Math.round(width * 0.24) }} title="Listened">
+          <HeadphonesGlyph size={Math.max(9, Math.round(width * 0.14))} />
+        </span>
       )}
       {showArt && (
         // eslint-disable-next-line @next/next/no-img-element

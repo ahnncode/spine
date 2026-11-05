@@ -156,16 +156,16 @@ export async function GET(req: NextRequest) {
 
   if (card.kind === "date") {
     const [{ data: rankedRows }, { data: shelfRows }] = await Promise.all([
-      sb.from("ranked_entries").select(`score, overall_rank, finished_on, book:books(${BOOK_FIELDS}, pages, genres, year)`).eq("user_id", uid).order("overall_rank"),
+      sb.from("ranked_entries").select(`score, overall_rank, finished_on, format, book:books(${BOOK_FIELDS}, pages, genres, year)`).eq("user_id", uid).order("overall_rank"),
       sb.from("shelf_entries").select("status, started_on, progress_pct, book:books(title)").eq("user_id", uid).in("status", ["want", "reading"]),
     ]);
-    type R = { score: number | string; finished_on: string | null; book: PublicBookCard & { pages: number | null; genres: string[] | null; year: number | null } };
+    type R = { score: number | string; finished_on: string | null; format?: string | null; book: PublicBookCard & { pages: number | null; genres: string[] | null; year: number | null } };
     const ranked = (rankedRows ?? []) as unknown as R[];
     if (ranked.length < 3) return new Response("Rank at least 3 books to get a dating profile", { status: 409 });
     const shelf = (shelfRows ?? []) as unknown as { status: string; started_on: string | null; progress_pct: number | null; book: { title: string } }[];
     const profile = buildDatingProfile({
       name: nameOf(me),
-      ranked: ranked.map((r) => ({ title: r.book.title, score: Number(r.score), genres: r.book.genres ?? [], pages: r.book.pages, year: r.book.year, finished_on: r.finished_on })),
+      ranked: ranked.map((r) => ({ title: r.book.title, score: Number(r.score), genres: r.book.genres ?? [], pages: r.book.pages, year: r.book.year, finished_on: r.finished_on, listened: r.format === "listen" || r.format === "both" })),
       wantCount: shelf.filter((e) => e.status === "want").length,
       reading: shelf.filter((e) => e.status === "reading").map((e) => ({ title: e.book.title, started_on: e.started_on, progress_pct: e.progress_pct })),
       today: new Date().toISOString().slice(0, 10),

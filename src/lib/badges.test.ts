@@ -4,9 +4,9 @@ import { BADGE, BADGES, isEarlyAdopter, progressLabel, sortForCase } from "./bad
 
 describe("badges", () => {
   it("has the same keys as the database", () => {
-    const sql = readFileSync("supabase/migrations/20261105040000_secret_badges.sql", "utf8");
+    const sql = readFileSync("supabase/migrations/20261105100000_listening.sql", "utf8");
     const keys = [...sql.matchAll(/\('([a-z_]+)',\s+[a-z_0-9:]+/g)].map((m) => m[1]);
-    expect(BADGES).toHaveLength(42);
+    expect(BADGES).toHaveLength(44);
     expect(new Set(keys)).toEqual(new Set(BADGES.map((b) => b.key)));
   });
 

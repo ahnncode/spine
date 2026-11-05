@@ -13,6 +13,8 @@ export interface DateBook {
   pages: number | null;
   year: number | null;
   finished_on: string | null;
+  /** Listened to as an audiobook (or both). */
+  listened?: boolean;
 }
 
 export interface DateInput {
@@ -95,6 +97,8 @@ export function buildDatingProfile(d: DateInput): DateProfile {
   const old = withYear.filter((b) => (b.year as number) < 1900 && b !== top && b !== longest).sort((a, b) => b.score - a.score)[0];
   if (old) green.push(`Has read ${short(old.title, 28)}. On purpose.`);
   if (lastFinish && days(lastFinish, d.today) <= 14) green.push("Actually finishes things.");
+  const heard = d.ranked.filter((b) => b.listened).length;
+  if (heard >= 3 && heard * 2 >= d.ranked.length) green.push("Reads with their ears. Great on road trips.");
   for (const fill of ["Will tell you when a book is worth it.", "Brings a book to the bar, but puts it away for you.", "Remembers every plot. Will not spoil them.", "Will lend you their favorite. Wants it back."]) {
     if (green.length >= 4) break;
     if (!green.includes(fill)) green.push(fill);

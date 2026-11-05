@@ -18,7 +18,7 @@ import { useCoverBackfill } from "@/components/useCoverBackfill";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
-import { rankEntries, type Entry, type RankedEntry } from "@/lib/data";
+import { rankEntries, type Entry, type RankedEntry, isListened } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { RowsSkeleton } from "@/components/Skeleton";
 import { ReadingCard } from "@/components/ReadingCard";
@@ -165,7 +165,7 @@ function Shelf() {
                   <li key={e.id}>
                     <button className="book-row" style={rowButton} onClick={() => setSheet(e)}>
                       <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}`}>{e.rank}</span>
-                      <Cover book={e.book} width={44} />
+                      <Cover book={e.book} width={44} listened={isListened(e.format)} />
                       <span className="book-row__body">
                         <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
                         <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>
@@ -294,7 +294,7 @@ function PlainList({ items, emptyTitle, onOpen }: { items: Entry[]; emptyTitle: 
       {items.map((e) => (
         <li key={e.id}>
           <button className="book-row" style={rowButton} onClick={() => onOpen(e)}>
-            <Cover book={e.book} width={44} />
+            <Cover book={e.book} width={44} listened={isListened(e.format)} />
             <span className="book-row__body">
               <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
               <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>

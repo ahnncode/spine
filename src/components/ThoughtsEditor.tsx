@@ -2,7 +2,8 @@
 
 import { useMentionPicker } from "@/components/Mentions";
 import { useState } from "react";
-import { saveFinishedOn, saveThoughts, type Entry } from "@/lib/data";
+import { saveFinishedOn, saveThoughts, setFormat, type Entry, type Format } from "@/lib/data";
+import { FormatToggle } from "@/components/FormatToggle";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { NOTE_MAX, TAG_LABEL, tagsFor, type Tag } from "@/lib/thoughts";
@@ -19,7 +20,7 @@ export function ThoughtsEditor({
   compact = false,
   showDate = true,
 }: {
-  entry: Pick<Entry, "id" | "note" | "tags" | "note_spoiler" | "finished_on">;
+  entry: Pick<Entry, "id" | "note" | "tags" | "note_spoiler" | "finished_on"> & { format?: Format };
   /** The book's genres: its main one picks the genre tags. */
   genres?: string[] | null;
   onSaved?: () => void | Promise<void>;
@@ -40,6 +41,19 @@ export function ThoughtsEditor({
   const [error, setError] = useState<string | null>(null);
 
   // The date saves the moment it's picked: no separate button to forget.
+  const [fmt, setFmt] = useState<Format>(entry.format ?? "read");
+  // Saves straight away, like the date.
+  async function pickFormat(v: Format) {
+    const before = fmt;
+    setFmt(v);
+    try {
+      await setFormat(entry.id, v);
+      await onDateSaved?.();
+    } catch {
+      setFmt(before);
+    }
+  }
+
   async function pickDate(v: string | null) {
     const before = finished;
     setFinished(v);
@@ -123,6 +137,9 @@ export function ThoughtsEditor({
       {showDate && <div style={{ marginTop: 12 }}>
         <FinishedPicker value={finished} onChange={pickDate} />
         {dateNote && <p className="muted" role="status" style={{ margin: "6px 0 0", fontSize: 12 }}>{dateNote}</p>}
+        <div style={{ marginTop: 14 }}>
+          <FormatToggle value={fmt} onChange={pickFormat} />
+        </div>
       </div>}
       {error && <p className="error" role="alert">{error}</p>}
       <button className="btn btn--outline btn--block" style={{ marginTop: 12 }} disabled={busy || saved} onClick={save}>

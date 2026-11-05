@@ -9,8 +9,9 @@ import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { FinishedPicker } from "@/components/FinishedPicker";
+import { FormatToggle } from "@/components/FormatToggle";
 import type { Book } from "@/lib/books";
-import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, today, type Entry, type RankedEntry } from "@/lib/data";
+import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, today, type Entry, type RankedEntry, setFormat, type Format } from "@/lib/data";
 import { BADGE } from "@/lib/badges";
 import { Medallion } from "@/components/Badge";
 import {
@@ -112,6 +113,8 @@ function Flow() {
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [finishedOn, setFinishedOn] = useState<string | null>(() => today());
+  // Read or listened: starts as Read (or what you said while reading it).
+  const [format, setFormatChoice] = useState<Format | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -150,8 +153,14 @@ function Flow() {
     try {
       // Re-ranking keeps the date already saved; a new finish uses the one picked here.
       await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, finishedOn: current ? undefined : finishedOn });
-      const [fresh, checkinDays, badges] = await Promise.all([
-        fetchShelf(),
+      let fresh = await fetchShelf();
+      const placed = fresh.find((e) => e.book_id === id);
+      // Save read/listened before badges are counted (All Ears, Both Ways).
+      if (placed && format && placed.format !== format) {
+        await setFormat(placed.id, format).catch(() => {});
+        fresh = fresh.map((e) => (e.id === placed.id ? { ...e, format } : e));
+      }
+      const [checkinDays, badges] = await Promise.all([
         fetchCheckinDays().catch(() => []),
         refreshBadges().catch(() => []),
       ]);
@@ -266,6 +275,9 @@ function Flow() {
             {!current && (
               <div style={{ alignSelf: "stretch", marginTop: 24 }}>
                 <FinishedPicker value={finishedOn} onChange={setFinishedOn} />
+                <div style={{ marginTop: 16 }}>
+                  <FormatToggle value={format ?? existing?.format ?? "read"} onChange={setFormatChoice} />
+                </div>
               </div>
             )}
             <h2 className="h2" style={{ alignSelf: "stretch", margin: current ? "28px 0 12px" : "22px 0 12px" }}>How did it land?</h2>

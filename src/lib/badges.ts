@@ -5,7 +5,7 @@ export type Rarity = "common" | "uncommon" | "rare" | "legendary";
 export type Glyph =
   | "book" | "box" | "bookmark" | "shelf" | "seal" | "worm" | "hundred" | "card" | "brick" | "pages" | "mountain"
   | "flame" | "leaf" | "infinity" | "sun" | "target" | "calendar" | "compass" | "globe" | "hourglass" | "quill"
-  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle"
+  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle" | "headphones" | "both"
   | "leap" | "pumpkin" | "anchor" | "abc" | "coffee" | "crystal" | "glasses" | "knock" | "spark";
 
 export interface BadgeDef {
@@ -49,6 +49,8 @@ export const BADGES: BadgeDef[] = [
   { key: "time_traveler", name: "Time Traveler", how: "Rank books from 4 different centuries", category: "breadth", rarity: "rare", glyph: "hourglass", unit: "century" },
   { key: "old_soul", name: "Old Soul", how: "Rank a book published before 1900", category: "breadth", rarity: "uncommon", glyph: "quill" },
   { key: "hot_off_the_press", name: "Hot Off the Press", how: "Finish a book the year it came out", category: "breadth", rarity: "uncommon", glyph: "press" },
+  { key: "all_ears", name: "All Ears", how: "Rank 10 books you listened to", category: "breadth", rarity: "uncommon", glyph: "headphones", unit: "audiobook" },
+  { key: "both_ways", name: "Both Ways", how: "Finish a book you read and one you listened to in the same month", category: "breadth", rarity: "uncommon", glyph: "both" },
   { key: "many_voices", name: "Many Voices", how: "Rank books by 50 different authors", category: "breadth", rarity: "rare", glyph: "voices", unit: "author" },
 
   { key: "decisive", name: "Decisive", how: "Answer 100 head-to-heads", category: "taste", rarity: "uncommon", glyph: "swords", unit: "head-to-head" },

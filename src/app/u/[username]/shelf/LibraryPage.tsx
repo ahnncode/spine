@@ -10,7 +10,7 @@ import { BackIcon, CloseIcon, LockIcon, SearchIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { WantButton } from "@/components/WantButton";
-import { fetchMyBlocks, fetchProfileByUsername, fetchShelf, rankEntries, type Entry, type Profile, type RankedEntry } from "@/lib/data";
+import { fetchMyBlocks, fetchProfileByUsername, fetchShelf, rankEntries, type Entry, type Profile, type RankedEntry, isListened } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { BUCKETS, formatScore, type Bucket } from "@/lib/ranking";
 import { RowsSkeleton } from "@/components/Skeleton";
@@ -232,7 +232,7 @@ function Inner() {
                         <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--line)" }}>
                           <Link href={`/book/${e.book_id}`} className="book-row" style={{ flex: 1, minWidth: 0, borderBottom: 0 }}>
                             {r && <span className={`book-row__rank ${r.rank <= 3 ? "book-row__rank--top" : ""}`}>{r.rank}</span>}
-                            <Cover book={e.book} width={44} />
+                            <Cover book={e.book} width={44} listened={isListened(e.format)} />
                             <span className="book-row__body">
                               <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
                               <span className="book-row__sub" style={{ display: "block" }}>{sub}</span>

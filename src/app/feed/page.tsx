@@ -21,8 +21,7 @@ import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
   commentCounts, feedReadAlongs, feedUser, fetchBooks, fetchFeed, type FeedReadAlong, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches,
-  type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType,
-} from "@/lib/data";
+  type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType, isListened } from "@/lib/data";
 import type { Book } from "@/lib/books";
 import { formatScore } from "@/lib/ranking";
 import { FeedSkeleton } from "@/components/Skeleton";
@@ -144,14 +143,14 @@ function Feed() {
                 <div key={e.id} className="reading-card" style={{ width: 230, flexDirection: "row", alignItems: "center", textAlign: "left" }}>
                   {/* Cover and title open the book; the progress area checks in. */}
                   <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`} style={{ flexShrink: 0 }}>
-                    <Cover book={e.book} width={40} />
+                    <Cover book={e.book} width={40} listened={isListened(e.format)} />
                   </Link>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ fontSize: 14, color: "inherit", textDecoration: "none", display: "block" }}>{e.book.title}</Link>
                     <button className="reading-card__checkin" onClick={() => setChecking(e)} aria-label={`Check in on ${e.book.title}`}>
                       <span className="bar" style={{ display: "block", height: 5, marginTop: 8 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
                       <span className="m muted" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
-                        {e.progress_pct != null ? `${e.progress_pct}% · ` : ""}<span style={{ color: "var(--cobalt-ink)", fontWeight: 700 }}>Check in</span>
+                        {e.progress_pct != null ? `${e.progress_pct}%${isListened(e.format) ? " listened" : ""} · ` : ""}<span style={{ color: "var(--cobalt-ink)", fontWeight: 700 }}>Check in</span>
                       </span>
                     </button>
                   </span>
@@ -213,14 +212,15 @@ function Feed() {
               const status = myStatus.get(bookId);
               const key = item.kind === "checkin" ? `c-${item.checkin.id}` : `${item.kind}-${item.entry.id}`;
               const isMe = uid === profile?.id;
+              const heard = item.kind !== "checkin" && isListened(item.entry.format);
               const verb =
                 item.kind === "ranked"
-                  ? "ranked a book"
+                  ? heard ? "listened to and ranked a book" : "ranked a book"
                   : item.kind === "checkin"
                     ? item.checkin.progress_pct != null && item.checkin.progress_pct > 0
                       ? `is ${item.checkin.progress_pct}% through`
                       : "checked in"
-                    : "started reading";
+                    : heard ? "started listening to" : "started reading";
               return (
                 <article key={key} className="feed-card">
                   <div className="feed-card__head">
@@ -233,7 +233,7 @@ function Feed() {
                     {!isMe && m?.match != null && <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>{m.match}% match</span>}
                   </div>
                   <Link href={`/book/${bookId}`} className="feed-card__book">
-                    <Cover book={book} width={item.kind === "ranked" ? 76 : 56} />
+                    <Cover book={book} width={item.kind === "ranked" ? 76 : 56} listened={heard} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="feed-card__title">{book.title}</div>
                       <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{book.author}</div>

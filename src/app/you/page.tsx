@@ -26,7 +26,7 @@ import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
 import type { Entry } from "@/lib/data";
-import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, updateMyProfile } from "@/lib/data";
+import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, updateMyProfile, isListened } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
@@ -189,7 +189,7 @@ function You() {
               {ranked.slice(0, 3).map((e) => (
                 <Link key={e.id} href={`/book/${e.book_id}`} className="top3-open__item" aria-label={`#${e.rank} ${e.book.title}`}>
                   <span className="top3-open__rank">{e.rank}</span>
-                  <Cover book={e.book} width={e.rank === 1 ? 112 : 92} />
+                  <Cover book={e.book} width={e.rank === 1 ? 112 : 92} listened={isListened(e.format)} />
                 </Link>
               ))}
             </div>

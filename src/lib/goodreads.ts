@@ -22,6 +22,13 @@ export interface ImportedBook {
   finishedOn: string | null;
   /** Your written Goodreads review, as plain text. */
   review: string | null;
+  /** Listened (an audiobook edition) or read. */
+  format: "read" | "listen";
+}
+
+/** Goodreads' Binding / StoryGraph's Format column → listened or read. */
+export function formatFrom(edition: string | undefined | null): "read" | "listen" {
+  return /audio|audible|mp3|cassette/i.test(edition ?? "") ? "listen" : "read";
 }
 
 export interface ImportSummary {
@@ -122,6 +129,7 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
       avgRating: parseFloat(row["Average Rating"] || "0") || 0,
       finishedOn: status === "ranked" || status === "unsorted" ? toDate(row["Date Read"]) : null,
       review: cleanReview(row["My Review"]),
+      format: formatFrom(row["Binding"]),
     });
   }
 

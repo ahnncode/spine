@@ -3,8 +3,9 @@
 import { useMentionPicker } from "@/components/Mentions";
 import Link from "next/link";
 import { useState } from "react";
-import { checkIn, type Entry } from "@/lib/data";
+import { checkIn, type Entry, isListened, setFormat, type Format } from "@/lib/data";
 import { CHECKIN_NOTE_MAX, VIBES } from "@/lib/thoughts";
+import { FormatToggle } from "./FormatToggle";
 import { Cover } from "./Cover";
 
 /**
@@ -12,6 +13,11 @@ import { Cover } from "./Cover";
  * know the page count, otherwise by percent.
  */
 export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose: () => void; onDone: () => void | Promise<void> }) {
+  const [fmt, setFmt] = useState<Format>(entry.format ?? "read");
+  function pickFormat(v: Format) {
+    setFmt(v);
+    setFormat(entry.id, v).catch(() => setFmt(entry.format ?? "read"));
+  }
   const pages = entry.book.pages ?? null;
   const start = entry.progress_pct ?? 0;
   const [pct, setPct] = useState<number>(start);
@@ -53,7 +59,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
         <div className="sheet__grab" />
         <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
           <Link href={`/book/${entry.book_id}`} aria-label={`${entry.book.title}: book page`} style={{ flexShrink: 0 }}>
-            <Cover book={entry.book} width={72} />
+            <Cover book={entry.book} width={72} listened={isListened(entry.format)} />
           </Link>
           <div style={{ minWidth: 0 }}>
             <p className="eyebrow">{doneToday ? "Checked in today" : "Reading check-in"}</p>
@@ -66,9 +72,13 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           </div>
         </div>
 
+        <div style={{ marginTop: 20 }}>
+          <FormatToggle value={fmt} onChange={pickFormat} label="Reading or listening?" />
+        </div>
+
         <div style={{ marginTop: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <label htmlFor="progress" style={{ fontWeight: 600, fontSize: 14 }}>How far are you?</label>
+            <label htmlFor="progress" style={{ fontWeight: 600, fontSize: 14 }}>{isListened(fmt) ? "How far have you listened?" : "How far are you?"}</label>
             <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{pct}%</span>
           </div>
           <input

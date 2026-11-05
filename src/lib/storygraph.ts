@@ -1,5 +1,5 @@
 import { cleanTitle, dedupeKey } from "./books";
-import { cleanReview, summarize, toDate, type ImportStatus, type ImportSummary, type ImportedBook } from "./goodreads";
+import { cleanReview, summarize, toDate, type ImportStatus, type ImportSummary, type ImportedBook, formatFrom } from "./goodreads";
 import type { Bucket } from "./ranking";
 
 type Row = Record<string, string | undefined>;
@@ -70,6 +70,7 @@ export function parseStoryGraph(rows: Row[]): ImportSummary {
       avgRating: 0,
       finishedOn: status === "ranked" || status === "unsorted" ? toDate((row["Last Date Read"] || "").split("-")[0]) : null,
       review: cleanReview(row["Review"]),
+      format: formatFrom(row["Format"]),
     });
   }
 

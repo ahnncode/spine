@@ -10,6 +10,10 @@ import { isRemoving } from "./toast";
 
 export type Status = "ranked" | "want" | "unsorted" | "reading";
 
+/** Read, listened (audiobook), or both. */
+export type Format = "read" | "listen" | "both";
+export const isListened = (f: Format | null | undefined) => f === "listen" || f === "both";
+
 export interface Entry {
   id: string;
   user_id: string;
@@ -31,6 +35,8 @@ export interface Entry {
   note: string | null;
   tags: string[];
   note_spoiler: boolean;
+  /** How you took it in. Doesn't affect ranking. */
+  format: Format;
   source: string;
   created_at: string;
   book: Book;
@@ -62,7 +68,7 @@ export interface Profile {
 }
 
 const ENTRY_SELECT =
-  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, manual_score, note, tags, note_spoiler, source, created_at, book:books(*)";
+  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, manual_score, note, tags, note_spoiler, format, source, created_at, book:books(*)";
 
 export async function myId(): Promise<string> {
   const { data } = await supabase().auth.getSession();
@@ -231,6 +237,12 @@ export async function setBookGenre(bookId: string, genre: string): Promise<boole
 }
 
 /** Save backup cover art for a book (null records that there isn't any). */
+/** Read, listened or both, for one shelf entry. */
+export async function setFormat(entryId: string, format: Format): Promise<void> {
+  const { error } = await supabase().from("shelf_entries").update({ format }).eq("id", entryId);
+  if (error) throw error;
+}
+
 export async function setBookCover(bookId: string, url: string | null): Promise<void> {
   const { error } = await supabase().rpc("set_book_cover", { p_book: bookId, p_url: url });
   if (error) throw error;
@@ -447,6 +459,7 @@ export async function importGoodreads(
       // Date read stands in for when it was ranked, so imports don't flood friends' feeds.
       ranked_at: b.status === "ranked" ? (b.finishedOn ? `${b.finishedOn}T12:00:00Z` : "2000-01-01T00:00:00Z") : null,
       note: b.review,
+      format: b.format,
       source: b.source,
     }));
 
@@ -465,6 +478,15 @@ export async function importGoodreads(
     .filter((x): x is { id: string; date: string } => Boolean(x.id && x.date));
   for (const f of fills) {
     await supabase().from("shelf_entries").update({ finished_on: f.date }).eq("id", f.id).is("finished_on", null);
+  }
+  // Same for audiobooks: books already here (as Read) that the file says you listened to.
+  const byBook = new Map(existing.map((e) => [e.book_id, e]));
+  const heard = books
+    .filter((b) => b.format === "listen")
+    .map((b) => byBook.get(ids.get(b.key) ?? ""))
+    .filter((e): e is Entry => Boolean(e) && e!.format === "read");
+  for (const e of heard) {
+    await supabase().from("shelf_entries").update({ format: "listen" }).eq("id", e.id).eq("format", "read");
   }
   onProgress(1, "Done");
   return { added: rows.length, skipped: books.length - rows.length, dated: fills.length };
@@ -649,10 +671,11 @@ export interface ScoredEntry {
   note: string | null;
   tags: string[];
   note_spoiler: boolean;
+  format: Format;
   book: Book;
 }
 
-const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, note, tags, note_spoiler, book:books(*)";
+const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, note, tags, note_spoiler, format, book:books(*)";
 
 /** People you follow who ranked this book. */
 export async function friendsOnBook(bookId: string, friendIds: string[]): Promise<ScoredEntry[]> {

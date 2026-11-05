@@ -20,8 +20,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import {
   block, fetchBadges, fetchFollowing, fetchMyBlocks, fetchProfileByUsername, fetchShelf, followCounts, followsMe, rankEntries, report, tasteMatches, unblock,
-  type Entry, type Match, type Profile,
-} from "@/lib/data";
+  type Entry, type Match, type Profile, isListened } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
 import { passport, readInYear } from "@/lib/stats";
 import { ProfileSkeleton } from "@/components/Skeleton";
@@ -183,7 +182,7 @@ function Inner() {
                   <div className="top3" aria-label="Their top three">
                     {ranked.slice(0, 3).map((e) => (
                       <Link key={e.id} href={`/book/${e.book_id}`} className="top3__item" aria-label={`#${e.rank} ${e.book.title}`}>
-                        <Cover book={e.book} width={96} />
+                        <Cover book={e.book} width={96} listened={isListened(e.format)} />
                         <span className="top3__rank m">#{e.rank}</span>
                       </Link>
                     ))}
@@ -197,7 +196,7 @@ function Inner() {
                       {reading.map((e) => (
                         <div key={e.id} className="reading-card">
                           <Link href={`/book/${e.book_id}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-                            <Cover book={e.book} width={64} />
+                            <Cover book={e.book} width={64} listened={isListened(e.format)} />
                             <span className="reading-card__title">{e.book.title}</span>
                           </Link>
                           <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>

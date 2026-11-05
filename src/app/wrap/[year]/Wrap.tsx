@@ -9,7 +9,8 @@ import { Cover } from "@/components/Cover";
 import { BackIcon, ShareIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { useShelf } from "@/components/useShelf";
-import { fetchFollowing, fetchProfiles, rankEntries, tasteMatches, type Profile } from "@/lib/data";
+import { fetchFollowing, fetchProfiles, isListened, rankEntries, tasteMatches, type Profile } from "@/lib/data";
+import { HeadphonesGlyph } from "@/components/FormatToggle";
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { readInYear } from "@/lib/stats";
 import { WrapShareButton } from "@/components/WrapShare";
@@ -48,6 +49,13 @@ function Inner() {
   const all = useMemo(() => rankEntries(entries || []), [entries]);
   const books = useMemo(() => readInYear(all, year), [all, year]);
   const pages = books.reduce((s, e) => s + (e.book.pages ?? 0), 0);
+  // Read vs listened. Hours are a rough guess: about 1.8 minutes of audio per printed page.
+  const heard = books.filter((e) => isListened(e.format));
+  const seen = books.filter((e) => e.format !== "listen");
+  const heardPct = books.length ? Math.round((heard.length / books.length) * 100) : 0;
+  const hours = Math.round(heard.reduce((s, e) => s + (e.book.pages ?? 0), 0) * 1.8 / 60);
+  const avg = (xs: typeof books) => xs.reduce((s, e) => s + e.score, 0) / xs.length;
+  const earGap = heard.length >= 3 && seen.length >= 3 ? avg(heard) - avg(seen) : null;
   const longest = [...books].sort((a, b) => (b.book.pages ?? 0) - (a.book.pages ?? 0))[0];
   const months = MONTHS.map((_, i) => books.filter((e) => Number(e.finished_on!.slice(5, 7)) === i + 1).length);
   const maxMonth = Math.max(1, ...months);
@@ -147,6 +155,26 @@ function Inner() {
                       <span className="m" style={{ width: 20, textAlign: "right", fontWeight: 700 }}>{n}</span>
                     </div>
                   ))}
+                </div>
+              </section>
+            )}
+
+            {heard.length > 0 && (
+              <section className="card" style={{ marginTop: 12 }}>
+                <div className="eyebrow" style={{ display: "flex", alignItems: "center", gap: 6 }}><HeadphonesGlyph size={14} /> Ears vs eyes</div>
+                <div className="d" style={{ fontWeight: 700, fontSize: 24, lineHeight: 1.1, letterSpacing: "-0.01em", marginTop: 8 }}>
+                  {heardPct}% listened · {100 - heardPct}% read
+                </div>
+                <div role="img" aria-label={`${heardPct}% of your books were audiobooks`} style={{ display: "flex", height: 10, borderRadius: 5, overflow: "hidden", marginTop: 12, background: "var(--well-2)" }}>
+                  <span style={{ width: `${heardPct}%`, background: "var(--accent)" }} />
+                </div>
+                <div className="muted" style={{ fontSize: 13, marginTop: 10 }}>
+                  {[
+                    hours > 0 ? `About ${hours.toLocaleString()} hours in your ears` : null,
+                    earGap != null && Math.abs(earGap) >= 0.3
+                      ? `You score audiobooks ${Math.abs(earGap).toFixed(1)} ${earGap > 0 ? "higher" : "lower"}`
+                      : null,
+                  ].filter(Boolean).join(" · ") || `${heard.length} audiobook${heard.length === 1 ? "" : "s"} this year`}
                 </div>
               </section>
             )}

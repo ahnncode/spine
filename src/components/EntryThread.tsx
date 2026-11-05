@@ -6,8 +6,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
   addComment, deleteComment, fetchComments, fetchHearts, fetchProfiles, fetchScoredEntry, myId, report,
-  type Comment, type HeartState, type Profile, type ScoredEntry,
-} from "@/lib/data";
+  type Comment, type HeartState, type Profile, type ScoredEntry, isListened } from "@/lib/data";
 import { COMMENT_MAX } from "@/lib/thoughts";
 import { Avatar } from "./Avatar";
 import { Name } from "@/components/Badge";
@@ -107,7 +106,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
               </div>
             </div>
             <Link href={`/book/${entry.book_id}`} style={{ display: "flex", gap: 14, marginTop: 12, textDecoration: "none", color: "inherit", alignItems: "center" }}>
-              <Cover book={entry.book} width={52} />
+              <Cover book={entry.book} width={52} listened={isListened(entry.format)} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="book-row__title">{entry.book.title}</div>
                 <div className="book-row__sub">#{entry.overall_rank} on their shelf</div>
