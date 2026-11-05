@@ -26,7 +26,7 @@ function Importer() {
   const [fileName, setFileName] = useState("");
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [progress, setProgress] = useState({ f: 0, label: "" });
-  const [result, setResult] = useState<{ added: number; skipped: number } | null>(null);
+  const [result, setResult] = useState<{ added: number; skipped: number; dated: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [over, setOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -107,7 +107,7 @@ function Importer() {
           <>
             <h1 className="h1 h1--xl" style={{ marginTop: 30 }}>Your shelf is in.</h1>
             <p className="lede">
-              {result.added} books added{result.skipped ? `, ${result.skipped} were already on your shelf` : ""}. Your
+              {result.added} books added{result.skipped ? `, ${result.skipped} were already on your shelf` : ""}{result.dated ? ` (${result.dated} of those got their finish date filled in)` : ""}. Your
               starred books are roughly in order — a few quick matchups will make the ranking yours.
             </p>
             <div className="card card--ink" style={{ marginTop: 24, display: "flex", gap: 14 }}>

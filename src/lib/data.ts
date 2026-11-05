@@ -412,7 +412,7 @@ export async function importGoodreads(
   books: ImportedBook[],
   existing: Entry[],
   onProgress: (fraction: number, label: string) => void,
-): Promise<{ added: number; skipped: number }> {
+): Promise<{ added: number; skipped: number; dated: number }> {
   const uid = await myId();
   onProgress(0.05, "Adding books to the catalog…");
   const ids = await ensureBooks(books.map((b) => b.book));
@@ -455,8 +455,17 @@ export async function importGoodreads(
     if (error) throw error;
     onProgress(0.6 + 0.4 * Math.min(1, (i + 200) / rows.length), "Building your shelf…");
   }
+  // Books already on your shelf with no finish date get the one from the file,
+  // so re-importing fills in dates (Wrapped and yearly stats need them).
+  const missing = new Map(existing.filter((e) => !e.finished_on && (e.status === "ranked" || e.status === "unsorted")).map((e) => [e.book_id, e.id]));
+  const fills = books
+    .map((b) => ({ id: missing.get(ids.get(b.key) ?? ""), date: b.finishedOn }))
+    .filter((x): x is { id: string; date: string } => Boolean(x.id && x.date));
+  for (const f of fills) {
+    await supabase().from("shelf_entries").update({ finished_on: f.date }).eq("id", f.id).is("finished_on", null);
+  }
   onProgress(1, "Done");
-  return { added: rows.length, skipped: books.length - rows.length };
+  return { added: rows.length, skipped: books.length - rows.length, dated: fills.length };
 }
 
 /* ------------------------------ Profiles & follows ----------------------- */

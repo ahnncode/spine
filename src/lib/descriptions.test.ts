@@ -31,3 +31,13 @@ describe("sameTitle", () => {
     expect(sameTitle(want, { trackName: "On the Calculation of Volume I", artistName: "Someone Else" })).toBe(false);
   });
 });
+
+import { toDate } from "./goodreads";
+describe("toDate", () => {
+  it("reads the date formats exports use", () => {
+    expect(toDate("2026/3/14")).toBe("2026-03-14");
+    expect(toDate("2026-03-14")).toBe("2026-03-14");
+    expect(toDate("3/14/2026")).toBe("2026-03-14");
+    expect(toDate("")).toBeNull();
+  });
+});

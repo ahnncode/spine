@@ -13,6 +13,7 @@ import { fetchFollowing, fetchProfiles, rankEntries, tasteMatches, type Profile 
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { readInYear } from "@/lib/stats";
 import { WrapShareButton } from "@/components/WrapShare";
+import { MissingDates } from "@/components/MissingDates";
 
 export function Wrap() {
   return (
@@ -28,7 +29,7 @@ function Inner() {
   const params = useParams<{ year: string }>();
   const year = parseInt(params.year, 10) || new Date().getFullYear();
   const { profile } = useProfile();
-  const { entries } = useShelf();
+  const { entries, reload } = useShelf();
   const [friends, setFriends] = useState<{ closest?: [Profile, number]; furthest?: [Profile, number] } | null>(null);
   const [shared, setShared] = useState(false);
 
@@ -82,6 +83,8 @@ function Inner() {
 
         <p className="eyebrow" style={{ marginTop: 20 }}>{displayName(profile)}&rsquo;s year in books</p>
         <h1 className="d moment" style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.06em", lineHeight: 0.85, margin: "8px 0 0" }}>{year}</h1>
+
+        {entries && <MissingDates entries={entries} onChanged={reload} />}
 
         {!entries ? <div aria-busy="true" style={{ minHeight: 200 }} /> : books.length === 0 ? (
           <div className="empty">

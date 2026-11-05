@@ -56,9 +56,14 @@ export function toInt(raw: string | undefined): number | null {
 
 /** "2023/10/28" → "2023-10-28". */
 export function toDate(raw: string | undefined): string | null {
-  const m = (raw || "").trim().match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
-  if (!m) return null;
-  return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  const s = (raw || "").trim();
+  // 2026/03/14 or 2026-03-14 (Goodreads, StoryGraph)
+  let m = s.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})$/);
+  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  // 3/14/2026 (some spreadsheet re-saves)
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (m) return `${m[3]}-${m[1].padStart(2, "0")}-${m[2].padStart(2, "0")}`;
+  return null;
 }
 
 /** Goodreads reviews come with <br/> and a little HTML; keep the words. */
