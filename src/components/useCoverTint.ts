@@ -7,6 +7,7 @@ import { coverCandidates, coverColors, dedupeKey, type BookInput } from "@/lib/b
 const cache = new Map<string, string>();
 
 const FALLBACK = "fallback";
+const PROXY_HOSTS = /^https:\/\/(covers\.openlibrary\.org|is\d-ssl\.mzstatic\.com)\//;
 
 /** Average a cover down to one colour, nudged away from grey so it reads as a tint. */
 function sample(img: HTMLImageElement): string | null {
@@ -63,7 +64,9 @@ export function useCoverTint(book: BookInput | null | undefined): string | null 
         return;
       }
       const img = new Image();
-      img.crossOrigin = "anonymous";
+      // Known cover hosts go through our own route so the pixels are readable.
+      const proxied = PROXY_HOSTS.test(list[i]);
+      if (!proxied) img.crossOrigin = "anonymous";
       img.decoding = "async";
       img.onload = () => {
         if (!live) return;
@@ -73,6 +76,7 @@ export function useCoverTint(book: BookInput | null | undefined): string | null 
         setTint({ key, color });
       };
       img.onerror = () => {
+        if (proxied) return tryAt(i + 1); // our route says there's no cover here
         // Failed with CORS on: is the art there but just unreadable? Then stay neutral.
         const probe = new Image();
         probe.onload = () => {
@@ -84,7 +88,7 @@ export function useCoverTint(book: BookInput | null | undefined): string | null 
         probe.onerror = () => tryAt(i + 1);
         probe.src = list[i];
       };
-      img.src = list[i];
+      img.src = proxied ? `/api/cover?u=${encodeURIComponent(list[i])}` : list[i];
     };
     tryAt(0);
     return () => {

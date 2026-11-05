@@ -129,7 +129,7 @@ function Inner() {
   return (
     <div className="app">
       <main className="screen" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
-        <div className="book-hero" style={{ background: tint ? `color-mix(in srgb, ${tint} var(--tint-mix), var(--ground))` : "var(--well)" }}>
+        <div className="book-hero" style={{ ["--tint" as string]: tint ?? "var(--well)", background: tint ? "color-mix(in srgb, var(--tint) var(--tint-mix), var(--ground))" : "var(--well)" }}>
           <div style={{ alignSelf: "stretch" }}>
             <button className="icon-btn" style={{ background: "color-mix(in srgb, var(--surface) 72%, transparent)" }} aria-label="Back" onClick={() => router.back()}>
               <BackIcon size={20} />
@@ -140,7 +140,7 @@ function Inner() {
 
         {!book && <BookSkeleton />}
         {book && (
-          <div style={{ padding: "18px 20px 0" }}>
+          <div className="book-hero__fade" style={{ ["--tint" as string]: tint ?? "transparent" }}>
             <h1 className="h1" style={{ fontSize: 32 }}>{book.title}</h1>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
               {[book.author, book.year, book.pages ? `${book.pages} pages` : null].filter(Boolean).join(" · ")}
