@@ -52,10 +52,17 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
       <div className="sheet" role="dialog" aria-modal="true" aria-label={`Check in on ${entry.book.title}`} onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
         <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
-          <Cover book={entry.book} width={72} />
+          <Link href={`/book/${entry.book_id}`} aria-label={`${entry.book.title}: book page`} style={{ flexShrink: 0 }}>
+            <Cover book={entry.book} width={72} />
+          </Link>
           <div style={{ minWidth: 0 }}>
             <p className="eyebrow">{doneToday ? "Checked in today" : "Reading check-in"}</p>
-            <h2 className="d" style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{entry.book.title}</h2>
+            <h2 className="d" style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+              <Link href={`/book/${entry.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{entry.book.title}</Link>
+            </h2>
+            <Link href={`/book/${entry.book_id}`} style={{ display: "inline-block", marginTop: 6, fontSize: 13, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
+              Book page →
+            </Link>
           </div>
         </div>
 

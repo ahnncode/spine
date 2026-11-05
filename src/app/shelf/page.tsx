@@ -97,10 +97,10 @@ function Shelf() {
             <div className="reading-strip">
               {reading.map((e) => (
                 <div key={e.id} className="reading-card">
-                  <button onClick={() => setSheet(e)} style={{ background: "none", border: 0, padding: 0 }} aria-label={`${e.book.title} options`}>
+                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`}>
                     <Cover book={e.book} width={64} />
-                  </button>
-                  <div className="reading-card__title">{e.book.title}</div>
+                  </Link>
+                  <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none" }}>{e.book.title}</Link>
                   {(() => {
                     const ra = activeFor(readAlongs, e.book_id, profile?.id);
                     return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
@@ -209,9 +209,13 @@ function Shelf() {
           <div className="sheet" role="dialog" aria-modal="true" aria-label={sheet.book.title} onClick={(ev) => ev.stopPropagation()}>
             <div className="sheet__grab" />
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
-              <Cover book={sheet.book} width={84} />
+              <Link href={`/book/${sheet.book_id}`} aria-label={`${sheet.book.title}: book page`} style={{ flexShrink: 0 }}>
+                <Cover book={sheet.book} width={84} />
+              </Link>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{sheet.book.title}</h2>
+                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>
+                  <Link href={`/book/${sheet.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{sheet.book.title}</Link>
+                </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{sheet.book.author}</p>
                 <Link href={`/book/${sheet.book_id}`} style={{ display: "inline-block", marginTop: 6, fontSize: 14, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
                   See friends &amp; scores →

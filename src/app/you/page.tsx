@@ -11,7 +11,6 @@ import { Avatar, displayName } from "@/components/Avatar";
 import { Blurb } from "@/components/Blurb";
 import { EarlyPill, Name } from "@/components/Badge";
 import { AvatarPicker } from "@/components/AvatarPicker";
-import { BookActions } from "@/components/BookActions";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { BadgeCase } from "@/components/BadgeCase";
 import { InviteCard } from "@/components/InviteCard";
@@ -62,7 +61,6 @@ function You() {
   const reading = useMemo(() => (entries || []).filter((e) => e.status === "reading"), [entries]);
   const { list: readAlongs, people: raPeople } = useReadAlongs();
   const [checking, setChecking] = useState<Entry | null>(null);
-  const [actions, setActions] = useState<Entry | null>(null);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
   const [stamp, setStamp] = useState<string | null>(null);
@@ -160,10 +158,10 @@ function You() {
             <div className="reading-strip">
               {reading.map((e) => (
                 <div key={e.id} className="reading-card">
-                  <button onClick={() => setActions(e)} style={{ background: "none", border: 0, padding: 0, cursor: "pointer" }} aria-label={`${e.book.title} options`}>
+                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`}>
                     <Cover book={e.book} width={64} />
-                  </button>
-                  <div className="reading-card__title">{e.book.title}</div>
+                  </Link>
+                  <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none" }}>{e.book.title}</Link>
                   {(() => {
                     const ra = activeFor(readAlongs, e.book_id, profile?.id);
                     return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
@@ -434,23 +432,6 @@ function You() {
         />
       )}
 
-      {actions && (
-        <div className="sheet-backdrop" onClick={() => setActions(null)}>
-          <div className="sheet" role="dialog" aria-modal="true" aria-label={actions.book.title} onClick={(ev) => ev.stopPropagation()}>
-            <div className="sheet__grab" />
-            <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
-              <Cover book={actions.book} width={72} />
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.05 }}>{actions.book.title}</h2>
-                <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{actions.book.author}</p>
-              </div>
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <BookActions bookId={actions.book_id} entry={actions} onChange={async () => { await reload(); setActions(null); }} />
-            </div>
-          </div>
-        </div>
-      )}
 
       {picking && profile && (
         <AvatarPicker

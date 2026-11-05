@@ -116,11 +116,13 @@ function Inner() {
               <h2 className="h2">Your top {Math.min(10, top.length)}</h2>
               <ol style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
                 {top.map((e, i) => (
-                  <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
-                    <span className="d" style={{ width: 26, fontWeight: 800, fontSize: i < 3 ? 22 : 17, color: i < 3 ? "var(--ink)" : "var(--faint)" }}>{i + 1}</span>
-                    <Cover book={e.book} width={34} />
-                    <span style={{ flex: 1, minWidth: 0 }} className="book-row__title">{e.book.title}</span>
-                    <ScoreChip score={e.score} bucket={e.bucket} size={36} />
+                  <li key={e.id}>
+                    <Link href={`/book/${e.book_id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", color: "inherit", textDecoration: "none" }}>
+                      <span className="d" style={{ width: 26, fontWeight: 800, fontSize: i < 3 ? 22 : 17, color: i < 3 ? "var(--ink)" : "var(--faint)" }}>{i + 1}</span>
+                      <Cover book={e.book} width={34} />
+                      <span style={{ flex: 1, minWidth: 0 }} className="book-row__title">{e.book.title}</span>
+                      <ScoreChip score={e.score} bucket={e.bucket} size={36} />
+                    </Link>
                   </li>
                 ))}
               </ol>
@@ -144,14 +146,14 @@ function Inner() {
             )}
 
             {longest?.book.pages && (
-              <section className="card" style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center" }}>
+              <Link href={`/book/${longest.book_id}`} className="card" style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center", color: "inherit", textDecoration: "none" }}>
                 <Cover book={longest.book} width={56} />
                 <div>
                   <div className="eyebrow">Longest read</div>
                   <div className="d" style={{ fontWeight: 700, fontSize: 18, marginTop: 4 }}>{longest.book.title}</div>
                   <div className="muted" style={{ fontSize: 13 }}>{longest.book.pages.toLocaleString()} pages</div>
                 </div>
-              </section>
+              </Link>
             )}
 
             {friends?.closest && (

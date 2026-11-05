@@ -144,16 +144,21 @@ function Feed() {
           <section aria-label="Your reading" style={{ marginTop: 14 }}>
             <div className="reading-strip" style={{ marginTop: 0 }}>
               {reading.map((e) => (
-                <button key={e.id} className="reading-card" style={{ width: 230, flexDirection: "row", alignItems: "center", textAlign: "left" }} onClick={() => setChecking(e)} aria-label={`Check in on ${e.book.title}`}>
-                  <Cover book={e.book} width={40} />
+                <div key={e.id} className="reading-card" style={{ width: 230, flexDirection: "row", alignItems: "center", textAlign: "left" }}>
+                  {/* Cover and title open the book; the progress area checks in. */}
+                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`} style={{ flexShrink: 0 }}>
+                    <Cover book={e.book} width={40} />
+                  </Link>
                   <span style={{ flex: 1, minWidth: 0 }}>
-                    <span className="reading-card__title" style={{ fontSize: 14 }}>{e.book.title}</span>
-                    <span className="bar" style={{ display: "block", height: 5, marginTop: 6 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
-                    <span className="m muted" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
-                      {e.progress_pct != null ? `${e.progress_pct}% · ` : ""}Check in
-                    </span>
+                    <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ fontSize: 14, color: "inherit", textDecoration: "none", display: "block" }}>{e.book.title}</Link>
+                    <button className="reading-card__checkin" onClick={() => setChecking(e)} aria-label={`Check in on ${e.book.title}`}>
+                      <span className="bar" style={{ display: "block", height: 5, marginTop: 6 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
+                      <span className="m muted" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
+                        {e.progress_pct != null ? `${e.progress_pct}% · ` : ""}<span style={{ color: "var(--cobalt-ink)", fontWeight: 700 }}>Check in</span>
+                      </span>
+                    </button>
                   </span>
-                </button>
+                </div>
               ))}
             </div>
           </section>
