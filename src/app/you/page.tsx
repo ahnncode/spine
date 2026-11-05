@@ -31,6 +31,7 @@ import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
 import { ReadingCard } from "@/components/ReadingCard";
+import { SlidesSheet } from "@/components/WrapShare";
 
 export default function YouPage() {
   return (
@@ -103,6 +104,7 @@ function You() {
     return ok;
   }
   const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
+  const [dating, setDating] = useState(false);
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
   const shelfSize = entries?.length ?? -1;
   useEffect(() => {
@@ -311,6 +313,19 @@ function You() {
           {[
             ...(profile?.username ? [{ href: `/u/${profile.username}/shelf`, label: "Your whole library" }] : []),
             { href: `/wrap/${year}`, label: `Your ${year} in books` },
+          ].map((l) => (
+            <Link key={l.href} href={l.href} className="link-group__row">
+              <span>{l.label}</span>
+              <ArrowIcon size={18} />
+            </Link>
+          ))}
+          {ranked.length >= 3 && (
+            <button className="link-group__row" onClick={() => setDating(true)}>
+              <span>Your dating profile, by your books <span className="new-pill">New</span></span>
+              <ArrowIcon size={18} />
+            </button>
+          )}
+          {[
             { href: "/people", label: "Find friends" },
             { href: "/import", label: "Import from Goodreads or StoryGraph" },
             { href: "/sharpen", label: "Sharpen your ranking" },
@@ -321,6 +336,14 @@ function You() {
             </Link>
           ))}
         </nav>
+        {dating && (
+          <SlidesSheet
+            title="Your dating profile"
+            blurb="Written by your shelf. Three slides, sized for an Instagram post."
+            slides={[1, 2, 3].map((n) => ({ src: `/api/card?kind=date&slide=${n}`, filename: `readread-dating-profile-${n}.png` }))}
+            onClose={() => setDating(false)}
+          />
+        )}
 
         <button className="btn btn--ghost btn--block" style={{ marginTop: 20 }} onClick={signOut}>
           Sign out

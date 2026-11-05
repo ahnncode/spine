@@ -851,3 +851,6 @@ div.stats-panel__half { cursor: default; }
 @keyframes settle { 0% { transform: translateY(-26px) scale(1.04); opacity: 0; } 55% { opacity: 1; } 100% { transform: none; opacity: 1; } }
 @keyframes nudge { 0% { transform: translateY(-12px); } 100% { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .placed .mini-row--new, .placed .mini-row--new + .mini-row { animation: none; } }
+button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--line); background: none; font: inherit; font-weight: 600; font-size: 15px; text-align: left; color: inherit; cursor: pointer; }
+.link-group > button.link-group__row:first-child { border-top: 0; }
+.new-pill { display: inline-flex; align-items: center; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: var(--accent); color: var(--black); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 2px; }
