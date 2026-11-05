@@ -1,6 +1,7 @@
 import { englishAuthorName, isLatin } from "./authors";
 import { cleanTitle, dedupeKey, type BookInput } from "./books";
-import { genresFromSubjects } from "./genres";
+import { genresFromApple, genresFromSubjects } from "./genres";
+import { findAppleBook } from "./applecovers";
 
 interface OLDoc {
   key: string;
@@ -215,8 +216,19 @@ export async function findByIsbn(isbn: string): Promise<BookInput | null> {
 
 /** Best Open Library match for a title and author (used to fill in imports). */
 export async function lookup(title: string, author: string | null): Promise<BookInput | null> {
-  const params: Record<string, string> = { title, limit: "1" };
-  if (author) params.author = author;
-  const docs = await search(params);
-  return docs[0] ? toBook(docs[0]) : null;
+  const find = async (t: string) => {
+    const params: Record<string, string> = { title: t, limit: "1" };
+    if (author) params.author = author;
+    return (await search(params))[0];
+  };
+  // A long title with a subtitle (often from Apple) can miss; try the short one too.
+  const short = title.split(/[:(]/)[0].trim();
+  const doc = (await find(title)) ?? (short && short !== title ? await find(short) : undefined);
+  const book = doc ? toBook(doc) : null;
+  if (book?.genres?.length) return book;
+  // Open Library has no match, or no subjects we can place: ask Apple for its genre.
+  const apple = await findAppleBook(title, author).catch(() => null);
+  const genres = genresFromApple(apple?.genres);
+  if (!genres.length) return book;
+  return book ? { ...book, genres } : { title, author, genres };
 }

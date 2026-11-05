@@ -35,6 +35,12 @@ describe("genresFromSubjects", () => {
     expect(genresFromSubjects(["Description and travel", "Mountaineering", "Essays"], 2003)).toEqual(["essays"]);
     expect(genresFromSubjects(["Time travel", "Science fiction"], 2010)).toEqual(["scifi"]);
   });
+  it("reads Apple's genre names when Open Library can't place a book", async () => {
+    const { genresFromApple } = await import("./genres");
+    expect(genresFromApple(["Management & Leadership", "Books", "Business & Personal Finance"])).toEqual(["business"]);
+    expect(genresFromApple(["Mysteries & Thrillers", "True Crime"])).toEqual(["mystery", "truecrime"]);
+    expect(genresFromApple(["Sci-Fi & Fantasy", "Fiction"])).toEqual([]);
+  });
   it("leaves bare children's books and empty lists alone", () => {
     expect(genresFromSubjects(["Fiction", "Juvenile fiction", "Cats"], 2004)).toEqual([]);
     expect(genresFromSubjects([], 2023)).toEqual([]);

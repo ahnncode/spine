@@ -9,6 +9,7 @@ interface AppleResult {
   trackName?: string;
   artistName?: string;
   artworkUrl100?: string;
+  genres?: string[];
 }
 
 function norm(s: string): string {
@@ -38,14 +39,19 @@ export function bigArtwork(url: string): string {
   return url.replace(/\/\d+x\d+bb\.(jpg|png)$/, "/400x600bb.jpg");
 }
 
-export async function findAppleCover(title: string, author: string | null): Promise<string | null> {
+/** The same book in Apple's catalogue: its cover and its genre names. */
+export async function findAppleBook(title: string, author: string | null): Promise<{ cover: string | null; genres: string[] } | null> {
   const term = [title.split(":")[0].replace(/[()[\]]/g, " "), author ?? ""].join(" ").replace(/\s+/g, " ").trim();
   const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: "us" });
   const res = await fetch(`https://itunes.apple.com/search?${params}`);
   if (!res.ok) throw new Error(`Apple lookup failed (${res.status})`);
   const { results } = (await res.json()) as { results?: AppleResult[] };
-  const hit = (results ?? []).find((r) => r.artworkUrl100 && sameBook({ title, author }, r));
-  return hit?.artworkUrl100 ? bigArtwork(hit.artworkUrl100) : null;
+  const hit = (results ?? []).find((r) => sameBook({ title, author }, r));
+  return hit ? { cover: hit.artworkUrl100 ? bigArtwork(hit.artworkUrl100) : null, genres: hit.genres ?? [] } : null;
+}
+
+export async function findAppleCover(title: string, author: string | null): Promise<string | null> {
+  return (await findAppleBook(title, author))?.cover ?? null;
 }
 
 /**

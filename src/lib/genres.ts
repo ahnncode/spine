@@ -72,3 +72,36 @@ export function genresFromSubjects(subjects: string[] | undefined | null, year?:
     .slice(0, 3)
     .map(([k]) => k);
 }
+
+/** Apple Books' genre names → ours, for books Open Library can't place. First match wins per name. */
+const APPLE: Array<[RegExp, string]> = [
+  [/true crime/i, "truecrime"],
+  [/comics|graphic novels|manga/i, "graphic"],
+  [/young adult|teens?\b/i, "ya"],
+  [/business|self-improvement|management|leadership|careers|investing|personal finance|entrepreneur|marketing|negotiat/i, "business"],
+  [/science fiction|sci-fi/i, "scifi"],
+  [/fantasy/i, "fantasy"],
+  [/mysteries|thrillers|mystery|suspense|crime/i, "mystery"],
+  [/romance/i, "romance"],
+  [/horror/i, "horror"],
+  [/historical fiction/i, "historical"],
+  [/classics/i, "classics"],
+  [/biographies|memoirs|autobiograph/i, "memoir"],
+  [/^history|history$/i, "history"],
+  [/science|psychology|nature|philosophy|economics/i, "science"],
+  [/poetry/i, "poetry"],
+  [/travel|essays|outdoors/i, "essays"],
+  [/literary|fiction & literature/i, "literary"],
+];
+const APPLE_SKIP = /^(books|fiction|nonfiction|non-fiction|sci-fi & fantasy|kids)$/i;
+
+export function genresFromApple(names: string[] | undefined | null): string[] {
+  const out: string[] = [];
+  for (const n of names ?? []) {
+    if (APPLE_SKIP.test(n.trim())) continue;
+    const hit = APPLE.find(([re]) => re.test(n));
+    if (hit && !out.includes(hit[1])) out.push(hit[1]);
+    if (out.length >= 3) break;
+  }
+  return out;
+}
