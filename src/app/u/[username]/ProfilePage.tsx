@@ -19,7 +19,7 @@ import { ArrowIcon, BackIcon, LockIcon, MoreIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import {
-  block, fetchBadges, fetchFollowing, fetchMyBlocks, fetchProfileByUsername, fetchShelf, followCounts, rankEntries, report, tasteMatches, unblock,
+  block, fetchBadges, fetchFollowing, fetchMyBlocks, fetchProfileByUsername, fetchShelf, followCounts, followsMe, rankEntries, report, tasteMatches, unblock,
   type Entry, type Match, type Profile,
 } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
@@ -40,6 +40,9 @@ interface Loaded {
   mine: Entry[];
   following: boolean;
   counts: { followers: number; following: number };
+  /** You follow each other: their follower lists are open to you. */
+  mutual?: boolean;
+  theyFollow?: boolean;
   match: Match | undefined;
   blocked: boolean;
   badges: { key: string; earned_at: string }[];
@@ -81,11 +84,12 @@ function Inner() {
       const profile = await fetchProfileByUsername(username);
       if (!profile) return setData(null);
       if (profile.id === me?.id) return router.replace("/you");
-      const [theirs, mine, followingIds, counts, matches, blocks, badges] = await Promise.all([
+      const [theirs, mine, followingIds, counts, matches, blocks, badges, theyFollow] = await Promise.all([
         fetchShelf(profile.id), fetchShelf(), fetchFollowing(), followCounts(profile.id), tasteMatches([profile.id]), fetchMyBlocks(),
-        fetchBadges(profile.id).catch(() => []),
+        fetchBadges(profile.id).catch(() => []), followsMe(profile.id).catch(() => false),
       ]);
-      setData({ profile, theirs, mine, following: followingIds.includes(profile.id), counts, match: matches.get(profile.id), blocked: blocks.has(profile.id), badges });
+      const following = followingIds.includes(profile.id);
+      setData({ profile, theirs, mine, following, counts, mutual: following && theyFollow, theyFollow, match: matches.get(profile.id), blocked: blocks.has(profile.id), badges });
     })().catch(() => setData(null));
   }, [username, me?.id, router]);
 
@@ -132,10 +136,19 @@ function Inner() {
               <Avatar profile={data.profile} size={64} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h1 className="h1" style={{ fontSize: 28 }}><Name profile={data.profile} markSize={20} /></h1>
-                <div className="muted" style={{ fontSize: 13 }}>@{data.profile.username} · {data.counts.followers} followers</div>
+                <div className="muted" style={{ fontSize: 13 }}>
+                  @{data.profile.username} · {data.mutual ? (
+                    <>
+                      <Link href={`/u/${data.profile.username}/follows`} className="count-link">{data.counts.followers} {data.counts.followers === 1 ? "follower" : "followers"}</Link>
+                      {" · "}<Link href={`/u/${data.profile.username}/follows?tab=following`} className="count-link">{data.counts.following} following</Link>
+                    </>
+                  ) : (
+                    <>{data.counts.followers} {data.counts.followers === 1 ? "follower" : "followers"} · {data.counts.following} following</>
+                  )}
+                </div>
                 {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
               </div>
-              {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} onChange={(following) => setData((d) => (d ? { ...d, following } : d))} />}
+              {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} onChange={(following) => setData((d) => (d ? { ...d, following, mutual: following && Boolean(d.theyFollow) } : d))} />}
               <div style={{ position: "relative" }}>
                 <button className="icon-btn" aria-label="More options" aria-expanded={menu} onClick={() => setMenu(!menu)}>
                   <MoreIcon size={20} />

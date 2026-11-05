@@ -135,7 +135,13 @@ function You() {
               {profile?.is_private && <LockIcon size={16} aria-label="Private" />}
             </h1>
             <div className="muted" style={{ fontSize: 13 }}>
-              @{profile?.username} · {counts ? `${counts.followers} followers · ${counts.following} following` : " "}
+              @{profile?.username}
+              {counts && (
+                <>
+                  {" · "}<Link href={`/u/${profile?.username}/follows`} className="count-link">{counts.followers} {counts.followers === 1 ? "follower" : "followers"}</Link>
+                  {" · "}<Link href={`/u/${profile?.username}/follows?tab=following`} className="count-link">{counts.following} following</Link>
+                </>
+              )}
             </div>
             {isEarlyAdopter(profile?.created_at) && <div style={{ marginTop: 6 }}><EarlyPill /></div>}
           </div>

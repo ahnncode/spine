@@ -555,6 +555,26 @@ export async function followCounts(userId: string): Promise<{ followers: number;
   return { followers: a.count ?? 0, following: b.count ?? 0 };
 }
 
+/** Whether they follow you back. */
+export async function followsMe(userId: string): Promise<boolean> {
+  const uid = await myId();
+  const { count } = await supabase().from("follows").select("*", { count: "exact", head: true }).eq("follower_id", userId).eq("followee_id", uid);
+  return (count ?? 0) > 0;
+}
+
+export interface FollowPerson extends Pick<Profile, "id" | "username" | "display_name" | "avatar_icon" | "avatar_color" | "created_at"> {
+  i_follow: boolean;
+  follows_me: boolean;
+}
+
+/** Someone's followers or following: yours, or a mutual follow's. `null` when not allowed. */
+export async function followList(userId: string, kind: "followers" | "following"): Promise<FollowPerson[] | null> {
+  const { data, error } = await supabase().rpc("follow_list", { p_user: userId, p_kind: kind });
+  if (error) throw error;
+  const r = data as { allowed: boolean; people: FollowPerson[] };
+  return r.allowed ? r.people : null;
+}
+
 export async function follow(userId: string): Promise<void> {
   const { error } = await supabase().from("follows").insert({ followee_id: userId });
   if (error && error.code !== "23505") throw error;
