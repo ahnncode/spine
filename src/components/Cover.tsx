@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { coverCandidates, coverColors, dedupeKey, type BookInput } from "@/lib/books";
 import { rescueCover } from "@/lib/coverRescue";
 
+/** How long to wait for a picture before trying the next one. */
+const SLOW_MS = 8000;
+
 interface Props {
   book: BookInput;
   width: number;
@@ -32,6 +35,15 @@ export function Cover({ book, width, className }: Props) {
   const { bg, fg } = coverColors(bookKey);
   const showArt = url && !failed;
 
+  // A picture that hasn't arrived after a while (Open Library's image host can
+  // hang without ever erroring) counts as broken, so the next one gets a turn.
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!showArt || loadedUrl === url) return;
+    const t = setTimeout(() => setTried((cur) => (cur.sig === sig && cur.n === attempt ? { sig, n: attempt + 1 } : cur)), SLOW_MS);
+    return () => clearTimeout(t);
+  }, [showArt, url, loadedUrl, sig, attempt]);
+
   // Had pictures, and all of them failed: try to find a working one.
   const allFailed = failed && known.length > 0 && rescued?.key !== bookKey;
   useEffect(() => {
@@ -55,27 +67,8 @@ export function Cover({ book, width, className }: Props) {
 
   return (
     <div className={`cover ${className ?? ""}`} style={{ width, height, background: bg, color: fg }}>
-      {showArt ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={url}
-          alt=""
-          loading="lazy"
-          key={url}
-          decoding="async"
-          // Already cached (e.g. loaded before hydration): show it without waiting for onLoad.
-          ref={(img) => {
-            if (img?.complete && img.naturalWidth >= 10) img.dataset.loaded = "1";
-          }}
-          onError={fail}
-          onLoad={(e) => {
-            const img = e.currentTarget as HTMLImageElement;
-            // Open Library sometimes returns a 1×1 placeholder.
-            if (img.naturalWidth < 10) fail();
-            else img.dataset.loaded = "1"; // fades in over the coloured block
-          }}
-        />
-      ) : width < 56 ? (
+      {/* The drawn cover sits underneath; real art fades in over it once it arrives. */}
+      {width < 56 ? (
         // Too small for a readable title: a monogram, like a spine stamp.
         <div className="cover__gen" aria-hidden="true" style={{ alignItems: "center", justifyContent: "center", padding: 0 }}>
           <div className="cover__spine" />
@@ -95,6 +88,33 @@ export function Cover({ book, width, className }: Props) {
             </div>
           )}
         </div>
+      )}
+      {showArt && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={url}
+          alt=""
+          loading="lazy"
+          key={url}
+          decoding="async"
+          // Already cached (e.g. loaded before hydration): show it without waiting for onLoad.
+          ref={(img) => {
+            if (img?.complete && img.naturalWidth >= 10) {
+              img.dataset.loaded = "1";
+              if (loadedUrl !== url) queueMicrotask(() => setLoadedUrl(url));
+            }
+          }}
+          onError={fail}
+          onLoad={(e) => {
+            const img = e.currentTarget as HTMLImageElement;
+            // Open Library sometimes returns a 1×1 placeholder.
+            if (img.naturalWidth < 10) fail();
+            else {
+              img.dataset.loaded = "1"; // fades in over the coloured block
+              setLoadedUrl(url);
+            }
+          }}
+        />
       )}
     </div>
   );
