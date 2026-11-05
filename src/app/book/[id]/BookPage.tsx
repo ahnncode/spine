@@ -21,7 +21,7 @@ import type { Book } from "@/lib/books";
 import { openLibraryHasCover } from "@/components/useCoverBackfill";
 import { findAppleCover } from "@/lib/applecovers";
 import {
-  fixBookDetails, setBookCover,
+  fixBookDetails, setBookCover, saveFinishedOn,
   fetchCheckins, type Checkin,
   bookStats, fetchBook, fetchFollowing, fetchProfiles, fetchShelf, friendsOnBook, predictedScore,
   rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry,
@@ -29,6 +29,7 @@ import {
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { BookSummary } from "@/components/BookSummary";
 import { ElsewhereRatings } from "@/components/ElsewhereRatings";
+import { FinishedPicker } from "@/components/FinishedPicker";
 import { formatScore } from "@/lib/ranking";
 
 export function BookPage() {
@@ -54,6 +55,7 @@ function Inner() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [social, setSocial] = useState<Social | null>(null);
   const [thread, setThread] = useState<string | null>(null);
+  const [dating, setDating] = useState(false);
   const [diary, setDiary] = useState<Checkin[]>([]);
   const [editing, setEditing] = useState(false);
   const [fixing, setFixing] = useState(false);
@@ -170,15 +172,31 @@ function Inner() {
             )}
 
             {myRanked ? (
+              <>
               <div className="card" style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 14 }}>
                 <ScoreChip score={myRanked.score} bucket={myRanked.bucket} size={60} />
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>Your #{myRanked.rank}</div>
                   <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>
                     {social?.predicted.score != null ? `Readers like you: ${formatScore(social.predicted.score)}` : "Your score"}
                   </div>
+                  <button className="link-btn" style={{ fontSize: 13, marginTop: 4, fontWeight: 600 }} aria-expanded={dating} onClick={() => setDating((d) => !d)}>
+                    {myRanked.finished_on ? `Finished ${formatDay(myRanked.finished_on)}` : "Add when you finished it"} · {dating ? "done" : "change"}
+                  </button>
                 </div>
               </div>
+              {dating && (
+                <div className="card" style={{ marginTop: 8 }}>
+                  <FinishedPicker
+                    value={myRanked.finished_on}
+                    onChange={async (v) => {
+                      await saveFinishedOn(myRanked.id, v).catch(() => {});
+                      await loadShelf();
+                    }}
+                  />
+                </div>
+              )}
+              </>
             ) : (
               <div className="card" style={{ marginTop: 16, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
                 <div className="m score" style={{ width: 60, height: 60, background: "#fff", color: "var(--cobalt-ink)", fontSize: 20 }}>
@@ -353,4 +371,8 @@ function FixDetails({ book, onClose, onSaved }: { book: Book; onClose: () => voi
       </div>
     </div>
   );
+}
+
+function formatDay(iso: string): string {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
