@@ -1,6 +1,7 @@
 "use client";
 
 import { ShareCardButton } from "@/components/ShareCard";
+import { timeAgo } from "@/lib/time";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
@@ -33,13 +34,7 @@ export function ReadAlongPage() {
 const MESSAGE_MAX = 1000;
 const REFRESH_MS = 20000;
 
-function ago(iso: string): string {
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m`;
-  if (s < 86400) return `${Math.round(s / 3600)}h`;
-  if (s < 86400 * 7) return `${Math.round(s / 86400)}d`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+const ago = timeAgo;
 
 function bucketFor(score: number): Bucket {
   return score >= 6.7 ? "loved" : score >= 3.4 ? "fine" : "disliked";

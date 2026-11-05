@@ -1,6 +1,7 @@
 "use client";
 
 import { MentionText, useMentionPicker } from "@/components/Mentions";
+import { timeAgo } from "@/lib/time";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
@@ -15,14 +16,7 @@ import { MoreIcon } from "./icons";
 import { ScoreChip } from "./ScoreChip";
 import { HeartButton, NoteText, TagList } from "./Social";
 
-function ago(iso: string): string {
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60) return "now";
-  if (s < 3600) return `${Math.round(s / 60)}m`;
-  if (s < 86400) return `${Math.round(s / 3600)}h`;
-  if (s < 86400 * 7) return `${Math.round(s / 86400)}d`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+const ago = timeAgo;
 
 /**
  * Someone's ranking of a book, with their thoughts, hearts and the comment

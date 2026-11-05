@@ -31,14 +31,14 @@ export function WantButton({
     }
   }
 
-  const label = state === "saved" ? "Saved" : state === "error" ? "Try again" : "Want to read";
+  const label = state === "saved" ? "Saved" : state === "error" ? "Try again" : "Save";
   return (
     <button
       className="action-btn"
       onClick={save}
       disabled={state === "saving"}
       aria-pressed={state === "saved"}
-      aria-label={compact ? (state === "saved" ? "Saved to want to read" : "Want to read") : undefined}
+      aria-label={state === "saved" ? "Saved to want to read" : "Save to want to read"}
       style={state === "saved" ? { color: "var(--cobalt-ink)", background: "var(--cobalt-soft)" } : undefined}
     >
       <BookmarkIcon size={16} style={state === "saved" ? { fill: "currentColor" } : undefined} />

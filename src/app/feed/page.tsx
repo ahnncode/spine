@@ -1,6 +1,7 @@
 "use client";
 
 import { MentionText } from "@/components/Mentions";
+import { timeAgo } from "@/lib/time";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
@@ -44,13 +45,7 @@ interface Loaded {
   books: Map<string, Book>;
 }
 
-function ago(iso: string): string {
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m ago`;
-  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
-  if (s < 86400 * 7) return `${Math.round(s / 86400)}d ago`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+const ago = timeAgo;
 
 function Feed() {
   const { profile } = useProfile();

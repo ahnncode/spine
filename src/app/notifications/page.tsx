@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { timeAgo } from "@/lib/time";
 import { useEffect, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
 import { Avatar } from "@/components/Avatar";
@@ -23,13 +24,7 @@ export default function NotificationsPage() {
   );
 }
 
-function ago(iso: string): string {
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m`;
-  if (s < 86400) return `${Math.round(s / 3600)}h`;
-  if (s < 86400 * 7) return `${Math.round(s / 86400)}d`;
-  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
+const ago = timeAgo;
 
 interface Loaded {
   items: Notification[];

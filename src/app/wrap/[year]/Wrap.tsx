@@ -153,10 +153,10 @@ function Inner() {
             {longest?.book.pages && (
               <Link href={`/book/${longest.book_id}`} className="card" style={{ marginTop: 10, display: "flex", gap: 14, alignItems: "center", color: "inherit", textDecoration: "none" }}>
                 <Cover book={longest.book} width={56} />
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <div className="eyebrow">Longest read</div>
-                  <div className="d" style={{ fontWeight: 700, fontSize: 18, marginTop: 4 }}>{longest.book.title}</div>
-                  <div className="muted" style={{ fontSize: 13 }}>{longest.book.pages.toLocaleString()} pages</div>
+                  <div className="d clamp-2" style={{ fontWeight: 700, fontSize: 20, lineHeight: 1.15, letterSpacing: "-0.02em", marginTop: 6 }}>{longest.book.title}</div>
+                  <div className="muted" style={{ fontSize: 13, marginTop: 4 }}>{[longest.book.author, `${longest.book.pages.toLocaleString()} pages`].filter(Boolean).join(" · ")}</div>
                 </div>
               </Link>
             )}

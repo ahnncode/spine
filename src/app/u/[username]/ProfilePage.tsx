@@ -1,6 +1,7 @@
 "use client";
 
 import { ShareCardButton } from "@/components/ShareCard";
+import { dayAgo } from "@/lib/time";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -24,15 +25,6 @@ import {
 import { formatScore } from "@/lib/ranking";
 import { passport, readInYear } from "@/lib/stats";
 
-/** " · today", " · 3d ago" — when they last touched a book they're reading. */
-function since(day: string | null): string {
-  if (!day) return "";
-  const days = Math.round((Date.now() - new Date(`${day}T12:00:00`).getTime()) / 86400000);
-  if (days <= 0) return " · today";
-  if (days === 1) return " · yesterday";
-  if (days < 30) return ` · ${days}d ago`;
-  return "";
-}
 
 export function ProfilePage() {
   return (
@@ -199,7 +191,7 @@ function Inner() {
                               <span className="reading-card__bar" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
                             )}
                             <span className="m muted" style={{ fontSize: 11 }}>
-                              {e.progress_pct != null ? `${e.progress_pct}%` : "Started"}{since(e.last_checkin_on ?? e.started_on)}
+                              {readingStatus(e.progress_pct, e.last_checkin_on ?? e.started_on)}
                             </span>
                           </span>
                           {wantable(e.book_id) && <WantButton bookId={e.book_id} initialSaved={myStatus.get(e.book_id) === "want"} />}
@@ -316,4 +308,11 @@ function Inner() {
       <TabBar />
     </div>
   );
+}
+
+/** "60% · 2 days ago", or "Started yesterday". */
+function readingStatus(pct: number | null, day: string | null): string {
+  const when = dayAgo(day);
+  if (pct != null) return when ? `${pct}% · ${when}` : `${pct}%`;
+  return when ? `Started ${when}` : "Started";
 }
