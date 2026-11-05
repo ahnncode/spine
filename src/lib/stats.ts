@@ -71,6 +71,7 @@ export function readInYear(ranked: RankedEntry[], year: number): RankedEntry[] {
 export interface Stamp {
   key: string;
   label: string;
+  short: string;
   bg: string;
   fg: string;
   count: number;
@@ -80,6 +81,7 @@ export function passport(ranked: RankedEntry[]): Stamp[] {
   return GENRES.map((g) => ({
     key: g.key,
     label: g.label,
+    short: g.short ?? g.label,
     bg: g.bg,
     fg: g.fg,
     count: ranked.filter((e) => e.book.genres?.includes(g.key)).length,

@@ -1,7 +1,9 @@
-/** The genre "passport": twelve stamps, each matched from Open Library subjects. */
+/** The genre "passport": one stamp per genre, each matched from Open Library subjects. */
 export interface Genre {
   key: string;
   label: string;
+  /** Fits a passport stamp (defaults to the label). */
+  short?: string;
   bg: string;
   fg: string;
   match: RegExp;
@@ -20,6 +22,11 @@ export const GENRES: Genre[] = [
   { key: "memoir", label: "Memoir", bg: "#0F5257", fg: "#E8F3F1", match: /biography|autobiography|memoir|personal narratives|biographies/ },
   { key: "science", label: "Science", bg: "#2D3FE0", fg: "#FFFFFF", match: /popular works|^science|science$|physics|biology|evolution|psychology|economics|philosophy/ },
   { key: "poetry", label: "Poetry", bg: "#E9E4DA", fg: "#2A2A2A", match: /poetry|poems|verse/ },
+  { key: "business", label: "Business & self-help", short: "Self-help & biz", bg: "#3A3F7A", fg: "#F1F0FF", match: /self-help|self help|personal growth|self-actualization|business|management|leadership|success|personal finance|finance, personal|investing|investments|productivity|negotiation|entrepreneur|careers?\b|habits|motivation|marketing/ },
+  { key: "truecrime", label: "True crime", bg: "#4B5563", fg: "#FDE2D8", match: /true crime|criminal investigation|serial murder|serial killers|murder investigation|criminals|crime.*case studies/ },
+  { key: "graphic", label: "Graphic novels", short: "Graphic", bg: "#C2185B", fg: "#FFF0F6", match: /graphic novels?|comic books|comics & graphic|\bmanga\b|^comics\b/ },
+  { key: "ya", label: "Young adult", short: "YA", bg: "#5B3FB8", fg: "#F3EEFF", match: /young adult|\bteen(s|agers?)?\b/ },
+  { key: "essays", label: "Essays, nature & travel", short: "Essays & travel", bg: "#4F7C8A", fg: "#F0F6F7", match: /\bessays\b|natural history|voyages and travels|description and travel|travel writing|^travel\b|nature writing|^nature$|outdoor life|wilderness|mountaineering|hiking/ },
 ];
 
 export const GENRE_BY_KEY = Object.fromEntries(GENRES.map((g) => [g.key, g]));
@@ -27,7 +34,9 @@ export const GENRE_BY_KEY = Object.fromEntries(GENRES.map((g) => [g.key, g]));
 /** Catalogue noise: list tags, awards, reading levels, and bookstore-aisle catch-alls. */
 const NOISE = /^(nyt:|award:|lexile|age:|grade:|reading level|collectionid|serie:|series:)|new york times|science fiction, fantasy, horror|fantasy & horror|sci-fi & fantasy/;
 /** Genres that only describe nonfiction, so "science fiction" never counts as science. */
-const NONFICTION = new Set(["history", "memoir", "science"]);
+const NONFICTION = new Set(["history", "memoir", "science", "business", "truecrime", "essays"]);
+/** Signs a book is a novel, so a "crime" subject means a mystery, not true crime. */
+const NOVEL = /fiction|detective and mystery stories|novels?$/;
 /** National-literature subjects mean "classic" only for older books. */
 const NATIONAL_LIT = /^(english|american|russian|french|german|italian|spanish) literature$/;
 const CLASSIC_BEFORE = 1950;
@@ -54,6 +63,8 @@ export function genresFromSubjects(subjects: string[] | undefined | null, year?:
   if (!scores.size && lower.some((s) => s === "fiction" || s === "novels") && !lower.some((s) => /juvenile|children|picture books/.test(s))) {
     add("literary", 1);
   }
+  // True crime is nonfiction: drop the mystery match its "crime"/"murder" subjects make.
+  if (scores.has("truecrime") && !lower.some((s) => NOVEL.test(s))) scores.delete("mystery");
   const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]);
   const top = ranked[0]?.[1] ?? 0;
   return ranked

@@ -23,7 +23,7 @@
   /* Fixed near-black for text on white buttons that sit on dark panels. */
   --black: #111111;
   --line-3: #cfcec8;
-  --dash: var(--dash);
+  --dash: #bdbcb6;
   --well-2: #f2f1ed;
   --heart: #d1361a;
   --heart-soft: #fde9e4;

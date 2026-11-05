@@ -6,7 +6,7 @@ import { ALL_TAG_KEYS, tagsFor } from "./thoughts";
 describe("quick tags", () => {
   it("every tag key is allowed by the latest database check", () => {
     const dir = join(process.cwd(), "supabase/migrations");
-    const latest = readdirSync(dir).filter((f) => f.includes("tags")).sort().pop()!;
+    const latest = readdirSync(dir).sort().filter((f) => readFileSync(join(dir, f), "utf8").includes("tags_valid")).pop()!;
     const sql = readFileSync(join(dir, latest), "utf8");
     for (const k of ALL_TAG_KEYS) expect(sql, k).toContain(`'${k}'`);
   });

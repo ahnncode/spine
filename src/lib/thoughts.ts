@@ -94,6 +94,41 @@ export const GENRE_TAGS: Record<string, Tag[]> = {
     { key: "lines_ill_keep", label: "Lines I’ll keep" },
     { key: "didnt_click", label: "Didn’t click" },
   ],
+  business: [
+    { key: "actually_useful", label: "Actually useful" },
+    { key: "changed_how_i_work", label: "Changed how I work" },
+    { key: "already_using_it", label: "Already using it" },
+    { key: "too_many_anecdotes", label: "Too many anecdotes" },
+    { key: "could_be_blog_post", label: "Could’ve been a blog post" },
+  ],
+  truecrime: [
+    { key: "deeply_researched", label: "Deeply researched" },
+    { key: "chilling", label: "Chilling" },
+    { key: "respectful", label: "Respectful to the victims" },
+    { key: "wanted_answers", label: "Still want answers" },
+    { key: "bit_sensational", label: "A bit sensational" },
+  ],
+  graphic: [
+    { key: "stunning_art", label: "Stunning art" },
+    { key: "art_tells_it", label: "The art tells the story" },
+    { key: "one_sitting", label: "Read it in one sitting" },
+    { key: "want_whole_series", label: "Want the whole series" },
+    { key: "hard_to_follow", label: "Hard to follow" },
+  ],
+  ya: [
+    { key: "wish_read_at_15", label: "Wish I’d read it at 15" },
+    { key: "adults_too", label: "Adults will love it too" },
+    { key: "found_family", label: "Found family" },
+    { key: "so_angsty", label: "So angsty" },
+    { key: "love_triangle", label: "Love triangle (ugh)" },
+  ],
+  essays: [
+    { key: "underlined_everything", label: "Underlined everything" },
+    { key: "want_to_go", label: "Want to go there now" },
+    { key: "made_me_slow_down", label: "Made me slow down" },
+    { key: "so_quotable", label: "So quotable" },
+    { key: "hit_and_miss", label: "Some hit, some missed" },
+  ],
 };
 
 /** Tags for a book: its main genre's set (if any), then the ones for any book. */

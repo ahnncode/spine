@@ -19,13 +19,21 @@ describe("genresFromSubjects", () => {
     expect(genresFromSubjects(TOMORROW, 2022)).toEqual(["literary"]);
   });
   it("keeps science fiction out of Science", () => {
-    expect(genresFromSubjects(HUNGER_GAMES, 2008)).toEqual(["scifi"]);
+    expect(genresFromSubjects(HUNGER_GAMES, 2008)).toEqual(["scifi", "ya"]);
     expect(genresFromSubjects(PHM, 2021)).toEqual(["scifi"]);
   });
   it("still finds classics by age", () => {
     const g = genresFromSubjects(MIDDLEMARCH, 1871);
     expect(g).toContain("classics");
     expect(g).not.toContain("mystery");
+  });
+  it("finds the newer genres", () => {
+    expect(genresFromSubjects(["Management", "Leadership", "Communication in management", "Interpersonal communication"], 2017)).toEqual(["business"]);
+    expect(genresFromSubjects(["Murder", "Kansas", "True crime", "Criminals", "Case studies"], 1966)).toEqual(["truecrime"]);
+    expect(genresFromSubjects(["Detective and mystery stories", "Murder", "Fiction"], 2020)).toEqual(["mystery"]);
+    expect(genresFromSubjects(["Holocaust, Jewish (1939-1945)", "Comic books, strips", "Graphic novels", "Biography"], 1986)).toContain("graphic");
+    expect(genresFromSubjects(["Description and travel", "Mountaineering", "Essays"], 2003)).toEqual(["essays"]);
+    expect(genresFromSubjects(["Time travel", "Science fiction"], 2010)).toEqual(["scifi"]);
   });
   it("leaves bare children's books and empty lists alone", () => {
     expect(genresFromSubjects(["Fiction", "Juvenile fiction", "Cats"], 2004)).toEqual([]);

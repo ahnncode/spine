@@ -45,7 +45,7 @@ export const BADGES: BadgeDef[] = [
   { key: "scrooge", name: "Scrooge", how: "Log reading on Christmas Day. Bah, humbug.", category: "consistency", rarity: "rare", glyph: "candle" },
 
   { key: "explorer", name: "Explorer", how: "Rank books from 5 genres", category: "breadth", rarity: "common", glyph: "compass", unit: "genre" },
-  { key: "full_passport", name: "Full Passport", how: "Rank books from all 12 genres", category: "breadth", rarity: "rare", glyph: "globe", unit: "genre" },
+  { key: "full_passport", name: "Full Passport", how: "Rank books from 12 different genres", category: "breadth", rarity: "rare", glyph: "globe", unit: "genre" },
   { key: "time_traveler", name: "Time Traveler", how: "Rank books from 4 different centuries", category: "breadth", rarity: "rare", glyph: "hourglass", unit: "century" },
   { key: "old_soul", name: "Old Soul", how: "Rank a book published before 1900", category: "breadth", rarity: "uncommon", glyph: "quill" },
   { key: "hot_off_the_press", name: "Hot Off the Press", how: "Finish a book the year it came out", category: "breadth", rarity: "uncommon", glyph: "press" },

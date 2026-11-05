@@ -247,12 +247,12 @@ function You() {
                 <button key={s.key} className="stamp" style={{ background: s.bg, color: s.fg }} onClick={() => setStamp(s.key)}
                   aria-label={`${s.label}: ${s.count} book${s.count === 1 ? "" : "s"}`}>
                   <span className="m" style={{ fontWeight: 700 }}>{s.count}</span>
-                  <span>{s.label}</span>
+                  <span>{s.short}</span>
                 </button>
               ) : (
                 <button key={s.key} className="stamp stamp--locked" onClick={() => setStamp(s.key)} aria-label={`${s.label}: not earned yet`}>
                   <LockIcon size={14} />
-                  <span>{s.label}</span>
+                  <span>{s.short}</span>
                 </button>
               ),
             )}
