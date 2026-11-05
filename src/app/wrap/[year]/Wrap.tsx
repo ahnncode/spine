@@ -12,6 +12,7 @@ import { useShelf } from "@/components/useShelf";
 import { fetchFollowing, fetchProfiles, rankEntries, tasteMatches, type Profile } from "@/lib/data";
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { readInYear } from "@/lib/stats";
+import { WrapShareButton } from "@/components/WrapShare";
 
 export function Wrap() {
   return (
@@ -89,6 +90,7 @@ function Inner() {
           </div>
         ) : (
           <>
+            <WrapShareButton year={year} />
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10, marginTop: 24 }}>
               <div className="card card--ink moment" style={{ animationDelay: "0.1s" }}>
                 <div className="stat-big">{books.length}</div>

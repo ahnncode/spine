@@ -3,6 +3,7 @@ import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import { ACCENT, clamp, coverData, GROUND, INK, MUTED, OgAvatar, OgCover, ogFonts, ScoreDisc, Wordmark } from "@/lib/og";
 import type { PublicBookCard } from "@/lib/public";
+import { WRAP_SLIDES, wrapSlide, type WrapBook } from "@/lib/wrapCards";
 
 /**
  * Share cards (1080×1350, made for Instagram stories and texts), built from
@@ -13,7 +14,7 @@ import type { PublicBookCard } from "@/lib/public";
 const SIZE = { width: 1080, height: 1350 };
 const BOOK_FIELDS = "title, author, cover_id, cover_url, isbn13";
 
-type Card = { kind: "top" } | { kind: "twins"; username: string } | { kind: "verdict"; id: string };
+type Card = { kind: "top" } | { kind: "twins"; username: string } | { kind: "verdict"; id: string } | { kind: "wrap"; slide: number; year: number };
 
 function parse(req: NextRequest): Card | null {
   const p = req.nextUrl.searchParams;
@@ -21,6 +22,11 @@ function parse(req: NextRequest): Card | null {
   if (kind === "top") return { kind };
   if (kind === "twins" && /^[a-z0-9_]{3,20}$/i.test(p.get("u") ?? "")) return { kind, username: p.get("u")!.toLowerCase() };
   if (kind === "verdict" && /^[0-9a-f-]{36}$/i.test(p.get("id") ?? "")) return { kind, id: p.get("id")! };
+  if (kind === "wrap") {
+    const slide = Number(p.get("slide") ?? 1);
+    const year = Number(p.get("year") ?? new Date().getFullYear());
+    if (Number.isInteger(slide) && slide >= 1 && slide <= WRAP_SLIDES && Number.isInteger(year) && year >= 2000 && year <= 2100) return { kind, slide, year };
+  }
   return null;
 }
 
@@ -137,6 +143,25 @@ export async function GET(req: NextRequest) {
           )}
         </Frame>
       ),
+      { ...SIZE, fonts },
+    );
+  }
+
+  if (card.kind === "wrap") {
+    const { data } = await sb
+      .from("ranked_entries")
+      .select(`score, overall_rank, finished_on, book:books(${BOOK_FIELDS}, pages, genres)`)
+      .eq("user_id", uid)
+      .gte("finished_on", `${card.year}-01-01`)
+      .lt("finished_on", `${card.year + 1}-01-01`)
+      .order("overall_rank");
+    const books = (data ?? []) as unknown as WrapBook[];
+    if (!books.length) return new Response(`No books finished in ${card.year} yet`, { status: 409 });
+    // Only the slides that show covers need them.
+    const covers = card.slide <= 2 ? await Promise.all(books.slice(0, card.slide === 1 ? 3 : 5).map((b) => coverData(b.book))) : [];
+    const now = new Date();
+    return new ImageResponse(
+      wrapSlide(card.slide, { name: nameOf(me), year: card.year, soFar: card.year === now.getFullYear() && now.getMonth() < 11, books, covers }) as React.ReactElement,
       { ...SIZE, fonts },
     );
   }
