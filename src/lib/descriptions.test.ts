@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanDescription } from "./descriptions";
+import { cleanDescription, sameTitle } from "./descriptions";
 
 describe("cleanDescription", () => {
   it("drops Open Library footers and markdown links", () => {
@@ -15,5 +15,19 @@ describe("cleanDescription", () => {
     const out = cleanDescription(long);
     expect(out.length).toBeLessThanOrEqual(2500);
     expect(out.endsWith(".")).toBe(true);
+  });
+});
+
+describe("sameTitle", () => {
+  const want = { title: "On the Calculation of Volume (Book I)", author: "Solvej Balle" };
+  it("matches series markers written differently", () => {
+    expect(sameTitle(want, { trackName: "On the Calculation of Volume I", artistName: "Solvej Balle" })).toBe(true);
+    expect(sameTitle({ title: "On the Calculation of Volume I", author: "Solvej Balle" }, { trackName: "On the Calculation of Volume 1", artistName: "Solvej Balle & Barbara J. Haveland" })).toBe(true);
+  });
+  it("keeps different volumes apart", () => {
+    expect(sameTitle(want, { trackName: "On the Calculation of Volume II", artistName: "Solvej Balle" })).toBe(false);
+  });
+  it("needs the author", () => {
+    expect(sameTitle(want, { trackName: "On the Calculation of Volume I", artistName: "Someone Else" })).toBe(false);
   });
 });
