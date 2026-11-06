@@ -1,3 +1,8 @@
+# Only main goes live (once a day, see .github/workflows/daily-deploy.yml).
+# Pushes to any other branch never build. Exit 0 here means "skip".
+[build]
+  ignore = "test \"$BRANCH\" != main"
+
 # The app moved from readspine.app to readread.app. Netlify serves domain
 # aliases as-is, so send old addresses (and every path on them) to the new one.
 [[redirects]]

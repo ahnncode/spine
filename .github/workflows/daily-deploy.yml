@@ -1,0 +1,37 @@
+# readread ships once a day. Work lands on the dev branch; this moves it to
+# main (which Netlify deploys) once a night, only if dev has something new.
+# Run it by hand from the Actions tab to ship right away.
+name: Daily deploy
+
+on:
+  schedule:
+    - cron: "7 9 * * *" # 09:07 UTC = 2:07am Mountain / 4:07am Eastern (an hour later in summer)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-deploy
+  cancel-in-progress: false
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Move dev onto main
+        run: |
+          git fetch origin dev
+          if [ -z "$(git rev-list main..origin/dev)" ]; then
+            echo "Nothing new on dev today. No deploy."
+            exit 0
+          fi
+          echo "Shipping:"; git log --oneline main..origin/dev
+          git config user.name "readread deploy"
+          git config user.email "noreply@github.com"
+          git merge --ff-only origin/dev || git merge --no-edit origin/dev
+          git push origin main
