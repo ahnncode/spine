@@ -29,14 +29,35 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
     return u === "page" && !pages ? "percent" : u;
   });
   const [total, setTotal] = useState<string>(String(entry.chapter_total ?? entry.book.chapters ?? ""));
-  const [chapter, setChapter] = useState<number>(entry.progress_chapter ?? 0);
   const totalN = parseInt(total, 10) > 0 ? Math.min(999, parseInt(total, 10)) : null;
+  // Chapters finished, estimated from a percent when switching from pages or percent.
+  const fromPct = (p: number, t: number) => Math.max(0, Math.min(t, Math.floor((p / 100) * t)));
+  const [chapter, setChapter] = useState<number>(() => {
+    if (entry.progress_chapter != null) return entry.progress_chapter;
+    const t = entry.chapter_total ?? entry.book.chapters;
+    return t && entry.progress_pct != null ? fromPct(entry.progress_pct, t) : 0;
+  });
+  // Once they set a chapter themselves, stop estimating it.
+  const [chapterSet, setChapterSet] = useState(entry.progress_chapter != null);
   // Chapter progress also gives a percent once the count is known.
   const chapterPct = totalN ? Math.round((Math.min(chapter, totalN) / totalN) * 100) : null;
   const shownPct = unit === "chapter" ? chapterPct : pct;
+  // Already partway (by page or percent) but no chapter count yet: don't claim chapter 0.
+  const unknownChapter = !totalN && !chapterSet && pct > 0;
   function stepChapter(d: number) {
     setChapter((c) => Math.max(0, Math.min(totalN ?? 999, c + d)));
+    setChapterSet(true);
     setTouched(true);
+  }
+  // Switching units carries progress across instead of starting over.
+  function pickUnit(u: ProgressUnit) {
+    if (u === unit) return;
+    if (unit === "chapter" && chapterPct != null && chapterSet) {
+      setPct(chapterPct);
+      if (pages) setPage(String(Math.round((chapterPct / 100) * pages)));
+    }
+    if (u === "chapter" && totalN && !chapterSet) setChapter(fromPct(pct, totalN));
+    setUnit(u);
   }
   const [note, setNote] = useState("");
   const mention = useMentionPicker<HTMLInputElement>(note, setNote);
@@ -109,9 +130,9 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
             <span style={{ fontWeight: 600, fontSize: 14 }}>{isListened(fmt) ? "How far have you listened?" : "How far are you?"}</span>
             <div className="unit-tabs" role="group" aria-label="Track progress by">
-              <button type="button" aria-pressed={unit === "chapter"} onClick={() => setUnit("chapter")}>Chapter</button>
-              {pages && <button type="button" aria-pressed={unit === "page"} onClick={() => setUnit("page")}>Page</button>}
-              <button type="button" aria-pressed={unit === "percent"} onClick={() => setUnit("percent")}>%</button>
+              <button type="button" aria-pressed={unit === "chapter"} onClick={() => pickUnit("chapter")}>Chapter</button>
+              {pages && <button type="button" aria-pressed={unit === "page"} onClick={() => pickUnit("page")}>Page</button>}
+              <button type="button" aria-pressed={unit === "percent"} onClick={() => pickUnit("percent")}>%</button>
             </div>
           </div>
 
@@ -119,21 +140,28 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
             <div className="chapter-picker">
               <button type="button" className="icon-btn" aria-label="One chapter back" onClick={() => stepChapter(-1)} disabled={chapter <= 0}>−</button>
               <div className="chapter-picker__now" aria-live="polite">
-                <span className="chapter-picker__label">{chapter === 0 ? "Not started" : "Finished chapter"}</span>
-                <span className="d chapter-picker__n">{chapter}</span>
+                <span className="chapter-picker__label">{unknownChapter ? "Your chapter" : chapter === 0 ? "Not started" : "Finished chapter"}</span>
+                <span className="d chapter-picker__n">{unknownChapter ? "?" : chapter}</span>
               </div>
               <button type="button" className="icon-btn" aria-label="One chapter forward" onClick={() => stepChapter(1)} disabled={totalN != null && chapter >= totalN}>+</button>
               <label className="chapter-picker__of">
                 <span>of</span>
                 <input className="input" inputMode="numeric" aria-label="Chapters in the book" placeholder="?" value={total}
-                  onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); setTotal(v); const n = parseInt(v, 10); if (n > 0) setChapter((c) => Math.min(c, n)); }} />
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 3);
+                    setTotal(v);
+                    const n = parseInt(v, 10);
+                    if (n > 0) setChapter((c) => (chapterSet ? Math.min(c, n) : fromPct(pct, n)));
+                  }} />
               </label>
             </div>
           )}
           {unit === "chapter" && (
             <p className="muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
               {!totalN
-                ? "Add how many chapters it has to see your percent. Readers after you get it filled in."
+                ? pct > 0 && !chapterSet
+                  ? `You’re ${pct}% through. Add how many chapters it has and we’ll work out your chapter.`
+                  : "Add how many chapters it has to see your percent. Readers after you get it filled in."
                 : `${chapterPct}% through${!entry.chapter_total && entry.book.chapters ? " · chapter count from another reader" : ""}`}
             </p>
           )}
