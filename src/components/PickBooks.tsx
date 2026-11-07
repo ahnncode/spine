@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Cover } from "@/components/Cover";
-import { ArrowIcon, FileIcon, SearchIcon } from "@/components/icons";
+import { SearchIcon } from "@/components/icons";
 import { dedupeKey, type BookInput } from "@/lib/books";
 import { addToRank, ensureBooks } from "@/lib/data";
 import { lookup, searchBooks } from "@/lib/openlibrary";
@@ -141,7 +141,7 @@ export function PickBooks({ embedded = false }: { embedded?: boolean }) {
             <div className="m muted" style={{ fontSize: 12, marginTop: 8 }}>{count} picked{count < TARGET ? ` · ${TARGET - count} to unlock taste match` : " · taste match unlocked"}</div>
           </div>
           <button className="btn" disabled={!count || busy} onClick={go}>
-            {busy ? "Saving…" : `Rank ${count || ""}`}
+            {busy ? "Saving…" : count ? `Rank ${count}` : "Pick a few first"}
           </button>
         </div>
   );
@@ -197,16 +197,7 @@ export function PickBooks({ embedded = false }: { embedded?: boolean }) {
         <span className="wordmark">readread</span>
         <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>What have you been reading?</h1>
 
-        <Link href="/import" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 24, textDecoration: "none" }}>
-          <span className="icon-btn" style={{ background: "#2a2a2a", color: "#fff", borderRadius: 12 }}><FileIcon /></span>
-          <span style={{ flex: 1 }}>
-            <span style={{ display: "block", fontWeight: 600 }}>Coming from Goodreads or StoryGraph?</span>
-            <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>Bring your whole library in one upload</span>
-          </span>
-          <ArrowIcon size={18} />
-        </Link>
-
-        <h2 className="h2" style={{ marginTop: 24 }}>Or tap books you&rsquo;ve read</h2>
+        <h2 className="h2" style={{ marginTop: 24 }}>Tap books you&rsquo;ve read</h2>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
           Pick {TARGET} or so and you&rsquo;ll unlock taste match and picks for you. You&rsquo;ll rank them next.
         </p>
@@ -239,13 +230,16 @@ export function PickBooks({ embedded = false }: { embedded?: boolean }) {
             );
           })}
         </ul>
+        <p className="muted" style={{ fontSize: 14, marginTop: 20 }}>
+          Coming from Goodreads or StoryGraph? <Link href="/import" style={{ fontWeight: 600 }}>Bring your whole library in one upload</Link>
+        </p>
       </main>
 
       <div className="tabbar" style={{ padding: "12px 16px 18px" }}>
         {progress}
         {errorLine}
         <div style={{ textAlign: "center", marginTop: 8 }}>
-          <Link href="/feed" style={{ fontSize: 13, color: "var(--muted)" }}>Skip for now</Link>
+          <Link href="/feed" style={{ fontSize: 13, color: "var(--muted)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>Skip for now</Link>
         </div>
       </div>
     </div>

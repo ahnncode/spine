@@ -81,8 +81,8 @@ export default function Landing() {
           not stars.
         </h1>
         <p className="lede" style={{ fontSize: 17 }}>
-          Every book you finish goes head-to-head with ones you&rsquo;ve read. A few taps later you have an honest,
-          ranked shelf, with a score that actually means something.
+          Every book you finish goes head-to-head with ones you&rsquo;ve read. You get an honest ranked shelf,
+          and you see exactly where your friends agree with you, and where they don&rsquo;t.
         </p>
 
         <ol className="mini-list" style={{ listStyle: "none", margin: "28px 0 0" }} aria-label="Example ranked shelf">
@@ -108,6 +108,47 @@ export default function Landing() {
         <p className="muted" style={{ textAlign: "center", fontSize: 14, margin: "14px 0 0" }}>
           Coming from Goodreads or StoryGraph? Bring your whole library in one upload.
         </p>
+
+        {/* What it looks like: three small screens instead of more paragraphs. */}
+        <section className="showcase" aria-label="What readread looks like">
+          <figure className="showcase__item">
+            <div className="showcase__screen">
+              <p className="showcase__q">Which one stuck with you more?</p>
+              <div className="showcase__versus">
+                <Cover book={{ title: "Piranesi", author: "Susanna Clarke" }} width={74} />
+                <span className="showcase__or" aria-hidden="true">OR</span>
+                <Cover book={{ title: "The Secret History", author: "Donna Tartt" }} width={74} />
+              </div>
+            </div>
+            <figcaption><strong>Rank in a few taps.</strong> Two books, one question, until it lands in the right spot.</figcaption>
+          </figure>
+          <figure className="showcase__item">
+            <div className="showcase__screen">
+              <div className="showcase__post-head">
+                <span className="showcase__avatar" aria-hidden="true">M</span>
+                <span><strong>Maya</strong> ranked a book</span>
+                <span className="pill pill--cobalt m">86% match</span>
+              </div>
+              <div className="showcase__post-book">
+                <Cover book={{ title: "Lonesome Dove", author: "Larry McMurtry" }} width={48} />
+                <span className="showcase__post-text">
+                  <span className="d" style={{ display: "block", fontWeight: 700 }}>Lonesome Dove</span>
+                  <span className="muted" style={{ display: "block", fontSize: 13 }}>You disagree. You gave it 5.8</span>
+                </span>
+                <ScoreChip score={9.4} bucket="loved" size={38} />
+              </div>
+            </div>
+            <figcaption><strong>See friends&rsquo; rankings.</strong> Your taste match with each of them, and the books you fight about.</figcaption>
+          </figure>
+          <figure className="showcase__item">
+            <div className="showcase__screen showcase__screen--ink">
+              <p className="showcase__eyebrow">Your year in books</p>
+              <p className="showcase__year">2026</p>
+              <p className="showcase__stats">34 books · 4 genres · a 12-week streak</p>
+            </div>
+            <figcaption><strong>Your year, wrapped.</strong> Streaks, a genre passport, badges and a recap to share.</figcaption>
+          </figure>
+        </section>
 
         <section className="landing-more" aria-label="About readread">
           {FEATURES.map((f) => (

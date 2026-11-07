@@ -1,8 +1,7 @@
 "use client";
 
 import { ShareCardButton } from "@/components/ShareCard";
-import { ReadAlongStack } from "@/components/ReadAlongStack";
-import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
+import { useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -30,7 +29,6 @@ import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, s
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
-import { ReadingCard } from "@/components/ReadingCard";
 import { SlidesSheet } from "@/components/WrapShare";
 
 export default function YouPage() {
@@ -61,11 +59,14 @@ function You() {
   const thisYear = readInYear(ranked, year).length;
   const goal = profile?.yearly_goal ?? null;
   const { streak, reloadCheckins } = useStreak(entries);
-  const reading = useMemo(() => (entries || []).filter((e) => e.status === "reading"), [entries]);
   const { list: readAlongs, people: raPeople } = useReadAlongs();
   const [checking, setChecking] = useState<Entry | null>(null);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
+  // Earned stamps plus the next three to unlock, not a wall of padlocks.
+  const [allStamps, setAllStamps] = useState(false);
+  const shownStamps = allStamps ? stamps : [...stamps.filter((s) => s.count > 0), ...stamps.filter((s) => s.count === 0).slice(0, 3)];
+  const hiddenStamps = stamps.length - shownStamps.length;
   const [stamp, setStamp] = useState<string | null>(null);
   const openStamp = stamps.find((s) => s.key === stamp);
   const liveStampBooks = stamp ? ranked.filter((e) => e.book.genres?.includes(stamp)) : [];
@@ -159,22 +160,8 @@ function You() {
         ) : (
           <button className="blurb blurb--empty" onClick={() => setEditing(true)}>
             + Add a line about you as a reader
+            <span className="blurb__example">Like &ldquo;Sci-fi lifer, will read anything with a map in the front.&rdquo;</span>
           </button>
-        )}
-
-        {reading.length > 0 && (
-          <section aria-label="Reading now">
-            <h2 className="section-title" style={{ marginTop: 28 }}>Reading now</h2>
-            <div className="reading-strip">
-              {reading.map((e) => (
-                <ReadingCard key={e.id} entry={e} onCheckIn={() => setChecking(e)}
-                  extra={(() => {
-                    const ra = activeFor(readAlongs, e.book_id, profile?.id);
-                    return ra ? <ReadAlongStack ra={ra} people={raPeople} me={profile?.id} /> : null;
-                  })()} />
-              ))}
-            </div>
-          </section>
         )}
 
         {ranked.length > 0 && (
@@ -196,23 +183,22 @@ function You() {
           </section>
         )}
 
-        <div className="card card--ink stats-panel">
-          <button className="stats-panel__half" onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
+        <div className="stats-pair">
+          <button className="card stats-goal" onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
             <svg width="64" height="64" viewBox="0 0 80 80" aria-hidden="true">
-              <circle cx="40" cy="40" r="34" fill="none" stroke="#3a3a37" strokeWidth="8" />
+              <circle cx="40" cy="40" r="34" fill="none" stroke="var(--line-2)" strokeWidth="8" />
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round"
                 strokeDasharray={`${C * pct} ${C}`} transform="rotate(-90 40 40)" />
-              <text x="40" y="48" textAnchor="middle" fill="#fff" fontFamily="var(--font-book)" fontSize="26" fontWeight="700">{thisYear}</text>
+              <text x="40" y="48" textAnchor="middle" fill="var(--ink)" fontFamily="var(--font-book)" fontSize="26" fontWeight="700">{thisYear}</text>
             </svg>
             <span>
               <span style={{ display: "block", fontSize: 14, fontWeight: 600 }}>{goal ? `${year} goal` : `In ${year}`}</span>
-              <span style={{ display: "block", fontSize: 12, color: "#c9c8c2", marginTop: 2 }}>
+              <span className="muted" style={{ display: "block", fontSize: 12, marginTop: 2 }}>
                 {goal ? (thisYear >= goal ? "Goal reached" : `${goal - thisYear} to go`) : "Set a goal"}
               </span>
             </span>
           </button>
-          <span className="stats-panel__rule" aria-hidden="true" />
-          <div className="stats-panel__half" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+          <div className="card card--ink stats-streak">
             <span style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
               <span className="d" style={{ fontSize: 30, fontWeight: 800, lineHeight: 1 }}>{streak.weeks}</span>
               <span style={{ fontSize: 13, fontWeight: 600 }}>week streak</span>
@@ -242,7 +228,7 @@ function You() {
             <span className="m muted" style={{ fontSize: 12 }}>{earnedStamps} of {stamps.length} stamps</span>
           </div>
           <div className="stamp-grid">
-            {stamps.map((s) =>
+            {shownStamps.map((s) =>
               s.count > 0 ? (
                 <button key={s.key} className="stamp" style={{ background: s.bg, color: s.fg }} onClick={() => setStamp(s.key)}
                   aria-label={`${s.label}: ${s.count} book${s.count === 1 ? "" : "s"}`}>
@@ -257,6 +243,11 @@ function You() {
               ),
             )}
           </div>
+          {hiddenStamps > 0 && (
+            <button className="link-btn" style={{ marginTop: 12, fontSize: 13, display: "block", minHeight: 32 }} onClick={() => setAllStamps(true)}>
+              See all {stamps.length} genres
+            </button>
+          )}
           {pendingGenres > 0 && (
             <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>Looking up genres for {pendingGenres} book{pendingGenres === 1 ? "" : "s"}… stamps fill in as you browse.</p>
           )}

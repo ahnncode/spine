@@ -10,7 +10,9 @@ import { Avatar, displayName } from "@/components/Avatar";
 import { Name } from "@/components/Badge";
 import { Cover } from "@/components/Cover";
 import { EntryThread } from "@/components/EntryThread";
-import { ArrowIcon, BellIcon, AddFriendIcon } from "@/components/icons";
+import { BellIcon } from "@/components/icons";
+import { FollowButton } from "@/components/FollowButton";
+import { FriendsMonth, SplitCard, WeekCard } from "@/components/FeedExtras";
 import { CommentButton, HeartButton, NoteText, TagList, VibePill } from "@/components/Social";
 import { WantButton } from "@/components/WantButton";
 import { ScoreChip } from "@/components/ScoreChip";
@@ -57,12 +59,28 @@ function Feed() {
   const [error, setError] = useState<string | null>(null);
   const [thread, setThread] = useState<string | null>(null);
   const unread = useUnread();
-  // "Following" is friends' activity; "You" is everything you've posted.
-  const [scope, setScope] = useState<"following" | "you">("following");
-  const [cache, setCache] = useState<Partial<Record<"following" | "you", Loaded>>>({});
+  // "Following" is friends' activity; "Everyone" is public activity across readread,
+  // which is also what someone who follows nobody yet sees first.
+  const [scope, setScope] = useState<"following" | "everyone">("following");
+  const [cache, setCache] = useState<Partial<Record<"following" | "everyone", Loaded>>>({});
+  const [followingIds, setFollowingIds] = useState<string[] | null>(null);
+  const [picked, setPicked] = useState(false);
+  const [openedAt] = useState(() => Date.now());
 
   useEffect(() => {
-    if (cache[scope] || (scope === "you" && !profile)) {
+    fetchFollowing()
+      .then((ids) => {
+        setFollowingIds(ids);
+        // Follows nobody yet: start on Everyone instead of an empty page.
+        if (!ids.length && !picked) setScope("everyone");
+      })
+      .catch(() => setFollowingIds([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per visit
+  }, []);
+
+  useEffect(() => {
+    if (followingIds === null) return;
+    if (cache[scope] || (scope === "everyone" && !profile)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setData(cache[scope] ?? null);
       return;
@@ -70,12 +88,12 @@ function Feed() {
     setData(null);
     setError(null);
     (async () => {
-      const ids = scope === "you" ? [profile!.id] : await fetchFollowing();
+      const ids = followingIds;
       const [items, togetherAll] = await Promise.all([
-        fetchFeed(ids, scope === "you" ? { days: 3650, limit: 150 } : {}),
-        feedReadAlongs(),
+        scope === "everyone" ? fetchFeed("everyone", { days: 21, exclude: profile!.id }) : fetchFeed(ids),
+        scope === "everyone" ? Promise.resolve([]) : feedReadAlongs(),
       ]);
-      const together = scope === "you" ? togetherAll.filter((t) => t.members.includes(profile!.id)) : togetherAll;
+      const together = togetherAll;
       const people = [...new Set([...items.map(feedUser), ...together.flatMap((t) => t.members)])];
       const targets: Array<{ type: TargetType; id: string }> = [];
       for (const i of items) {
@@ -93,13 +111,18 @@ function Feed() {
       setCache((c) => ({ ...c, [scope]: loaded }));
       setData(loaded);
     })().catch((e) => setError(e instanceof Error ? e.message : "Couldn’t load your feed"));
-  }, [scope, profile, cache]);
+  }, [scope, profile, cache, followingIds]);
+  const followSet = useMemo(() => new Set(followingIds ?? []), [followingIds]);
 
 
   const mine = useMemo(() => new Map(rankEntries(entries || []).map((e) => [e.book_id, e])), [entries]);
   const myStatus = useMemo(() => new Map((entries || []).map((e) => [e.book_id, e.status])), [entries]);
   const { streak, reloadCheckins } = useStreak(entries);
   const reading = (entries || []).filter((e) => e.status === "reading");
+  // Recap for the week card: friends who finished books in the last seven days.
+  const weekAgo = new Date(openedAt - 7 * 864e5).toISOString();
+  const weekRanked = scope === "following" && data ? data.items.filter((i) => i.kind === "ranked" && i.at >= weekAgo && feedUser(i) !== profile?.id) : [];
+  const weekFinishers = [...new Set(weekRanked.map(feedUser))].map((u) => displayName(data?.profiles.get(u)).split(" ")[0]);
   // Signed up but hasn't ranked or queued anything yet.
   const newReader = entries !== null && entries !== undefined && !entries.some((e) => e.status === "ranked" || e.status === "unsorted");
 
@@ -109,15 +132,9 @@ function Feed() {
         <div className="topbar">
           <Logo size={30} />
           <div style={{ display: "flex", gap: 8 }}>
-            <Link href="/people" className="icon-btn" aria-label="Find friends">
-              <AddFriendIcon size={21} />
-            </Link>
             <Link href="/notifications" className="icon-btn" style={{ position: "relative" }} aria-label={unread ? `Notifications, ${unread} new` : "Notifications"}>
               <BellIcon size={20} />
               {unread > 0 && <span className="unread-dot" />}
-            </Link>
-            <Link href="/you" aria-label="Your profile" style={{ textDecoration: "none" }}>
-              <Avatar profile={profile} size={44} />
             </Link>
           </div>
         </div>
@@ -136,62 +153,50 @@ function Feed() {
           )
         )}
 
-        {reading.length > 0 && (
-          <section aria-label="Your reading" style={{ marginTop: 16 }}>
-            <div className="reading-strip" style={{ marginTop: 0 }}>
-              {reading.map((e) => (
-                <div key={e.id} className="reading-card" style={{ width: 230, flexDirection: "row", alignItems: "center", textAlign: "left" }}>
-                  {/* Cover and title open the book; the progress area checks in. */}
-                  <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`} style={{ flexShrink: 0 }}>
-                    <Cover book={e.book} width={40} listened={isListened(e.format)} />
-                  </Link>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ fontSize: 14, color: "inherit", textDecoration: "none", display: "block" }}>{e.book.title}</Link>
-                    <button className="reading-card__checkin" onClick={() => setChecking(e)} aria-label={`Check in on ${e.book.title}`}>
-                      <span className="bar" style={{ display: "block", height: 5, marginTop: 8 }}><span style={{ width: `${e.progress_pct ?? 0}%`, background: "var(--accent)" }} /></span>
-                      <span className="m muted" style={{ fontSize: 11, display: "block", marginTop: 4 }}>
-                        {e.progress_pct != null ? `${e.progress_pct}%${isListened(e.format) ? " listened" : ""} · ` : ""}<span style={{ color: "var(--cobalt-ink)", fontWeight: 700 }}>Check in</span>
-                      </span>
-                    </button>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* Nothing ranked yet: start with books, not an empty feed. */}
         {newReader && <PickBooks embedded />}
 
         <div className="segmented" role="tablist" aria-label="Feed" style={{ marginTop: newReader ? 32 : 16 }}>
-          <button role="tab" aria-selected={scope === "following"} onClick={() => setScope("following")}>Following</button>
-          <button role="tab" aria-selected={scope === "you"} onClick={() => setScope("you")}>You</button>
+          <button role="tab" aria-selected={scope === "following"} onClick={() => { setPicked(true); setScope("following"); }}>Following</button>
+          <button role="tab" aria-selected={scope === "everyone"} onClick={() => { setPicked(true); setScope("everyone"); }}>Everyone</button>
         </div>
+
+        {scope === "everyone" && followingIds !== null && followingIds.length < 3 && !newReader && (
+          <div className="card" style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
+            <p style={{ margin: 0, flex: 1, fontSize: 14, lineHeight: 1.4 }}>
+              {followingIds.length ? "Follow a few more readers to fill your own feed." : "This is everyone on readread. Follow readers you like and they’ll show up under Following."}
+            </p>
+            <Link href="/people" className="btn" style={{ flexShrink: 0, minHeight: 40 }}>Find people</Link>
+          </div>
+        )}
+
+        {scope === "following" && data && <WeekCard finished={weekRanked.length} finishers={weekFinishers} streakWeeks={streak.weeks} />}
 
         {error && <p className="error" role="alert">{error}</p>}
         {!data && !error && <FeedSkeleton />}
 
-        {data && !newReader && data.items.length === 0 && data.together.length === 0 && scope === "you" && (
+        {data && data.items.length === 0 && scope === "everyone" && (
           <div className="empty">
-            <p className="h2">Nothing posted yet</p>
-            <p style={{ margin: "0 0 16px", fontSize: 14 }}>Rank a book or check in, and it&rsquo;ll show up here.</p>
-            <Link href="/add" className="btn">Rank a book</Link>
+            <p className="h2">Quiet on readread</p>
+            <p style={{ margin: "0 0 16px", fontSize: 14 }}>Nobody with a public shelf has ranked anything in the last few weeks. Invite a friend to get things going.</p>
+            <Link href="/people" className="btn">Invite friends</Link>
           </div>
         )}
 
         {data && !newReader && data.items.length === 0 && data.together.length === 0 && scope === "following" && (
-          <div className="card card--ink" style={{ marginTop: 16 }}>
+          <div className="card" style={{ marginTop: 16 }}>
             <p className="g" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05, margin: 0 }}>
               {data.following ? "Quiet in here." : "Your feed needs friends."}
             </p>
-            <p style={{ color: "#c9c8c2", fontSize: 14, lineHeight: 1.45, margin: "10px 0 0" }}>
+            <p className="muted" style={{ fontSize: 14, lineHeight: 1.45, margin: "10px 0 0" }}>
               {data.following
                 ? "When people you follow rank or start books, it shows up here."
                 : "Follow a few people and you’ll see what they’re reading and how they rank it."}
             </p>
-            <Link href="/people" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--black)" }}>
-              Find people to follow
-            </Link>
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <Link href="/people" className="btn" style={{ flex: 1 }}>Find people to follow</Link>
+              <button className="btn btn--quiet" onClick={() => { setPicked(true); setScope("everyone"); }}>See everyone</button>
+            </div>
           </div>
         )}
 
@@ -200,7 +205,13 @@ function Feed() {
             {[
               ...data.items.map((item) => ({ at: item.at, item, together: null as FeedReadAlong | null })),
               ...data.together.map((t) => ({ at: t.revealed_at ?? t.created_at, item: null as FeedItem | null, together: t })),
-            ].sort((a, b) => b.at.localeCompare(a.at)).map(({ item: row, together: t }) => {
+            ].sort((a, b) => b.at.localeCompare(a.at)).flatMap(({ item: row, together: t }, idx, all) => {
+              // A disagreement after the third post, the month's board after the eighth (or at the end).
+              const extras = scope !== "following" ? [] : [
+                idx === Math.min(2, all.length - 1) && <SplitCard key="split" friends={followingIds ?? []} mine={mine} me={profile?.id} />,
+                idx === Math.min(7, all.length - 1) && <FriendsMonth key="month" friends={followingIds ?? []} me={profile?.id} />,
+              ].filter(Boolean);
+              const post = (() => {
               if (t) return <TogetherCard key={`t-${t.id}`} t={t} book={data.books.get(t.book_id)} people={data.profiles} me={profile?.id} />;
               const item = row!;
               const uid = feedUser(item);
@@ -231,6 +242,9 @@ function Feed() {
                       <div className="when">{ago(item.at)}</div>
                     </div>
                     {!isMe && m?.match != null && <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>{m.match}% match</span>}
+                    {!isMe && scope === "everyone" && !followSet.has(uid) && (
+                      <FollowButton userId={uid} initial={false} onChange={(on) => setFollowingIds((f) => (f ? (on ? [...f, uid] : f.filter((x) => x !== uid)) : f))} />
+                    )}
                   </div>
                   <Link href={`/book/${bookId}`} className="feed-card__book">
                     <Cover book={book} width={item.kind === "ranked" ? 76 : 56} listened={heard} />
@@ -296,13 +310,9 @@ function Feed() {
                   )}
                 </article>
               );
+              })();
+              return [post, ...extras];
             })}
-            {scope === "following" && (
-              <Link href="/people" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", padding: "16px 18px" }}>
-                <span style={{ fontWeight: 600 }}>Find more people</span>
-                <ArrowIcon size={18} />
-              </Link>
-            )}
           </div>
         )}
       </main>

@@ -3,7 +3,7 @@
 import { ReadAlongStack } from "@/components/ReadAlongStack";
 import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
 import { BookActions } from "@/components/BookActions";
 import { CheckInSheet } from "@/components/CheckInSheet";
@@ -117,6 +117,8 @@ function Shelf() {
           ))}
         </div>
 
+        {tab === "ranked" && <TierKey />}
+
         {error && <p className="error" role="alert">{error}</p>}
         {!entries && !error && <RowsSkeleton count={6} label="Loading shelf" />}
 
@@ -160,9 +162,19 @@ function Shelf() {
                 <Link href="/add" className="btn" style={{ marginTop: 12 }}>Rank a book</Link>
               </div>
             ) : (
+              <>
+              {/* Long shelves: skip past the loved books to the rest. */}
+              {shown.length > 25 && (
+                <div className="tier-jump" aria-label="Jump to a tier">
+                  <span className="muted">Jump to</span>
+                  {(["fine", "disliked"] as const).filter((b) => shown.some((x) => x.bucket === b)).map((b) => (
+                    <a key={b} href={`#tier-${b}`} className="tag-chip">{b === "fine" ? "It was fine" : "Not for me"}</a>
+                  ))}
+                </div>
+              )}
               <ol style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
-                {shown.map((e) => (
-                  <li key={e.id}>
+                {shown.map((e, i) => (
+                  <li key={e.id} id={i === 0 || shown[i - 1].bucket !== e.bucket ? `tier-${e.bucket}` : undefined} style={{ scrollMarginTop: 16 }}>
                     <button className="book-row" style={rowButton} onClick={() => setSheet(e)}>
                       <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}`}>{e.rank}</span>
                       <Cover book={e.book} width={44} listened={isListened(e.format)} />
@@ -180,6 +192,7 @@ function Shelf() {
                   </li>
                 ))}
               </ol>
+              </>
             )}
           </>
         )}
@@ -312,4 +325,27 @@ function formatDate(iso: string): string {
   const date = new Date(y, m - 1, d);
   const sameYear = y === new Date().getFullYear();
   return date.toLocaleDateString(undefined, sameYear ? { month: "short", day: "numeric" } : { month: "short", year: "numeric" });
+}
+
+/** What the score colours mean, until it's been dismissed once (kept in this browser). */
+function TierKey() {
+  const [hidden, setHidden] = useState(true);
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of a per-browser setting
+      setHidden(localStorage.getItem("readread:tier-key") === "seen");
+    } catch {
+      setHidden(false);
+    }
+  }, []);
+  if (hidden) return null;
+  return (
+    <div className="tier-key" role="note">
+      <span><i className="score score--top" /> 9 and up</span>
+      <span><i className="score" /> Loved</span>
+      <span><i className="score score--fine" /> Fine</span>
+      <span><i className="score score--low" /> Not for me</span>
+      <button type="button" aria-label="Got it, hide this" onClick={() => { setHidden(true); try { localStorage.setItem("readread:tier-key", "seen"); } catch { /* fine */ } }}>Got it</button>
+    </div>
+  );
 }

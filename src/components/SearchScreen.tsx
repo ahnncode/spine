@@ -62,6 +62,12 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
     setPicked(null);
   }, [mode]);
   const reading = (entries || []).filter((e) => e.status === "reading");
+  const [recent, setRecent] = useState<BookInput[]>([]);
+  useEffect(() => {
+    if (mode !== "add") return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- per-viewer convenience from this browser
+    setRecent(readRecent());
+  }, [mode]);
 
   useEffect(() => {
     if (mode === "add") inputRef.current?.focus();
@@ -101,6 +107,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   }, [query]);
 
   async function act(book: BookInput, what: "rank" | "reading" | "want" | "page") {
+    rememberBook(book);
     setBusy(true);
     setError(null);
     try {
@@ -141,7 +148,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
     <div className="app">
       <main className="screen">
         <div className="topbar">
-          <h1 className="h1">{mode === "add" ? "What did you finish?" : "Discover"}</h1>
+          <h1 className="h1">{mode === "add" ? "Add a book" : "Discover"}</h1>
           <div style={{ display: "flex", gap: 8 }}>
             {mode === "discover" && (
               <Link href="/people" className="icon-btn" aria-label="Find friends">
@@ -153,6 +160,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             </Link>
           </div>
         </div>
+        {mode === "add" && <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>Finished it, reading it, or saving it for later.</p>}
         <div className="search-box">
           <SearchIcon size={20} />
           <label htmlFor="q" className="visually-hidden">Search by title or author</label>
@@ -228,8 +236,31 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                   </ul>
                 </>
               )}
+              {recent.length > 0 && (
+                <>
+                  <h2 className="h2" style={{ marginTop: 24 }}>Recently looked up</h2>
+                  <ul style={{ listStyle: "none", margin: "4px 0 0", padding: 0 }}>
+                    {recent.map((b) => {
+                      const entry = entryFor(b);
+                      return (
+                        <li key={(b.ol_work_key || "") + b.title}>
+                          <button className="book-row" style={{ width: "100%", background: "none", border: 0, borderBottom: "1px solid var(--line)", textAlign: "left" }}
+                            onClick={() => (entry?.status === "ranked" ? act(b, "page") : setPicked(b))}>
+                            <Cover book={b} width={44} />
+                            <span className="book-row__body">
+                              <span className="book-row__title" style={{ display: "block" }}>{b.title}</span>
+                              <span className="book-row__sub" style={{ display: "block" }}>{b.author}</span>
+                            </span>
+                            {entry && <span className={`pill ${entry.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>{{ ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[entry.status]}</span>}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
               <div className="empty">
-                <p className="h2">Rank a book in a few taps</p>
+                <p className="h2">Log a book in a few taps</p>
                 <p style={{ margin: 0, fontSize: 14 }}>
                   Search above, <Link href="/scan" style={{ fontWeight: 600 }}>scan a barcode</Link>, or{" "}
                   <Link href="/import" style={{ fontWeight: 600 }}>bring in your Goodreads or StoryGraph shelf</Link>.
@@ -289,10 +320,6 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
             })}
           </ul>
         )}
-        <Link href="/people" className="card" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", textDecoration: "none", marginTop: 20, padding: "16px 18px" }}>
-          <span style={{ fontWeight: 600 }}>Find friends on readread</span>
-          <ArrowIcon size={18} />
-        </Link>
       </main>
 
       {picked && (
@@ -345,15 +372,15 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
   if (rankedCount < TASTE_UNLOCK) {
     const left = TASTE_UNLOCK - rankedCount;
     return (
-      <div className="card card--ink" style={{ marginTop: 20 }}>
-        <div className="eyebrow" style={{ color: "#c9c8c2" }}>For you</div>
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="eyebrow">For you</div>
         <p className="g" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", margin: "6px 0 0", lineHeight: 1.05 }}>
           Rank {left} more book{left === 1 ? "" : "s"} to unlock picks made for your taste.
         </p>
-        <div className="bar" style={{ marginTop: 16, background: "#2a2a2a" }}>
+        <div className="bar" style={{ marginTop: 16 }}>
           <span style={{ width: `${(rankedCount / TASTE_UNLOCK) * 100}%`, background: "var(--accent)" }} />
         </div>
-        <Link href="/add" className="btn btn--block" style={{ marginTop: 16, background: "#fff", color: "var(--black)" }}>Rank a book</Link>
+        <Link href="/add" className="btn btn--block" style={{ marginTop: 16 }}>Rank a book</Link>
       </div>
     );
   }
@@ -386,4 +413,24 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
       </ul>
     </>
   );
+}
+
+/* Books looked up on the add screen, newest first, kept in this browser only. */
+const RECENT_KEY = "readread:recent-books";
+function readRecent(): BookInput[] {
+  try {
+    const v = JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
+    return Array.isArray(v) ? v.slice(0, 5) : [];
+  } catch {
+    return [];
+  }
+}
+function rememberBook(b: BookInput) {
+  try {
+    const key = dedupeKey(b.title, b.author);
+    const next = [b, ...readRecent().filter((x) => dedupeKey(x.title, x.author) !== key)].slice(0, 5);
+    localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+  } catch {
+    /* storage blocked: nothing to remember */
+  }
 }

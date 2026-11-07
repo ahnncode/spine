@@ -26,6 +26,8 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   const [note, setNote] = useState("");
   const mention = useMentionPicker<HTMLInputElement>(note, setNote);
   const [vibe, setVibe] = useState<string | null>(null);
+  // Most check-ins are "I read some": mood and a note wait behind one tap.
+  const [extra, setExtra] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const today = new Date();
@@ -72,9 +74,12 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           </div>
         </div>
 
-        <div style={{ marginTop: 20 }}>
-          <FormatToggle value={fmt} onChange={pickFormat} label="Reading or listening?" />
-        </div>
+        {/* Asked on a book's first check-in; after that the cover's headphones mark says it. */}
+        {!entry.last_checkin_on && (
+          <div style={{ marginTop: 20 }}>
+            <FormatToggle value={fmt} onChange={pickFormat} label="Reading or listening?" />
+          </div>
+        )}
 
         <div style={{ marginTop: 24 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
@@ -100,6 +105,11 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           )}
         </div>
 
+        {!extra ? (
+          <button type="button" className="btn btn--quiet" style={{ marginTop: 16, alignSelf: "flex-start", minHeight: 44 }} onClick={() => setExtra(true)}>
+            + Add a thought
+          </button>
+        ) : (<>
         <div className="tag-list" role="group" aria-label="How’s it going?" style={{ marginTop: 20 }}>
           {VIBES.map((v) => (
             <button key={v.key} type="button" className="tag-chip" aria-pressed={vibe === v.key} onClick={() => setVibe(vibe === v.key ? null : v.key)}>
@@ -119,6 +129,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           {...mention.fieldProps}
         />
         {mention.picker}
+        </>)}
 
         {error && <p className="error" role="alert">{error}</p>}
         <div className="stack" style={{ marginTop: 20 }}>
@@ -128,7 +139,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           {pct >= 100 ? (
             <Link href={`/rank/${entry.book_id}`} className="btn btn--outline btn--block">Done? Rank it</Link>
           ) : (
-            <button className="btn btn--quiet btn--block" disabled={busy || (doneToday && !note.trim() && !vibe)} onClick={() => save(false)}>
+            <button className="link-btn" style={{ minHeight: 44 }} disabled={busy || (doneToday && !note.trim() && !vibe)} onClick={() => save(false)}>
               Just read a bit, skip progress
             </button>
           )}

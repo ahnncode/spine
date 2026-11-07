@@ -203,7 +203,7 @@ function Inner() {
                             {e.progress_pct != null && (
                               <span className="reading-card__bar" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
                             )}
-                            <span className="m muted" style={{ fontSize: 11 }}>
+                            <span className="m muted" style={{ fontSize: 12 }}>
                               {readingStatus(e.progress_pct, e.last_checkin_on ?? e.started_on)}
                             </span>
                           </span>
@@ -267,7 +267,7 @@ function Inner() {
                         <Link key={e.id} href={`/book/${e.book_id}`} className="cover-strip__item">
                           <Cover book={e.book} width={76} />
                           <span className="cover-strip__title">{e.book.title}</span>
-                          <span className="m muted" style={{ fontSize: 11 }}>them {formatScore(e.score)} · you {formatScore(mine.score)}</span>
+                          <span className="m muted" style={{ fontSize: 12 }}>them {formatScore(e.score)} · you {formatScore(mine.score)}</span>
                         </Link>
                       ))}
                     </div>

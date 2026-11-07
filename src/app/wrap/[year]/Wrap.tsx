@@ -90,7 +90,9 @@ function Inner() {
         </div>
         {shared && <p className="notice" role="status">Copied. Paste it anywhere.</p>}
 
-        <p className="eyebrow" style={{ marginTop: 20 }}>{displayName(profile)}&rsquo;s year in books</p>
+        <p className="eyebrow" style={{ marginTop: 20 }}>
+          {displayName(profile)}&rsquo;s year in books{year === new Date().getFullYear() && new Date().getMonth() < 11 ? " so far" : ""}
+        </p>
         <h1 className="g moment" style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 0.85, margin: "8px 0 0" }}>{year}</h1>
 
         {entries && <MissingDates entries={entries} onChanged={reload} />}
@@ -122,7 +124,7 @@ function Inner() {
                 ))}
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(12, minmax(0, 1fr))", gap: 4, marginTop: 8 }} aria-hidden="true">
-                {MONTHS.map((m, i) => <span key={i} className="m muted" style={{ fontSize: 10, textAlign: "center" }}>{m}</span>)}
+                {MONTHS.map((m, i) => <span key={i} className="m muted" style={{ fontSize: 12, textAlign: "center" }}>{m}</span>)}
               </div>
             </section>
 

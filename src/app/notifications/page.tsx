@@ -94,7 +94,8 @@ function Inner() {
         {data && data.items.length === 0 && (
           <div className="empty">
             <p className="h2">Nothing yet</p>
-            <p style={{ margin: 0, fontSize: 14 }}>When a friend hearts, comments or pokes you, it lands here.</p>
+            <p style={{ margin: "0 0 16px", fontSize: 14 }}>When a friend hearts, comments or pokes you, it lands here.</p>
+            <Link href="/feed" className="btn">See what friends are reading</Link>
           </div>
         )}
         {data && data.items.length > 0 && (

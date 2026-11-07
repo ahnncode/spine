@@ -246,7 +246,7 @@ function Inner() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <h2 className="h2">Progress</h2>
                 {pace != null && !data.ra.revealed_at && (
-                  <span className="m" style={{ fontSize: 11, color: "var(--cobalt-ink)", display: "inline-flex", alignItems: "center", gap: 5 }}>
+                  <span className="m" style={{ fontSize: 12, color: "var(--cobalt-ink)", display: "inline-flex", alignItems: "center", gap: 5 }}>
                     <i className="ra-legend" aria-hidden="true" /> on pace · {pace}%
                   </span>
                 )}

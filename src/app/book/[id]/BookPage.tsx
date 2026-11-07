@@ -159,11 +159,6 @@ function Inner() {
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
               {[book.author, book.year, book.pages ? `${book.pages} pages` : null].filter(Boolean).join(" · ")}
             </p>
-            {mine && (
-              <button className="link-btn" style={{ fontSize: 12, marginTop: 8, color: "var(--muted)", fontWeight: 500 }} onClick={() => setFixing(true)}>
-                Title or author wrong? Fix it
-              </button>
-            )}
             {book.genres?.length > 0 && (
               <div style={{ display: "flex", gap: 6, marginTop: 12, flexWrap: "wrap" }}>
                 {book.genres.map((g) => GENRE_BY_KEY[g] && (
@@ -175,6 +170,13 @@ function Inner() {
             )}
 
             <BookSummary book={book} />
+
+            {/* Not ranked yet: what you can do with this book comes first. */}
+            {mine?.status !== "ranked" && (
+              <div style={{ marginTop: 16 }}>
+                <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove={false} onStartedReading={() => setCheckIn(true)} />
+              </div>
+            )}
 
             {readAlong ? (
               <Link href={`/together/${readAlong.id}`} className="card ra-banner">
@@ -222,6 +224,8 @@ function Inner() {
                 </div>
               )}
               </>
+            ) : social?.predicted.score == null ? (
+              social && <p className="muted" style={{ margin: "16px 0 0", fontSize: 14 }}>Rank more books and you&rsquo;ll see a predicted score here.</p>
             ) : (
               <div className="card" style={{ marginTop: 16, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
                 <div className="m score" style={{ width: 60, height: 60, background: "#fff", color: "#1d2ba8", fontSize: 20 }}>
@@ -238,22 +242,24 @@ function Inner() {
               </div>
             )}
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 8, marginTop: 8 }}>
-              <div className="card" style={{ padding: "12px 14px" }}>
+            {(friends.length > 0 || (social?.stats.readers ?? 0) > 0) && (
+            <div style={{ display: "grid", gridTemplateColumns: friends.length && social?.stats.readers ? "repeat(2, minmax(0, 1fr))" : "1fr", gap: 8, marginTop: 8 }}>
+              {friends.length > 0 && <div className="card" style={{ padding: "12px 14px" }}>
                 <div className="m" style={{ fontSize: 20, fontWeight: 700 }}>
                   {friends.length ? formatScore(friends.reduce((s, f) => s + f.score, 0) / friends.length) : "—"}
                 </div>
                 <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>Friends · {friends.length} ranked</div>
-              </div>
-              <div className="card" style={{ padding: "12px 14px" }}>
+              </div>}
+              {(social?.stats.readers ?? 0) > 0 && <div className="card" style={{ padding: "12px 14px" }}>
                 <div className="m" style={{ fontSize: 20, fontWeight: 700 }}>
                   {social?.stats.avg != null ? formatScore(social.stats.avg) : "—"}
                 </div>
                 <div className="muted" style={{ fontSize: 12, marginTop: 2 }}>
                   Everyone · {social?.stats.readers ?? 0} {social?.stats.readers === 1 ? "rank" : "ranks"}
                 </div>
-              </div>
+              </div>}
             </div>
+            )}
             <ElsewhereRatings book={book} />
 
             {friends.length > 0 && (
@@ -339,8 +345,15 @@ function Inner() {
             )}
 
             <div style={{ marginTop: 24 }}>
-              <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove={Boolean(mine)} onStartedReading={() => setCheckIn(true)} />
+              {mine?.status === "ranked"
+                ? <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove onStartedReading={() => setCheckIn(true)} />
+                : <BookActions bookId={id} entry={mine} onChange={loadShelf} onlyRemove />}
             </div>
+            {mine && (
+              <button className="link-btn" style={{ fontSize: 13, margin: "12px auto 0", display: "block", color: "var(--muted)", fontWeight: 500, minHeight: 44 }} onClick={() => setFixing(true)}>
+                Title or author wrong? Fix it
+              </button>
+            )}
           </div>
         )}
       </main>

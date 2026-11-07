@@ -115,6 +115,9 @@ function Flow() {
   const [finishedOn, setFinishedOn] = useState<string | null>(() => today());
   // Read or listened: starts as Read (or what you said while reading it).
   const [format, setFormatChoice] = useState<Format | null>(null);
+  // Date and format sit behind one line so the tier question comes first.
+  const [details, setDetails] = useState(false);
+  const [savedBeforeError, setSavedBeforeError] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -150,9 +153,11 @@ function Flow() {
 
   async function finish(b: Bucket, index: number, sorted: RankedEntry[]) {
     setPhase("saving");
+    let saved = false;
     try {
       // Re-ranking keeps the date already saved; a new finish uses the one picked here.
       await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, finishedOn: current ? undefined : finishedOn });
+      saved = true;
       let fresh = await fetchShelf();
       const placed = fresh.find((e) => e.book_id === id);
       // Save read/listened before badges are counted (All Ears, Both Ways).
@@ -180,7 +185,9 @@ function Flow() {
       setQueueLeft(shiftQueue(id));
       setPhase("done");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn’t save your ranking");
+      // The first worry is "did it save?", so say that before anything else.
+      setSavedBeforeError(saved);
+      setError(saved ? "Your ranking is saved. The results just didn’t load." : `Your ranking wasn’t saved. ${e instanceof Error ? e.message : ""}`.trim());
       setPhase("error");
     }
   }
@@ -244,6 +251,9 @@ function Flow() {
                   data-state={phase === "done" || i < steps ? "done" : i === steps ? "current" : undefined}
                 />
               ))}
+              {phase === "compare" && (
+                <small className="dots__count">{steps + 1} of {total > steps + 1 ? `about ${total}` : total}</small>
+              )}
             </div>
           ) : (
             <span />
@@ -255,9 +265,12 @@ function Flow() {
 
         {phase === "error" && (
           <div className="empty">
-            <p className="h2">Something went sideways</p>
+            <p className="h2">{savedBeforeError ? "Saved, with a hiccup" : "Something went sideways"}</p>
             <p style={{ margin: "0 0 16px", fontSize: 14 }}>{error}</p>
-            <Link href="/shelf" className="btn">Back to your shelf</Link>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+              {!savedBeforeError && book && <button className="btn" onClick={() => { setError(null); setPhase("bucket"); }}>Try again</button>}
+              <Link href="/shelf" className={savedBeforeError ? "btn" : "btn btn--quiet"}>{savedBeforeError ? "See your shelf" : "Back to your shelf"}</Link>
+            </div>
           </div>
         )}
 
@@ -272,7 +285,15 @@ function Flow() {
                 Now #{current.rank} · {formatScore(current.score)}
               </span>
             )}
-            {!current && (
+            {!current && !details && (
+              <button type="button" className="details-line" onClick={() => setDetails(true)}>
+                {finishedOn === today() ? "Finished today" : finishedOn === today(1) ? "Finished yesterday" : finishedOn ? `Finished ${new Date(`${finishedOn}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Finish date unknown"}
+                {" · "}
+                {FORMAT_WORD[format ?? existing?.format ?? "read"]}
+                <span className="details-line__change">Change</span>
+              </button>
+            )}
+            {!current && details && (
               <div style={{ alignSelf: "stretch", marginTop: 24 }}>
                 <FinishedPicker value={finishedOn} onChange={setFinishedOn} />
                 <div style={{ marginTop: 16 }}>
@@ -307,7 +328,7 @@ function Flow() {
               </p>
             )}
             <div className="versus">
-              <button className="versus__card" onClick={() => pick(true)}>
+              <button key={`new-${steps}`} className="versus__card" onClick={() => pick(true)}>
                 <Cover book={book} width={128} />
                 <div style={{ minWidth: 0 }}>
                   <div className="versus__title">{book.title}</div>
@@ -315,18 +336,17 @@ function Flow() {
                 </div>
                 <span className="pill pill--accent">{label}</span>
               </button>
-              <button key={opp.id} className="versus__card" onClick={() => pick(false)}>
+              <button key={`${opp.id}-${steps}`} className="versus__card" onClick={() => pick(false)}>
                 <Cover book={opp.book} width={128} />
                 <div style={{ minWidth: 0 }}>
                   <div className="versus__title">{opp.book.title}</div>
                   <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{opp.book.author}</div>
                 </div>
-                <span className="pill pill--ink">You: {formatScore(opp.score)}</span>
+                <span className="pill pill--ink">On your shelf</span>
               </button>
               <div className="versus__or" aria-hidden="true">OR</div>
             </div>
-            <div className="spacer" style={{ minHeight: 24 }} />
-            <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
               <button className="btn btn--quiet" style={{ flex: 1 }} onClick={tie}>
                 Too close to call
               </button>
@@ -420,6 +440,8 @@ function Flow() {
     </div>
   );
 }
+
+const FORMAT_WORD: Record<Format, string> = { read: "Read", listen: "Listened", both: "Read and listened" };
 
 const BUCKET_PHRASE: Record<Bucket, string> = {
   loved: "books you loved",

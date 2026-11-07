@@ -8,7 +8,9 @@ import { Name } from "@/components/Badge";
 import { FollowButton } from "@/components/FollowButton";
 import { BackIcon, SearchIcon, ShareIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
-import { fetchFollowing, fetchProfiles, inviteUrl, searchProfiles, similarReaders, type Profile } from "@/lib/data";
+import { fetchFollowing, fetchProfiles, inviteUrl, searchProfiles, similarReaders, suggestedReaders, topThreeFor, type Profile } from "@/lib/data";
+import type { Book } from "@/lib/books";
+import { Cover } from "@/components/Cover";
 import { RowsSkeleton } from "@/components/Skeleton";
 
 export default function PeoplePage() {
@@ -26,6 +28,8 @@ function People() {
   const [following, setFollowing] = useState<Set<string> | null>(null);
   const [similar, setSimilar] = useState<Array<{ profile: Profile; match: number; overlap: number }> | null>(null);
   const [copied, setCopied] = useState(false);
+  const [suggested, setSuggested] = useState<Array<{ profile: Profile; shared: number; ranked: number }> | null>(null);
+  const [tops, setTops] = useState<Map<string, Book[]>>(new Map());
 
   // Arriving from Discover with "@name": start with that search.
   useEffect(() => {
@@ -42,6 +46,15 @@ function People() {
         setSimilar(rows.filter((r) => profiles.get(r.user_id)?.username).map((r) => ({ profile: profiles.get(r.user_id)!, match: r.match, overlap: r.overlap })));
       })
       .catch(() => setSimilar([]));
+    // Readers to follow from day one: shared books first, then the most active.
+    suggestedReaders(12)
+      .then(async (rows) => {
+        const ids = rows.map((r) => r.user_id);
+        const [profiles, top] = await Promise.all([fetchProfiles(ids), topThreeFor(ids).catch(() => new Map<string, Book[]>())]);
+        setTops(top);
+        setSuggested(rows.filter((r) => profiles.get(r.user_id)?.username).map((r) => ({ profile: profiles.get(r.user_id)!, shared: r.shared, ranked: r.ranked })));
+      })
+      .catch(() => setSuggested([]));
   }, []);
 
   useEffect(() => {
@@ -107,11 +120,11 @@ function People() {
           )
         ) : (
           <>
-            <button className="card card--ink" style={{ width: "100%", textAlign: "left", marginTop: 16, display: "flex", alignItems: "center", gap: 14 }} onClick={invite}>
+            <button className="card" style={{ width: "100%", textAlign: "left", marginTop: 16, display: "flex", alignItems: "center", gap: 14, font: "inherit", color: "inherit", cursor: "pointer" }} onClick={invite}>
               <ShareIcon size={22} />
               <span style={{ flex: 1 }}>
                 <span style={{ display: "block", fontWeight: 600 }}>{copied ? "Link copied" : "Invite friends"}</span>
-                <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>Share your profile so they can follow you</span>
+                <span className="muted" style={{ display: "block", fontSize: 13, marginTop: 2 }}>Share a link. You&rsquo;ll both see your taste match once they join.</span>
               </span>
             </button>
             <h2 className="h2" style={{ marginTop: 24 }}>Readers like you</h2>
@@ -119,6 +132,24 @@ function People() {
               <div>{similar.map((s) => row(s.profile, `${s.match}% match`))}</div>
             ) : (
               <p className="muted" style={{ fontSize: 14 }}>Once you and other readers have ranked a few of the same books, your closest matches show up here.</p>
+            )}
+            {suggested && suggested.filter((x) => !similar?.some((s) => s.profile.id === x.profile.id)).length > 0 && (
+              <>
+                <h2 className="h2" style={{ marginTop: 28 }}>Readers to follow</h2>
+                <p className="muted" style={{ margin: "2px 0 4px", fontSize: 13 }}>Their top three, so you can follow on taste.</p>
+                <div>
+                  {suggested.filter((x) => !similar?.some((s) => s.profile.id === x.profile.id)).map((x) => (
+                    <div key={x.profile.id}>
+                      {row(x.profile, x.shared ? `${x.shared} book${x.shared === 1 ? "" : "s"} in common` : `${x.ranked} ranked`)}
+                      {(tops.get(x.profile.id) ?? []).length > 0 && (
+                        <div className="suggest-tops" aria-label={`${x.profile.username}'s top books`}>
+                          {(tops.get(x.profile.id) ?? []).map((b) => <Cover key={b.id} book={b} width={40} />)}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </>
         )}

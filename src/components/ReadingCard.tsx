@@ -20,7 +20,7 @@ export function ReadingCard({ entry: e, extra, onCheckIn }: { entry: Entry; extr
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button className="small-btn" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} onClick={onCheckIn}>Check in</button>
-          <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)", whiteSpace: "nowrap" }}>Rank it</Link>
+          <Link href={`/rank/${e.book_id}`} style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-2)", whiteSpace: "nowrap", display: "inline-flex", alignItems: "center", minHeight: 44, padding: "0 6px" }}>Rank it</Link>
         </div>
       </div>
     </div>

@@ -54,7 +54,7 @@ export function BookSummary({ book }: { book: Pick<Book, "id" | "title" | "autho
             {open ? "Show less" : "Read more"}
           </button>
         )}
-        {state.source && <span className="muted" style={{ fontSize: 11 }}>from {SOURCE[state.source] ?? state.source}</span>}
+        {state.source && <span className="muted" style={{ fontSize: 12 }}>from {SOURCE[state.source] ?? state.source}</span>}
       </div>
     </section>
   );

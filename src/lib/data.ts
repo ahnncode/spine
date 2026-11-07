@@ -660,6 +660,28 @@ export async function similarReaders(limit = 20): Promise<Array<{ user_id: strin
   return (data as Array<{ user_id: string; match: number; overlap: number }>) || [];
 }
 
+/** Public readers to follow, even before you share three books with anyone. */
+export async function suggestedReaders(limit = 12): Promise<Array<{ user_id: string; shared: number; ranked: number }>> {
+  const { data, error } = await supabase().rpc("suggested_readers", { p_limit: limit });
+  if (error) throw error;
+  return (data as Array<{ user_id: string; shared: number; ranked: number }>) || [];
+}
+
+/** Each reader's top three books, for showing taste at a glance. */
+export async function topThreeFor(userIds: string[]): Promise<Map<string, Book[]>> {
+  const out = new Map<string, Book[]>();
+  if (!userIds.length) return out;
+  const { data, error } = await supabase()
+    .from("ranked_entries")
+    .select("user_id, overall_rank, book:books(*)")
+    .in("user_id", userIds.slice(0, 50))
+    .lte("overall_rank", 3)
+    .order("overall_rank");
+  if (error) throw error;
+  for (const r of (data as unknown as Array<{ user_id: string; book: Book }>) || []) out.set(r.user_id, [...(out.get(r.user_id) ?? []), r.book]);
+  return out;
+}
+
 export async function recommendations(limit = 20): Promise<Array<{ book: Book; predicted: number; basis: number }>> {
   const { data, error } = await supabase().rpc("recommendations", { p_limit: limit });
   if (error) throw error;
@@ -687,6 +709,37 @@ export interface ScoredEntry {
 }
 
 const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, note, tags, note_spoiler, format, book:books(*)";
+
+/** How the people you follow ranked any of these books (for "you split on" cards). */
+export async function friendsRankedOn(bookIds: string[], friendIds: string[]): Promise<ScoredEntry[]> {
+  if (!bookIds.length || !friendIds.length) return [];
+  const { data, error } = await supabase()
+    .from("ranked_entries")
+    .select(SCORED_SELECT)
+    .in("user_id", friendIds.slice(0, 200))
+    .in("book_id", bookIds.slice(0, 200))
+    .limit(500);
+  if (error) throw error;
+  return ((data as unknown as ScoredEntry[]) || []).map((e) => ({ ...e, score: Number(e.score) }));
+}
+
+/** Books ranked this month by you and the people you follow, counted per person. */
+export async function rankedThisMonth(userIds: string[]): Promise<Map<string, number>> {
+  const counts = new Map<string, number>();
+  if (!userIds.length) return counts;
+  const d = new Date();
+  const start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
+  const { data, error } = await supabase()
+    .from("ranked_entries")
+    .select("user_id")
+    .in("user_id", userIds.slice(0, 300))
+    .not("source", "in", "(goodreads,storygraph)")
+    .gte("ranked_at", start)
+    .limit(2000);
+  if (error) throw error;
+  for (const r of (data as Array<{ user_id: string }>) || []) counts.set(r.user_id, (counts.get(r.user_id) ?? 0) + 1);
+  return counts;
+}
 
 /** People you follow who ranked this book. */
 export async function friendsOnBook(bookId: string, friendIds: string[]): Promise<ScoredEntry[]> {
@@ -723,30 +776,32 @@ export function feedUser(item: FeedItem): string {
   return item.kind === "checkin" ? item.checkin.user_id : item.entry.user_id;
 }
 
-export async function fetchFeed(friendIds: string[], opts: { days?: number; limit?: number } = {}): Promise<FeedItem[]> {
-  if (!friendIds.length) return [];
+export async function fetchFeed(
+  friendIds: string[] | "everyone",
+  opts: { days?: number; limit?: number; exclude?: string } = {},
+): Promise<FeedItem[]> {
+  if (friendIds !== "everyone" && !friendIds.length) return [];
+  const everyone = friendIds === "everyone";
   const since = new Date(Date.now() - 1000 * 60 * 60 * 24 * (opts.days ?? 60)).toISOString();
   const limit = opts.limit ?? 60;
+  // "Everyone" leans on row security: only public shelves (and your own) come back.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const who = (q: any) => (everyone ? (opts.exclude ? q.neq("user_id", opts.exclude) : q) : q.in("user_id", friendIds));
   const [ranked, reading, checkins] = await Promise.all([
-    supabase()
-      .from("ranked_entries")
-      .select(SCORED_SELECT)
-      .in("user_id", friendIds)
+    who(supabase().from("ranked_entries").select(SCORED_SELECT))
       .not("ranked_at", "is", null)
+      // Imported shelves would flood "Everyone" with hundreds of rows at once.
+      .not("source", "in", "(goodreads,storygraph)")
       .gte("ranked_at", since)
       .order("ranked_at", { ascending: false })
       .limit(limit),
-    supabase()
-      .from("shelf_entries")
-      .select(ENTRY_SELECT)
-      .in("user_id", friendIds)
+    who(supabase().from("shelf_entries").select(ENTRY_SELECT))
       .eq("status", "reading")
+      // Friends' current reads stay up however long they take; strangers' only while fresh.
+      .gte("updated_at", everyone ? since : "1970-01-01")
       .order("updated_at", { ascending: false })
       .limit(20),
-    supabase()
-      .from("reading_checkins")
-      .select(CHECKIN_SELECT)
-      .in("user_id", friendIds)
+    who(supabase().from("reading_checkins").select(CHECKIN_SELECT))
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(limit),
@@ -776,7 +831,17 @@ export async function fetchFeed(friendIds: string[], opts: { days?: number; limi
         entry: e,
       })),
   ];
-  return items.sort((a, b) => b.at.localeCompare(a.at));
+  // A row without a date can't be placed in time; leave it out rather than break the feed.
+  const dated = items.filter((i) => typeof i.at === "string");
+  dated.sort((a, b) => b.at.localeCompare(a.at));
+  if (!everyone) return dated;
+  // Strangers: a few posts each, so one busy reader doesn't fill the page.
+  const per = new Map<string, number>();
+  return dated.filter((i) => {
+    const u = i.kind === "checkin" ? i.checkin.user_id : i.entry.user_id;
+    per.set(u, (per.get(u) ?? 0) + 1);
+    return (per.get(u) ?? 0) <= 3;
+  });
 }
 
 /** Check-ins on one book (yours or a friend's), newest first, for the reading diary. */

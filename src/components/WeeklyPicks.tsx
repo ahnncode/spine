@@ -67,7 +67,7 @@ function MysteryCard({ pick, onChange }: { pick: WeeklyPick; onChange: (p: Parti
     pick.hints.decade ? `${pick.hints.decade}s` : null,
     pick.hints.pages ? `~${pick.hints.pages} pages` : null,
     pick.hints.initial ? `Title starts with “${pick.hints.initial}”` : null,
-  ].filter((h): h is string => Boolean(h));
+  ].filter((h): h is string => Boolean(h)).slice(0, 2);
 
   async function reveal() {
     setBusy(true);

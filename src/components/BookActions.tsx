@@ -16,12 +16,15 @@ export function BookActions({
   entry,
   onChange,
   showRemove = true,
+  onlyRemove = false,
   onStartedReading,
 }: {
   bookId: string;
   entry: Entry | null | undefined;
   onChange: () => void | Promise<void>;
   showRemove?: boolean;
+  /** Just the remove button (the main actions sit higher up the page). */
+  onlyRemove?: boolean;
   /** Right after "Reading it now": e.g. open the first check-in. */
   onStartedReading?: () => void;
 }) {
@@ -58,6 +61,14 @@ export function BookActions({
         void onChange();
       },
     });
+  }
+
+  if (onlyRemove) {
+    return entry ? (
+      <button className="btn btn--ghost btn--block" disabled={busy} onClick={() => remove(entry)}>
+        Remove from shelf
+      </button>
+    ) : null;
   }
 
   return (
