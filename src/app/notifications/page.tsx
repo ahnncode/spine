@@ -13,6 +13,10 @@ import { BackIcon } from "@/components/icons";
 import { TabBar } from "@/components/TabBar";
 import { RowsSkeleton } from "@/components/Skeleton";
 import { clearUnread } from "@/components/useUnread";
+import { useShelf } from "@/components/useShelf";
+import { CheckInSheet } from "@/components/CheckInSheet";
+import { Cover } from "@/components/Cover";
+import type { Entry } from "@/lib/data";
 import {
   fetchCheckinsById, fetchFollowing, fetchNotifications, fetchProfiles, markAllRead,
   fetchMyReadAlongs, type Checkin, type Notification, type Profile, type ReadAlong,
@@ -39,6 +43,11 @@ interface Loaded {
 function Inner() {
   const [data, setData] = useState<Loaded | null>(null);
   const [thread, setThread] = useState<string | null>(null);
+  // A poke isn't about one book: check in on your current read, or pick one.
+  const { entries, reload } = useShelf();
+  const reading = (entries || []).filter((e) => e.status === "reading");
+  const [checking, setChecking] = useState<Entry | null>(null);
+  const [choosing, setChoosing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -154,7 +163,11 @@ function Inner() {
                   ) : n.kind === "poke" ? (
                     <div style={{ ...rowStyle, gap: 10 }}>
                       <Link href={p?.username ? `/u/${p.username}` : "#"} style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, color: "inherit", textDecoration: "none" }}>{body}</Link>
-                      <Link href="/you" className="follow-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>Check in</Link>
+                      {reading.length ? (
+                        <button className="follow-btn" onClick={() => (reading.length === 1 ? setChecking(reading[0]) : setChoosing(true))}>Check in</button>
+                      ) : (
+                        <Link href="/add" className="follow-btn" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>Start a book</Link>
+                      )}
                     </div>
                   ) : n.kind === "follow" && p?.username ? (
                     <div style={{ ...rowStyle, gap: 10 }}>
@@ -177,6 +190,31 @@ function Inner() {
         )}
       </main>
       {thread && <EntryThread entryId={thread} onClose={() => setThread(null)} />}
+      {choosing && (
+        <div className="sheet-backdrop" onClick={() => setChoosing(false)}>
+          <div className="sheet" role="dialog" aria-modal="true" aria-label="Which book?" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet__grab" />
+            <h2 className="h2" style={{ margin: 0 }}>Which book?</h2>
+            <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }}>
+              {reading.map((e) => (
+                <li key={e.id}>
+                  <button className="book-row" style={{ width: "100%", background: "none", border: 0, borderBottom: "1px solid var(--line)", textAlign: "left", font: "inherit", color: "inherit", cursor: "pointer" }}
+                    onClick={() => { setChoosing(false); setChecking(e); }}>
+                    <Cover book={e.book} width={40} />
+                    <span className="book-row__body">
+                      <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
+                      <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+      {checking && (
+        <CheckInSheet entry={checking} onClose={() => setChecking(null)} onDone={async () => { await reload(); setChecking(null); }} />
+      )}
       <TabBar />
     </div>
   );
