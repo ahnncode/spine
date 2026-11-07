@@ -12,6 +12,7 @@ export type Status = "ranked" | "want" | "unsorted" | "reading";
 
 /** Read, listened (audiobook), or both. */
 export type Format = "read" | "listen" | "both";
+export type ProgressUnit = "chapter" | "page" | "percent";
 export const isListened = (f: Format | null | undefined) => f === "listen" || f === "both";
 
 export interface Entry {
@@ -28,6 +29,10 @@ export interface Entry {
   started_on: string | null;
   ranked_at: string | null;
   progress_pct: number | null;
+  /** How this book's progress is tracked: chapter (default), page or percent. */
+  progress_unit?: ProgressUnit;
+  progress_chapter?: number | null;
+  chapter_total?: number | null;
   last_checkin_on: string | null;
   /** A score you set yourself (your first few books); others fill in around it. */
   manual_score: number | null;
@@ -68,7 +73,7 @@ export interface Profile {
 }
 
 const ENTRY_SELECT =
-  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, last_checkin_on, manual_score, note, tags, note_spoiler, format, source, created_at, book:books(*)";
+  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, progress_unit, progress_chapter, chapter_total, last_checkin_on, manual_score, note, tags, note_spoiler, format, source, created_at, book:books(*)";
 
 export async function myId(): Promise<string> {
   const { data } = await supabase().auth.getSession();
@@ -321,23 +326,39 @@ export async function startReading(bookId: string): Promise<void> {
 export async function checkIn(
   bookId: string,
   progressPct: number | null,
-  extras: { note?: string | null; vibe?: string | null } = {},
+  extras: {
+    note?: string | null;
+    vibe?: string | null;
+    unit?: ProgressUnit;
+    chapter?: number | null;
+    chapterTotal?: number | null;
+  } = {},
 ): Promise<void> {
   const uid = await myId();
   const day = today();
   const pct = progressPct == null ? null : Math.max(0, Math.min(100, Math.round(progressPct)));
   const note = extras.note?.trim() ? extras.note.trim().slice(0, 280) : null;
+  const total = extras.chapterTotal && extras.chapterTotal > 0 ? Math.min(999, Math.round(extras.chapterTotal)) : null;
+  const chapter = extras.chapter != null ? Math.max(0, Math.min(total ?? 999, Math.round(extras.chapter))) : null;
   const { error } = await supabase()
     .from("reading_checkins")
     .upsert(
-      { user_id: uid, book_id: bookId, checked_on: day, progress_pct: pct, note, vibe: extras.vibe ?? null },
+      { user_id: uid, book_id: bookId, checked_on: day, progress_pct: pct, chapter, chapter_total: chapter != null ? total : null, note, vibe: extras.vibe ?? null },
       { onConflict: "user_id,book_id,checked_on" },
     );
   if (error) throw error;
   const fields: Record<string, unknown> = { last_checkin_on: day };
   if (pct != null) fields.progress_pct = pct;
+  if (extras.unit) fields.progress_unit = extras.unit;
+  if (chapter != null) fields.progress_chapter = chapter;
+  if (total != null) fields.chapter_total = total;
   const { error: e2 } = await supabase().from("shelf_entries").update(fields).eq("user_id", uid).eq("book_id", bookId);
   if (e2) throw e2;
+}
+
+/** Share a book's chapter count with other readers, if nobody has yet. */
+export async function suggestChapters(bookId: string, chapters: number): Promise<void> {
+  await supabase().rpc("suggest_book_chapters", { p_book: bookId, p_chapters: Math.round(chapters) });
 }
 
 /** Days you checked in on any book (the past ~14 months is plenty for streaks). */
@@ -759,13 +780,15 @@ export interface Checkin {
   book_id: string;
   checked_on: string;
   progress_pct: number | null;
+  chapter?: number | null;
+  chapter_total?: number | null;
   note: string | null;
   vibe: string | null;
   created_at: string;
   book: Book;
 }
 
-const CHECKIN_SELECT = "id, user_id, book_id, checked_on, progress_pct, note, vibe, created_at, book:books(*)";
+const CHECKIN_SELECT = "id, user_id, book_id, checked_on, progress_pct, chapter, chapter_total, note, vibe, created_at, book:books(*)";
 
 export type FeedItem =
   | { kind: "ranked"; at: string; entry: ScoredEntry }

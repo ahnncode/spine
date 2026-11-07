@@ -3,14 +3,15 @@
 import { useMentionPicker } from "@/components/Mentions";
 import Link from "next/link";
 import { useState } from "react";
-import { checkIn, type Entry, isListened, setFormat, type Format } from "@/lib/data";
+import { checkIn, type Entry, isListened, setFormat, suggestChapters, type Format, type ProgressUnit } from "@/lib/data";
 import { CHECKIN_NOTE_MAX, VIBES } from "@/lib/thoughts";
 import { FormatToggle } from "./FormatToggle";
 import { Cover } from "./Cover";
 
 /**
- * Check in on a book you're reading. Progress is optional: by page when we
- * know the page count, otherwise by percent.
+ * Check in on a book you're reading. Progress is optional and goes by chapter
+ * (the default), page, or percent. Chapter counts come from readers: the
+ * first one to enter a book's count shares it as everyone's starting point.
  */
 export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose: () => void; onDone: () => void | Promise<void> }) {
   const [fmt, setFmt] = useState<Format>(entry.format ?? "read");
@@ -23,6 +24,20 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   const [pct, setPct] = useState<number>(start);
   const [page, setPage] = useState<string>(pages && entry.progress_pct != null ? String(Math.round((entry.progress_pct / 100) * pages)) : "");
   const [touched, setTouched] = useState(false);
+  const [unit, setUnit] = useState<ProgressUnit>(() => {
+    const u = entry.progress_unit ?? (entry.progress_pct != null ? "percent" : "chapter");
+    return u === "page" && !pages ? "percent" : u;
+  });
+  const [total, setTotal] = useState<string>(String(entry.chapter_total ?? entry.book.chapters ?? ""));
+  const [chapter, setChapter] = useState<number>(entry.progress_chapter ?? 0);
+  const totalN = parseInt(total, 10) > 0 ? Math.min(999, parseInt(total, 10)) : null;
+  // Chapter progress also gives a percent once the count is known.
+  const chapterPct = totalN ? Math.round((Math.min(chapter, totalN) / totalN) * 100) : null;
+  const shownPct = unit === "chapter" ? chapterPct : pct;
+  function stepChapter(d: number) {
+    setChapter((c) => Math.max(0, Math.min(totalN ?? 999, c + d)));
+    setTouched(true);
+  }
   const [note, setNote] = useState("");
   const mention = useMentionPicker<HTMLInputElement>(note, setNote);
   const [vibe, setVibe] = useState<string | null>(null);
@@ -47,7 +62,16 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
     setBusy(true);
     setError(null);
     try {
-      await checkIn(entry.book_id, withProgress ? pct : null, { note, vibe });
+      const progress = !withProgress ? null : unit === "chapter" ? chapterPct : pct;
+      await checkIn(entry.book_id, progress, {
+        note,
+        vibe,
+        unit,
+        chapter: withProgress && unit === "chapter" ? chapter : null,
+        chapterTotal: unit === "chapter" ? totalN : null,
+      });
+      // First reader to count the chapters shares it with everyone after.
+      if (totalN && !entry.book.chapters) await suggestChapters(entry.book_id, totalN).catch(() => {});
       await onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t check in");
@@ -82,26 +106,64 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
         )}
 
         <div style={{ marginTop: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <label htmlFor="progress" style={{ fontWeight: 600, fontSize: 14 }}>{isListened(fmt) ? "How far have you listened?" : "How far are you?"}</label>
-            <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{pct}%</span>
-          </div>
-          <input
-            id="progress"
-            type="range"
-            min={0}
-            max={100}
-            step={1}
-            value={pct}
-            onChange={(e) => { setPct(Number(e.target.value)); setTouched(true); if (pages) setPage(String(Math.round((Number(e.target.value) / 100) * pages))); }}
-            style={{ width: "100%", marginTop: 12, accentColor: "var(--accent)", height: 32 }}
-          />
-          {pages && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 14 }}>
-              <label htmlFor="page" className="muted">Page</label>
-              <input id="page" className="input" inputMode="numeric" style={{ width: 90, height: 44 }} value={page} onChange={(e) => fromPage(e.target.value)} />
-              <span className="muted">of {pages}</span>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{isListened(fmt) ? "How far have you listened?" : "How far are you?"}</span>
+            <div className="unit-tabs" role="group" aria-label="Track progress by">
+              <button type="button" aria-pressed={unit === "chapter"} onClick={() => setUnit("chapter")}>Chapter</button>
+              {pages && <button type="button" aria-pressed={unit === "page"} onClick={() => setUnit("page")}>Page</button>}
+              <button type="button" aria-pressed={unit === "percent"} onClick={() => setUnit("percent")}>%</button>
             </div>
+          </div>
+
+          {unit === "chapter" && (
+            <div className="chapter-picker">
+              <button type="button" className="icon-btn" aria-label="One chapter back" onClick={() => stepChapter(-1)} disabled={chapter <= 0}>−</button>
+              <div className="chapter-picker__now" aria-live="polite">
+                <span className="chapter-picker__label">{chapter === 0 ? "Not started" : "Finished chapter"}</span>
+                <span className="d chapter-picker__n">{chapter}</span>
+              </div>
+              <button type="button" className="icon-btn" aria-label="One chapter forward" onClick={() => stepChapter(1)} disabled={totalN != null && chapter >= totalN}>+</button>
+              <label className="chapter-picker__of">
+                <span>of</span>
+                <input className="input" inputMode="numeric" aria-label="Chapters in the book" placeholder="?" value={total}
+                  onChange={(e) => { const v = e.target.value.replace(/\D/g, "").slice(0, 3); setTotal(v); const n = parseInt(v, 10); if (n > 0) setChapter((c) => Math.min(c, n)); }} />
+              </label>
+            </div>
+          )}
+          {unit === "chapter" && (
+            <p className="muted" style={{ margin: "8px 0 0", fontSize: 13 }}>
+              {!totalN
+                ? "Add how many chapters it has to see your percent. Readers after you get it filled in."
+                : `${chapterPct}% through${!entry.chapter_total && entry.book.chapters ? " · chapter count from another reader" : ""}`}
+            </p>
+          )}
+
+          {unit === "page" && pages && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 14, fontSize: 15 }}>
+              <label htmlFor="page" className="muted">Page</label>
+              <input id="page" className="input" inputMode="numeric" style={{ width: 96, height: 48 }} value={page} onChange={(e) => fromPage(e.target.value)} />
+              <span className="muted">of {pages}</span>
+              <span className="d" style={{ marginLeft: "auto", fontSize: 28, fontWeight: 800 }}>{pct}%</span>
+            </div>
+          )}
+
+          {unit === "percent" && (
+            <>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
+                <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{pct}%</span>
+              </div>
+              <label htmlFor="progress" className="visually-hidden">Percent through</label>
+              <input
+                id="progress"
+                type="range"
+                min={0}
+                max={100}
+                step={1}
+                value={pct}
+                onChange={(e) => { setPct(Number(e.target.value)); setTouched(true); if (pages) setPage(String(Math.round((Number(e.target.value) / 100) * pages))); }}
+                style={{ width: "100%", marginTop: 4, accentColor: "var(--accent)", height: 32 }}
+              />
+            </>
           )}
         </div>
 
@@ -133,10 +195,10 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
 
         {error && <p className="error" role="alert">{error}</p>}
         <div className="stack" style={{ marginTop: 20 }}>
-          <button className="btn btn--block" disabled={busy} onClick={() => save(touched || entry.progress_pct != null)}>
+          <button className="btn btn--block" disabled={busy} onClick={() => save(touched || entry.progress_pct != null || entry.progress_chapter != null)}>
             {busy ? "Saving…" : doneToday ? "Update progress" : "Check in"}
           </button>
-          {pct >= 100 ? (
+          {(shownPct ?? 0) >= 100 ? (
             <Link href={`/rank/${entry.book_id}`} className="btn btn--outline btn--block">Done? Rank it</Link>
           ) : (
             <button className="link-btn" style={{ minHeight: 44 }} disabled={busy || (doneToday && !note.trim() && !vibe)} onClick={() => save(false)}>
