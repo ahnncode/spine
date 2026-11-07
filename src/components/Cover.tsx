@@ -15,13 +15,15 @@ interface Props {
   className?: string;
   /** Listened to (audiobook): a small headphones mark in the corner. */
   listened?: boolean;
+  /** The main picture on the page: load it right away instead of lazily. */
+  priority?: boolean;
 }
 
 /**
  * Real cover art from Open Library when it exists; otherwise a typographic
  * cover in the app's palette so every shelf still looks designed.
  */
-export function Cover({ book, width, className, listened }: Props) {
+export function Cover({ book, width, className, listened, priority }: Props) {
   const height = Math.round(width * 1.5);
   const known = coverCandidates(book, width > 90 ? "L" : "M");
   // A replacement found after every known picture failed (see coverRescue).
@@ -102,7 +104,8 @@ export function Cover({ book, width, className, listened }: Props) {
         <img
           src={url}
           alt=""
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : undefined}
           key={url}
           decoding="async"
           // Already cached (e.g. loaded before hydration): show it without waiting for onLoad.

@@ -19,19 +19,45 @@ jobs:
   ship:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Actions are pinned to exact commits so a moved tag can't change what runs here.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: main
           fetch-depth: 0
-      - name: Move dev onto main
+      - name: Anything new on dev?
+        id: check
         run: |
           git fetch origin dev
           if [ -z "$(git rev-list main..origin/dev)" ]; then
             echo "Nothing new on dev today. No deploy."
-            exit 0
+            echo "ship=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Shipping:"; git log --oneline main..origin/dev
+            echo "ship=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "Shipping:"; git log --oneline main..origin/dev
+      - name: Move dev onto main (locally)
+        if: steps.check.outputs.ship == 'true'
+        run: |
           git config user.name "readread deploy"
           git config user.email "noreply@github.com"
           git merge --ff-only origin/dev || git merge --no-edit origin/dev
-          git push origin main
+      # Nothing goes live unless the tests pass and the app builds.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.check.outputs.ship == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Test and build
+        if: steps.check.outputs.ship == 'true'
+        env:
+          # Placeholders: this build only checks the code compiles. Netlify does the real build.
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-check
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          npm run build
+      - name: Push to main
+        if: steps.check.outputs.ship == 'true'
+        run: git push origin main

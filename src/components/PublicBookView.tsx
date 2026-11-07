@@ -47,7 +47,7 @@ export function PublicBookView({ book }: { book: PublicBook | null }) {
         }) }}
       />
       <div style={{ display: "flex", gap: 18, alignItems: "flex-end", marginTop: 12 }}>
-        <Cover book={book} width={120} />
+        <Cover book={book} width={120} priority />
         <div style={{ minWidth: 0 }}>
           <h1 className="h1" style={{ fontSize: 30 }}>{book.title}</h1>
           <p className="muted" style={{ margin: "6px 0 0", fontSize: 15 }}>

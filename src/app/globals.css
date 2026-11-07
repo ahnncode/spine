@@ -1,3 +1,13 @@
+/* Self-hosted fonts (SIL Open Font License): faster than Google Fonts and no third-party request. */
+@font-face { font-family: "Gloock"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/gloock-latin-ext-400-normal.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Gloock"; font-style: normal; font-weight: 400; font-display: swap; src: url(/fonts/gloock-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Brygada 1918"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/brygada-1918-latin-ext-wght-normal.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Brygada 1918"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/brygada-1918-latin-wght-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Brygada 1918"; font-style: italic; font-weight: 400 700; font-display: swap; src: url(/fonts/brygada-1918-latin-ext-wght-italic.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Brygada 1918"; font-style: italic; font-weight: 400 700; font-display: swap; src: url(/fonts/brygada-1918-latin-wght-italic.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Geist"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/geist-latin-ext-wght-normal.woff2) format("woff2"); unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+@font-face { font-family: "Geist"; font-style: normal; font-weight: 400 700; font-display: swap; src: url(/fonts/geist-latin-wght-normal.woff2) format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
 :root {
   --ground: #f7f7f5;
   --surface: #ffffff;
@@ -7,6 +17,8 @@
   --faint: #8c8c86;
   --line: #e4e3de;
   --line-2: #d9d8d2;
+  /* Text-field outlines: 3:1 against the page and fields (WCAG 1.4.11). */
+  --field-line: #86857f;
   --well: #ecebe6;
   --accent: #ff5a1f;
   --accent-soft: #ffe6da;
@@ -181,7 +193,7 @@ img { display: block; max-width: 100%; }
 .input {
   height: 52px; padding: 0 16px;
   border-radius: var(--radius-m);
-  border: 1px solid var(--line-2);
+  border: 1px solid var(--field-line);
   background: var(--surface);
   font-size: 16px;
 }
@@ -450,7 +462,7 @@ img { display: block; max-width: 100%; }
 .tag-pill { font-size: 12px; font-weight: 600; padding: 4px 9px; border-radius: 999px; background: var(--well); color: var(--ink-2); }
 .textarea {
   width: 100%; min-height: 96px; padding: 12px 14px; resize: vertical;
-  border-radius: var(--radius-m); border: 1px solid var(--line-2); background: var(--surface);
+  border-radius: var(--radius-m); border: 1px solid var(--field-line); background: var(--surface);
   font-size: 16px; line-height: 1.45;
 }
 .textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px rgba(17,17,17,0.08); }
@@ -505,8 +517,8 @@ img { display: block; max-width: 100%; }
   display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 0; background: none; border: 0;
   color: inherit; font: inherit; cursor: pointer; text-align: center; min-width: 0;
 }
-.badge-cell__name { font-size: 11.5px; font-weight: 600; line-height: 1.2; max-width: 100%; }
-.badge-cell__sub { font-size: 10.5px; color: var(--muted); line-height: 1.2; }
+.badge-cell__name { font-size: 12px; font-weight: 600; line-height: 1.2; max-width: 100%; }
+.badge-cell__sub { font-size: 12px; color: var(--muted); line-height: 1.2; }
 .badge-cell[data-locked="true"] .badge-cell__name { color: var(--muted); }
 .badge-strip { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 6px; margin: 10px -2px 0; scrollbar-width: none; }
 .badge-strip::-webkit-scrollbar { display: none; }
@@ -594,7 +606,7 @@ button.stamp--locked { border: 1.5px dashed var(--dash); }
   position: absolute; top: 36px; left: calc(50% + 12px); width: 20px; height: 20px; border-radius: 10px;
   background: var(--ink); color: var(--on-ink); display: flex; align-items: center; justify-content: center;
 }
-.pic__label { font-size: 10.5px; font-weight: 600; line-height: 1.15; text-align: center; color: var(--muted); max-width: 64px; }
+.pic__label { font-size: 12px; font-weight: 600; line-height: 1.15; text-align: center; color: var(--muted); max-width: 64px; }
 .pic:not([data-locked="true"]) .pic__label { color: var(--ink); }
 .avatar-edit { position: relative; background: none; border: 0; padding: 0; cursor: pointer; border-radius: 50%; }
 .avatar-edit__dot {
@@ -732,6 +744,7 @@ button.stamp--locked { border: 1.5px dashed var(--dash); }
     --faint: #7b7a73;
     --line: #2d2d2a;
     --line-2: #3b3b37;
+    --field-line: #6f6e68;
     --line-3: #4a4a45;
     --well: #2a2a27;
     --well-2: #262624;
@@ -913,3 +926,6 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .showcase__eyebrow { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #c9c8c2; }
 .showcase__year { margin: 2px 0 0; font-family: var(--font-display); font-size: 64px; line-height: 1; }
 .showcase__stats { margin: 6px 0 0; font-size: 14px; color: #c9c8c2; }
+
+/* Sheets take focus when they open (SheetFocus); the sheet itself needs no ring. */
+.sheet:focus { outline: none; }

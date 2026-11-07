@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/Auth";
+import { SheetFocus } from "@/components/SheetFocus";
 import { SheetSwipe } from "@/components/SheetSwipe";
 import { Toaster } from "@/components/Toaster";
 import "./globals.css";
@@ -13,9 +14,8 @@ export const metadata: Metadata = {
   description,
   applicationName: "readread",
   keywords: ["book tracker", "Goodreads alternative", "StoryGraph alternative", "rank books", "reading tracker", "book ranking app", "book club app", "reading log"],
-  alternates: { canonical: "/" },
   appleWebApp: { title: "readread", capable: true, statusBarStyle: "default" },
-  openGraph: { type: "website", siteName: "readread", url: "/", title: "readread: rank books, not stars", description },
+  openGraph: { type: "website", siteName: "readread", title: "readread: rank books, not stars", description },
   twitter: { card: "summary_large_image", title: "readread: rank books, not stars", description },
 };
 
@@ -34,18 +34,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        {/* Loaded at runtime rather than via next/font so builds don't need Google Fonts access. */}
-        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Gloock&family=Brygada+1918:ital,wght@0,400..700;1,400..700&family=Geist:wght@400..700&display=swap"
-        />
+        {/* Self-hosted fonts (see globals.css). Preload the two every page shows first. */}
+        <link rel="preload" href="/fonts/geist-latin-wght-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
+        <link rel="preload" href="/fonts/gloock-latin-400-normal.woff2" as="font" type="font/woff2" crossOrigin="" />
       </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
         <SheetSwipe />
+        <SheetFocus />
         <Toaster />
       </body>
     </html>

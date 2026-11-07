@@ -6,11 +6,11 @@ export const LEGAL = {
   /** Who runs readread (your name, or a company if you form one). */
   operator: "Paul Ahnn",
   /** Where people can reach you about privacy, accounts or legal questions. */
-  contactEmail: "hello@readspine.app",
+  contactEmail: "hello@readread.app",
   /** Whose laws apply to the terms. */
   governingState: "Pennsylvania",
   /** Where the Supabase project lives (Supabase → Project Settings → General → Region). */
   dataRegion: "the United States (East US)",
-  effectiveDate: "November 4, 2026",
+  effectiveDate: "November 8, 2026",
   minimumAge: 13,
 };

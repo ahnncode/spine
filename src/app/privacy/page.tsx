@@ -3,7 +3,11 @@ import Link from "next/link";
 import { LegalPage } from "@/components/LegalPage";
 import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Privacy · readread" };
+export const metadata: Metadata = {
+  title: "Privacy · readread",
+  description: "What readread collects, who can see it, and how to delete it. No ads, no selling your data.",
+  alternates: { canonical: "/privacy" },
+};
 
 export default function Privacy() {
   return (
@@ -24,7 +28,7 @@ export default function Privacy() {
         <li><strong>Your profile:</strong> username, display name, yearly reading goal, and whether your shelf is private.</li>
         <li><strong>Your shelf:</strong> the books you add, how you rank and score them, quick tags, notes and reviews (and whether they contain spoilers), the dates you started and finished, and reading check-ins with your progress, vibe and notes.</li>
         <li><strong>What you import:</strong> if you upload a Goodreads or StoryGraph export, we read it in your browser and save the books, star ratings, shelves, dates read and reviews from it. We don’t keep the file itself.</li>
-        <li><strong>Social activity:</strong> who you follow, hearts, comments, people you block, and reports you file.</li>
+        <li><strong>Social activity:</strong> who you follow, hearts, comments, @mentions, pokes, read-alongs and their messages, people you block, and reports you file.</li>
       </ul>
       <h3>Things we collect automatically</h3>
       <ul>
@@ -38,7 +42,7 @@ export default function Privacy() {
       <ul>
         <li><strong>By default your shelf is public to signed-in readers:</strong> your rankings, scores, notes, tags, check-ins and the books you’re reading. That’s what makes the feed, taste match and recommendations work.</li>
         <li><strong>You can make your shelf private</strong> (You → Edit → Private shelf). Then only you can see it, you won’t appear in anyone’s feed, and your scores aren’t used in community scores, taste match, or anyone’s recommendations.</li>
-        <li><strong>Your username and display name are visible</strong> to signed-in readers even when your shelf is private, so friends can find you.</li>
+        <li><strong>Your username and display name are visible</strong> to signed-in readers even when your shelf is private, so friends can find you. Your invite link (readread.app/join/your-username) shows your display name and picture to anyone you send it to.</li>
         <li><strong>Public web profiles are off unless you turn them on</strong> (You → Edit → Show my profile on the web). When on, anyone with your link, including search engines, can see your name, username, picture, blurb, top 10 rankings, what you&rsquo;re reading and your badges. Your notes, check-ins and the rest of your shelf stay visible only to signed-in readers.</li>
         <li><strong>Book pages are public:</strong> anyone can see a book&rsquo;s details and its community score (an average that never reveals who scored what), plus readers who have turned on public profiles.</li>
         <li><strong>Comments and hearts</strong> are visible to anyone who can see the post they’re on.</li>
@@ -65,7 +69,7 @@ export default function Privacy() {
             <tr><td>Resend</td><td>Sending sign-in emails</td><td>Your email address and the email it sends</td></tr>
             <tr><td>Cloudflare Turnstile</td><td>Bot protection on sign-in</td><td>Browser and device signals used to tell people from bots</td></tr>
             <tr><td>Open Library (Internet Archive)</td><td>Book search and cover images</td><td>Your searches and scanned ISBNs, and your IP address when covers load</td></tr>
-            <tr><td>Google Fonts</td><td>The app’s typefaces</td><td>Your IP address when fonts load</td></tr>
+            <tr><td>Apple (Apple Books search)</td><td>Backup cover images, book descriptions and outside ratings</td><td>Book titles and authors your device looks up, and your IP address when those load</td></tr>
           </tbody>
         </table>
       </div>

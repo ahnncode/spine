@@ -149,7 +149,7 @@ function Inner() {
               <BackIcon size={20} />
             </button>
           </div>
-          {book ? <Cover book={book} width={140} listened={isListened(mine?.format)} /> : <span className="skeleton" style={{ width: 140, height: 210, borderRadius: "3px 6px 6px 3px" }} aria-hidden="true" />}
+          {book ? <Cover book={book} width={140} listened={isListened(mine?.format)} priority /> : <span className="skeleton" style={{ width: 140, height: 210, borderRadius: "3px 6px 6px 3px" }} aria-hidden="true" />}
         </div>
 
         {!book && <BookSkeleton />}

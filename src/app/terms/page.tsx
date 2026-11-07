@@ -3,7 +3,11 @@ import Link from "next/link";
 import { LegalPage } from "@/components/LegalPage";
 import { LEGAL } from "@/lib/legal";
 
-export const metadata: Metadata = { title: "Terms · readread" };
+export const metadata: Metadata = {
+  title: "Terms · readread",
+  description: "The rules for using readread, the social book tracker that ranks books instead of starring them.",
+  alternates: { canonical: "/terms" },
+};
 
 export default function Terms() {
   return (
@@ -42,12 +46,22 @@ export default function Terms() {
 
       <h2>Copyright complaints</h2>
       <p>
-        If you believe something on readread infringes your copyright, email <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a> with
-        the work, where it appears on readread, your contact details, and a statement that you’re the owner or authorized to act for them. We’ll respond promptly.
+        If you believe something on readread infringes your copyright, email <a href={`mailto:${LEGAL.contactEmail}`}>{LEGAL.contactEmail}</a> with:
+        the work you say is infringed; where the material appears on readread (a link); your name, address, phone and email; a statement that you
+        believe in good faith the use isn&rsquo;t authorized by the owner, its agent or the law; a statement, under penalty of perjury, that your notice
+        is accurate and that you&rsquo;re the owner or authorized to act for them; and your physical or electronic signature. We&rsquo;ll remove or
+        disable the material and let the person who posted it know.
+      </p>
+      <p>
+        If your content was removed and you believe that was a mistake, you can send a counter-notice to the same address with the removed
+        material and where it was, a statement under penalty of perjury that it was removed by mistake or misidentification, your name, address
+        and phone, consent to the jurisdiction of the federal court for your address (or, outside the US, any court where readread may be found),
+        and your signature. We may restore it after 10 business days unless the complainant tells us they&rsquo;ve filed a lawsuit. We end the
+        accounts of repeat infringers.
       </p>
 
       <h2>Book information</h2>
-      <p>Book details and cover images come from Open Library and are provided as-is. They may be incomplete or wrong. Covers and titles belong to their publishers and creators.</p>
+      <p>Book details, descriptions and cover images come from Open Library and Apple Books and are provided as-is. They may be incomplete or wrong. Covers and titles belong to their publishers and creators.</p>
 
       <h2>Ending things</h2>
       <p>
