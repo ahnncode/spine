@@ -1,5 +1,6 @@
 "use client";
 
+import { progressLabel } from "@/lib/progress";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMemo, useState, useEffect, type ReactNode } from "react";
@@ -226,7 +227,7 @@ function Inner() {
                       const sub = !isMe && mine
                         ? `You: ${formatScore(mine.score)}${r && Math.abs(r.score - mine.score) >= 2 ? (r.score > mine.score ? " · they liked it more" : " · you liked it more") : ""}`
                         : !isMe && status === "reading" ? "You’re reading this"
-                        : e.status === "reading" && e.progress_pct != null ? `${e.book.author ?? ""} · ${e.progress_pct}%`
+                        : e.status === "reading" && progressLabel(e) ? `${e.book.author ?? ""} · ${progressLabel(e)}`
                         : e.book.author;
                       return (
                         <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--line)" }}>

@@ -1,5 +1,6 @@
 "use client";
 
+import { progressLabel } from "@/lib/progress";
 import { MentionText } from "@/components/Mentions";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -333,7 +334,7 @@ function Inner() {
                       </span>
                       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-start" }}>
                         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                          {c.progress_pct != null && <span className="m" style={{ fontSize: 13, fontWeight: 700 }}>{c.progress_pct}%</span>}
+                          {progressLabel(c) && <span className="m" style={{ fontSize: 13, fontWeight: 700 }}>{progressLabel(c)}</span>}
                           <VibePill vibe={c.vibe} />
                         </div>
                         {c.note && <p className="note" style={{ fontSize: 14 }}><MentionText text={c.note} /></p>}

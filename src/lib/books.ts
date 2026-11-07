@@ -9,6 +9,8 @@ export interface BookInput {
   cover_url?: string | null;
   year?: number | null;
   pages?: number | null;
+  /** Chapter count a reader shared (not in catalogue data). */
+  chapters?: number | null;
   /** Genre keys from src/lib/genres.ts. */
   genres?: string[];
 }

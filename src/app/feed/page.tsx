@@ -228,7 +228,9 @@ function Feed() {
                 item.kind === "ranked"
                   ? heard ? "listened to and ranked a book" : "ranked a book"
                   : item.kind === "checkin"
-                    ? item.checkin.progress_pct != null && item.checkin.progress_pct > 0
+                    ? item.checkin.chapter != null && item.checkin.chapter > 0
+                      ? `finished chapter ${item.checkin.chapter}${item.checkin.chapter_total ? ` of ${item.checkin.chapter_total}` : ""}`
+                      : item.checkin.progress_pct != null && item.checkin.progress_pct > 0
                       ? `is ${item.checkin.progress_pct}% through`
                       : "checked in"
                     : heard ? "started listening to" : "started reading";

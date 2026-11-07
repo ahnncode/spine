@@ -929,3 +929,16 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 
 /* Sheets take focus when they open (SheetFocus); the sheet itself needs no ring. */
 .sheet:focus { outline: none; }
+
+/* Check-in: track by chapter, page or percent */
+.unit-tabs { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--well); }
+.unit-tabs button { min-height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+.unit-tabs button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(17,17,17,0.12); }
+.chapter-picker { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.chapter-picker .icon-btn { width: 48px; height: 48px; font-size: 22px; font-weight: 600; }
+.chapter-picker .icon-btn:disabled { opacity: 0.35; }
+.chapter-picker__now { display: flex; flex-direction: column; align-items: center; min-width: 92px; }
+.chapter-picker__label { font-size: 12px; color: var(--muted); }
+.chapter-picker__n { font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.chapter-picker__of { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 15px; color: var(--muted); }
+.chapter-picker__of .input { width: 64px; height: 48px; text-align: center; }

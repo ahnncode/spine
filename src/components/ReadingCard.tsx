@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { Entry } from "@/lib/data";
 import { Cover } from "./Cover";
 import { isListened } from "@/lib/data";
+import { progressLabel } from "@/lib/progress";
 
 /** One compact "Reading now" card: cover beside title, a bar, check in. Same on You and Shelf. */
 export function ReadingCard({ entry: e, extra, onCheckIn }: { entry: Entry; extra?: ReactNode; onCheckIn: () => void }) {
@@ -14,9 +15,9 @@ export function ReadingCard({ entry: e, extra, onCheckIn }: { entry: Entry; extr
       <div className="reading-card__main">
         <Link href={`/book/${e.book_id}`} className="reading-card__title" style={{ color: "inherit", textDecoration: "none", minHeight: 0 }}>{e.book.title}</Link>
         {extra}
-        <div style={{ marginTop: "auto" }} aria-label={e.progress_pct != null ? `${e.progress_pct}% ${isListened(e.format) ? "listened" : "read"}` : "Not checked in yet"}>
+        <div style={{ marginTop: "auto" }} aria-label={progressLabel(e) ?? "Not checked in yet"}>
           <div className="reading-card__bar"><span style={{ width: `${e.progress_pct ?? 0}%` }} /></div>
-          <div className="m muted" style={{ fontSize: 12, marginTop: 4 }}>{e.progress_pct != null ? `${e.progress_pct}%${isListened(e.format) ? " listened" : ""}` : isListened(e.format) ? "Just started listening" : "Just started"}</div>
+          <div className="m muted" style={{ fontSize: 12, marginTop: 4 }}>{progressLabel(e) ? `${progressLabel(e)}${isListened(e.format) && progressLabel(e)!.endsWith("%") ? " listened" : ""}` : isListened(e.format) ? "Just started listening" : "Just started"}</div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button className="small-btn" style={{ minHeight: 34, padding: "0 12px", fontSize: 13 }} onClick={onCheckIn}>Check in</button>
