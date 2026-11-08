@@ -264,7 +264,7 @@ function Inner() {
                           {isMe ? "You" : <Name profile={person} />}
                         </span>
                         <span className="m muted" style={{ fontSize: 12, flexShrink: 0 }}>
-                          {p.state === "invited" ? "invited" : p.ranked ? (p.score != null ? `finished · ${formatScore(p.score)}` : "finished ✓") : p.progress_pct != null ? `${pct}%` : "not started"}
+                          {p.state === "invited" ? "invited" : p.ranked ? (p.score != null ? `finished · ${formatScore(p.score)}` : "finished ✓") : p.shelf_status === "paused" ? `put it aside${p.progress_pct != null ? ` at ${pct}%` : ""}` : p.shelf_status === "dropped" ? `didn’t finish${p.progress_pct != null ? ` · ${pct}%` : ""}` : p.progress_pct != null ? `${pct}%` : "not started"}
                         </span>
                       </div>
                       {p.state === "joined" && (

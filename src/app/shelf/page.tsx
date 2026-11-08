@@ -1,5 +1,6 @@
 "use client";
 
+import { DroppedList, PutAsideSection } from "@/components/PutAside";
 import { ReadAlongStack } from "@/components/ReadAlongStack";
 import { activeFor, useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
@@ -31,7 +32,7 @@ export default function ShelfPage() {
   );
 }
 
-type Tab = "ranked" | "want" | "unsorted";
+type Tab = "ranked" | "want" | "unsorted" | "dropped";
 
 function Shelf() {
   const { entries, error, reload } = useShelf();
@@ -55,6 +56,11 @@ function Shelf() {
   );
   const reading = useMemo(() => (entries || []).filter((e) => e.status === "reading"), [entries]);
   const unsorted = useMemo(() => (entries || []).filter((e) => e.status === "unsorted"), [entries]);
+  const paused = useMemo(() => (entries || []).filter((e) => e.status === "paused"), [entries]);
+  const dropped = useMemo(
+    () => (entries || []).filter((e) => e.status === "dropped").sort((a, b) => (b.stopped_at ?? "").localeCompare(a.stopped_at ?? "")),
+    [entries],
+  );
   const roughCount = ranked.filter((e) => e.needs_sort).length;
 
   const genresPresent = useMemo(() => GENRES.filter((g) => ranked.some((e) => e.book.genres?.includes(g.key))), [ranked]);
@@ -68,6 +74,7 @@ function Shelf() {
     { id: "want", label: "Want to read", count: want.length },
   ];
   if (unsorted.length) tabs.push({ id: "unsorted", label: "To rank", count: unsorted.length });
+  if (dropped.length) tabs.push({ id: "dropped", label: "Didn’t finish", count: dropped.length });
 
   return (
     <div className="app">
@@ -107,6 +114,8 @@ function Shelf() {
             </div>
           </section>
         )}
+
+        <PutAsideSection items={paused} onChange={reload} />
 
         <div className="segmented" role="tablist" aria-label="Shelf" style={{ marginTop: 16 }}>
           {tabs.map((t) => (
@@ -197,7 +206,9 @@ function Shelf() {
           </>
         )}
 
-        {entries && entries.length > 0 && tab !== "ranked" && (
+        {entries && entries.length > 0 && tab === "dropped" && <DroppedList items={dropped} />}
+
+        {entries && entries.length > 0 && (tab === "want" || tab === "unsorted") && (
           <PlainList
             items={tab === "want" ? want : unsorted}
             emptyTitle={tab === "want" ? "Nothing saved yet" : "All caught up"}

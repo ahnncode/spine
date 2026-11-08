@@ -74,6 +74,8 @@ function Inner() {
       if (n.detail === "joined") return `joined your read-along of${on}`;
       if (n.detail === "message") return `posted in your read-along of${on}`;
       if (n.detail === "verdict") return `finished${on}. The verdict is in`;
+      if (n.detail === "paused") return `put${on} aside for now`;
+      if (n.detail === "dropped") return `didn’t finish${on}`;
       return `updated your read-along of${on}`;
     }
     if (n.kind === "mention") {

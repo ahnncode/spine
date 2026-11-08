@@ -1,5 +1,7 @@
 "use client";
 
+import { progressLabel } from "@/lib/progress";
+import { STOP_REASON_LABEL } from "@/lib/stopReasons";
 import { MentionText } from "@/components/Mentions";
 import { timeAgo } from "@/lib/time";
 import Link from "next/link";
@@ -23,7 +25,7 @@ import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
   commentCounts, feedReadAlongs, feedUser, fetchBooks, fetchFeed, type FeedReadAlong, fetchFollowing, fetchHearts, fetchProfiles, rankEntries, tasteMatches,
-  type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType, isListened } from "@/lib/data";
+  type Entry, type FeedItem, type HeartState, type Match, type Profile, type TargetType, isListened, poke } from "@/lib/data";
 import type { Book } from "@/lib/books";
 import { formatScore } from "@/lib/ranking";
 import { FeedSkeleton } from "@/components/Skeleton";
@@ -97,14 +99,14 @@ function Feed() {
       const people = [...new Set([...items.map(feedUser), ...together.flatMap((t) => t.members)])];
       const targets: Array<{ type: TargetType; id: string }> = [];
       for (const i of items) {
-        if (i.kind === "ranked") targets.push({ type: "entry", id: i.entry.id });
+        if (i.kind === "ranked" || i.kind === "dropped") targets.push({ type: "entry", id: i.entry.id });
         else if (i.kind === "checkin") targets.push({ type: "checkin", id: i.checkin.id });
       }
       const [profiles, matches, hearts, comments] = await Promise.all([
         fetchProfiles(people),
         tasteMatches(people),
         fetchHearts(targets),
-        commentCounts(items.filter((i) => i.kind === "ranked").map((i) => (i.kind === "ranked" ? i.entry.id : ""))),
+        commentCounts(items.flatMap((i) => (i.kind === "ranked" || i.kind === "dropped" ? [i.entry.id] : []))),
       ]);
       const books = new Map((await fetchBooks([...new Set(together.map((t) => t.book_id))]).catch(() => [])).map((b) => [b.id, b]));
       const loaded = { items, profiles, matches, hearts, comments, following: ids.length, together, books };
@@ -233,7 +235,12 @@ function Feed() {
                       : item.checkin.progress_pct != null && item.checkin.progress_pct > 0
                       ? `is ${item.checkin.progress_pct}% through`
                       : "checked in"
-                    : heard ? "started listening to" : "started reading";
+                    : item.kind === "dropped"
+                      ? "didn’t finish a book"
+                      : item.entry.retrying
+                        ? "is giving a book another go"
+                        : heard ? "started listening to" : "started reading";
+              const stoppedAt = item.kind === "dropped" ? progressLabel(item.entry) : null;
               return (
                 <article key={key} className="feed-card">
                   <div className="feed-card__head">
@@ -249,7 +256,7 @@ function Feed() {
                     )}
                   </div>
                   <Link href={`/book/${bookId}`} className="feed-card__book">
-                    <Cover book={book} width={item.kind === "ranked" ? 76 : 56} listened={heard} />
+                    <Cover book={book} width={item.kind === "ranked" ? 76 : 56} listened={heard} state={item.kind === "dropped" ? "dropped" : null} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div className="feed-card__title">{book.title}</div>
                       <div className="muted" style={{ fontSize: 13, marginTop: 2 }}>{book.author}</div>
@@ -271,6 +278,22 @@ function Feed() {
                           </span>
                         </div>
                       )}
+                      {item.kind === "dropped" && (
+                        <div style={{ marginTop: 8, fontSize: 13, lineHeight: 1.35 }}>
+                          <span className="state-pill state-pill--dropped" style={{ marginRight: 8 }}>DNF</span>
+                          <span className="muted">
+                            {[stoppedAt && stoppedAt !== "Not started" ? `Got to ${stoppedAt.replace(/^Chapter/, "chapter")}` : null, item.entry.stop_reason ? STOP_REASON_LABEL[item.entry.stop_reason] : null].filter(Boolean).join(" · ")}
+                          </span>
+                          {!isMe && myEntry && (
+                            <span className="muted" style={{ display: "block", marginTop: 4 }}>
+                              You ranked it {formatScore(myEntry.score)}.{myEntry.score >= 6.7 ? " You two disagree." : ""}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      {item.kind === "reading" && item.entry.retrying && progressLabel(item.entry) && (
+                        <div className="muted" style={{ fontSize: 13, marginTop: 6 }}>Carrying on from {progressLabel(item.entry)!.replace(/^Chapter/, "chapter")}</div>
+                      )}
                       {item.kind === "checkin" && item.checkin.progress_pct != null && (
                         <div className="bar" style={{ height: 6, marginTop: 12 }}><span style={{ width: `${item.checkin.progress_pct}%`, background: "var(--accent)" }} /></div>
                       )}
@@ -285,6 +308,13 @@ function Feed() {
                           <NoteText note={item.entry.note} spoiler={item.entry.note_spoiler} clamp={4} links={false} />
                         </button>
                       )}
+                    </div>
+                  )}
+                  {item.kind === "dropped" && item.entry.stop_note && (
+                    <div style={{ marginTop: 12 }}>
+                      <button style={{ background: "none", border: 0, padding: 0, textAlign: "left" }} onClick={() => setThread(item.entry.id)} aria-label="Read the full note and comments">
+                        <NoteText note={item.entry.stop_note} spoiler={Boolean(item.entry.stop_note_spoiler)} clamp={4} links={false} />
+                      </button>
                     </div>
                   )}
                   {item.kind === "checkin" && (item.checkin.note || item.checkin.vibe) && (
@@ -304,6 +334,13 @@ function Feed() {
                       )}
                       {item.kind === "checkin" && (
                         <HeartButton type="checkin" id={item.checkin.id} initial={data.hearts.get(`checkin:${item.checkin.id}`)} />
+                      )}
+                      {item.kind === "dropped" && (
+                        <>
+                          <HeartButton type="entry" id={item.entry.id} initial={data.hearts.get(`entry:${item.entry.id}`)} />
+                          <CommentButton count={data.comments.get(item.entry.id) ?? 0} onClick={() => setThread(item.entry.id)} />
+                          {!isMe && <KeepGoingButton userId={uid} />}
+                        </>
                       )}
                       <span style={{ flex: 1 }} />
                       {/* Stays visible as "Saved" once added, instead of vanishing when your shelf updates. */}
@@ -372,5 +409,19 @@ function TogetherCard({ t, book, people, me }: { t: FeedReadAlong; book?: Book; 
         </div>
       </Link>
     </article>
+  );
+}
+
+/** On someone's "didn't finish" post: a one-tap nudge (a poke) to give it another go. */
+function KeepGoingButton({ userId }: { userId: string }) {
+  const [state, setState] = useState<"idle" | "sent" | "already">("idle");
+  return (
+    <button
+      className="small-btn"
+      disabled={state !== "idle"}
+      onClick={() => poke(userId).then((r) => setState(r === "ok" ? "sent" : "already")).catch(() => setState("already"))}
+    >
+      {state === "idle" ? "Push them to keep going" : state === "sent" ? "Nudged" : "Nudged today"}
+    </button>
   );
 }

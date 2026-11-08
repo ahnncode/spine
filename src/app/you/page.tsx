@@ -1,5 +1,6 @@
 "use client";
 
+import { DroppedRow } from "@/components/PutAside";
 import { ShareCardButton } from "@/components/ShareCard";
 import { useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
@@ -55,6 +56,10 @@ function You() {
   }, [profile]);
 
   const ranked = useMemo(() => rankEntries(entries || []), [entries]);
+  const dropped = useMemo(
+    () => (entries || []).filter((e) => e.status === "dropped").sort((a, b) => (b.stopped_at ?? "").localeCompare(a.stopped_at ?? "")),
+    [entries],
+  );
   const year = new Date().getFullYear();
   const thisYear = readInYear(ranked, year).length;
   const goal = profile?.yearly_goal ?? null;
@@ -211,6 +216,8 @@ function You() {
             </span>
           </div>
         </div>
+
+        <DroppedRow items={dropped} mine />
 
         {ranked.length < TASTE_UNLOCK && (
           <Link href="/add" className="unlock-row">

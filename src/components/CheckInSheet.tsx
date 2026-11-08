@@ -7,6 +7,7 @@ import { checkIn, type Entry, isListened, setFormat, suggestChapters, type Forma
 import { CHECKIN_NOTE_MAX, VIBES } from "@/lib/thoughts";
 import { FormatToggle } from "./FormatToggle";
 import { Cover } from "./Cover";
+import { StopSheet } from "./StopSheet";
 
 /**
  * Check in on a book you're reading. Progress is optional and goes by chapter
@@ -65,6 +66,8 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   // Most check-ins are "I read some": mood and a note wait behind one tap.
   const [extra, setExtra] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Not reading it right now: put it aside or drop it, from the same sheet.
+  const [stop, setStop] = useState<"pause" | "drop" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const today = new Date();
   const doneToday =
@@ -99,6 +102,8 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
       setBusy(false);
     }
   }
+
+  if (stop) return <StopSheet entry={entry} mode={stop} onClose={() => setStop(null)} onDone={onDone} />;
 
   return (
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
@@ -237,6 +242,19 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
         <p className="muted" style={{ fontSize: 13, textAlign: "center", margin: "12px 0 0" }}>
           A check-in any day keeps this week&rsquo;s streak going.
         </p>
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
+          <p className="muted" style={{ margin: "0 0 10px", fontSize: 13, textAlign: "center" }}>Not reading it right now?</p>
+          <div className="stop-row">
+            <button type="button" className="stop-btn stop-btn--pause" disabled={busy} onClick={() => setStop("pause")}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5.5 3.5v9M10.5 3.5v9" /></svg>
+              Put aside
+            </button>
+            <button type="button" className="stop-btn stop-btn--drop" disabled={busy} onClick={() => setStop("drop")}>
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+              Drop it
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

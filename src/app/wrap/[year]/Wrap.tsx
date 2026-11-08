@@ -1,5 +1,6 @@
 "use client";
 
+import { STOP_REASON_LABEL } from "@/lib/stopReasons";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -56,6 +57,11 @@ function Inner() {
   const hours = Math.round(heard.reduce((s, e) => s + (e.book.pages ?? 0), 0) * 1.8 / 60);
   const avg = (xs: typeof books) => xs.reduce((s, e) => s + e.score, 0) / xs.length;
   const earGap = heard.length >= 3 && seen.length >= 3 ? avg(heard) - avg(seen) : null;
+  // Books let go this year, and the reason given most.
+  const letGo = (entries || []).filter((e) => (e.status === "dropped" || e.did_not_finish) && e.stopped_at?.startsWith(String(year)));
+  const reasonCounts = new Map<string, number>();
+  for (const e of letGo) if (e.stop_reason) reasonCounts.set(e.stop_reason, (reasonCounts.get(e.stop_reason) ?? 0) + 1);
+  const topReason = [...reasonCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
   const longest = [...books].sort((a, b) => (b.book.pages ?? 0) - (a.book.pages ?? 0))[0];
   const months = MONTHS.map((_, i) => books.filter((e) => Number(e.finished_on!.slice(5, 7)) === i + 1).length);
   const maxMonth = Math.max(1, ...months);
@@ -177,6 +183,18 @@ function Inner() {
                       ? `You score audiobooks ${Math.abs(earGap).toFixed(1)} ${earGap > 0 ? "higher" : "lower"}`
                       : null,
                   ].filter(Boolean).join(" · ") || `${heard.length} audiobook${heard.length === 1 ? "" : "s"} this year`}
+                </div>
+              </section>
+            )}
+
+            {letGo.length > 0 && (
+              <section className="card" style={{ marginTop: 12 }}>
+                <div className="eyebrow">Life&rsquo;s too short</div>
+                <div className="d" style={{ fontWeight: 700, fontSize: 24, lineHeight: 1.1, letterSpacing: "-0.01em", marginTop: 8 }}>
+                  {letGo.length} book{letGo.length === 1 ? "" : "s"} you let go
+                </div>
+                <div className="muted" style={{ fontSize: 13, marginTop: 8 }}>
+                  {topReason ? `Top reason: ${STOP_REASON_LABEL[topReason]}` : "No regrets"}
                 </div>
               </section>
             )}

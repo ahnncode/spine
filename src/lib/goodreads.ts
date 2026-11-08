@@ -1,7 +1,7 @@
 import { cleanTitle, dedupeKey, type BookInput } from "./books";
 import type { Bucket } from "./ranking";
 
-export type ImportStatus = "ranked" | "want" | "unsorted" | "reading";
+export type ImportStatus = "ranked" | "want" | "unsorted" | "reading" | "paused" | "dropped";
 
 export type ImportSource = "goodreads" | "storygraph";
 
@@ -111,7 +111,10 @@ export function parseGoodreads(rows: Row[]): ImportSummary {
     let status: ImportStatus;
     if (shelf === "read") status = stars > 0 ? "ranked" : "unsorted";
     else if (shelf === "currently-reading") status = "reading";
-    else status = "want"; // to-read and custom exclusive shelves
+    // Custom shelves people use for books they stopped: didn't finish, or on hold.
+    else if (/^(dnf|did-?not-?finish|abandoned|gave-?up|didnt-?finish)$/i.test(shelf)) status = "dropped";
+    else if (/^(on-?hold|paused|put-?aside)$/i.test(shelf)) status = "paused";
+    else status = "want"; // to-read and other custom exclusive shelves
 
     books.push({
       source: "goodreads",

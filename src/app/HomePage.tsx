@@ -19,7 +19,7 @@ const FEATURES = [
   { h: "See what your friends are reading", p: "Follow friends, see their rankings and check-ins, and find out your taste match, plus the books you fight about most." },
   { h: "Read together, spoiler-free", p: "Start a read-along for any book: everyone's progress in one place, a discussion that hides anything past where you are, and a score reveal when you've all finished." },
   { h: "Bring your Goodreads or StoryGraph library", p: "Upload your export and your ratings become a starting ranking in seconds. Then sharpen it with quick head-to-heads." },
-  { h: "Streaks, badges and your year in books", p: "Check in as you read to keep a weekly streak, collect a genre passport and 34 badges (plus a few secret ones), and get a yearly recap of everything you read." },
+  { h: "Streaks, badges and your year in books", p: "Check in as you read to keep a weekly streak, collect a genre passport and 36 badges (plus a few secret ones), and get a yearly recap of everything you read." },
 ];
 
 const FAQ = [

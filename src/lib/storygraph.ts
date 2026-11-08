@@ -51,9 +51,10 @@ export function parseStoryGraph(rows: Row[]): ImportSummary {
       status = stars ? "ranked" : "unsorted";
       if (stars) bucket = bucketForQuarterStars(stars);
     } else if (shelf === "did-not-finish") {
-      // Didn't finish: it goes in "Not for me", at the bottom unless rated.
-      status = "ranked";
-      bucket = stars ? bucketForQuarterStars(Math.min(stars, 2.5)) : "disliked";
+      // Didn't finish: kept off the ranked list, like dropping it here.
+      status = "dropped";
+    } else if (shelf === "paused") {
+      status = "paused";
     } else if (shelf === "currently-reading") {
       status = "reading";
     } else {

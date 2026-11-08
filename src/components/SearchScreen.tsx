@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dedupeKey, type Book, type BookInput } from "@/lib/books";
-import { addToWant, ensureBook, fetchShelf, rankEntries, recommendations, startReading, type Entry } from "@/lib/data";
+import { addToWant, ensureBook, fetchShelf, rankEntries, recommendations, startReading, STATUS_LABEL, type Entry } from "@/lib/data";
 import { WeeklyPicks } from "@/components/WeeklyPicks";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { searchBooks } from "@/lib/openlibrary";
@@ -205,7 +205,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                       <span className="book-row__sub" style={{ display: "block" }}>{e.book.author}</span>
                     </span>
                     <span className={`pill ${e.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>
-                      {{ ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[e.status]}
+                      {STATUS_LABEL[e.status]}
                     </span>
                   </Link>
                 </li>
@@ -245,13 +245,13 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                       return (
                         <li key={(b.ol_work_key || "") + b.title}>
                           <button className="book-row" style={{ width: "100%", background: "none", border: 0, borderBottom: "1px solid var(--line)", textAlign: "left" }}
-                            onClick={() => (entry?.status === "ranked" ? act(b, "page") : setPicked(b))}>
+                            onClick={() => (entry && ["ranked", "paused", "dropped"].includes(entry.status) ? act(b, "page") : setPicked(b))}>
                             <Cover book={b} width={44} />
                             <span className="book-row__body">
                               <span className="book-row__title" style={{ display: "block" }}>{b.title}</span>
                               <span className="book-row__sub" style={{ display: "block" }}>{b.author}</span>
                             </span>
-                            {entry && <span className={`pill ${entry.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>{{ ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[entry.status]}</span>}
+                            {entry && <span className={`pill ${entry.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>{STATUS_LABEL[entry.status]}</span>}
                           </button>
                         </li>
                       );
@@ -300,7 +300,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                     className="book-row"
                     style={{ width: "100%", background: "none", border: 0, borderBottom: "1px solid var(--line)", textAlign: "left" }}
                     // Already ranked: go to its page (re-rank lives there) instead of asking again.
-                    onClick={() => (entry?.status === "ranked" ? act(b, "page") : setPicked(b))}
+                    onClick={() => (entry && ["ranked", "paused", "dropped"].includes(entry.status) ? act(b, "page") : setPicked(b))}
                   >
                     <Cover book={b} width={44} />
                     <div className="book-row__body">
@@ -311,7 +311,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                       <span className={`pill ${entry.status === "ranked" ? "pill--ink" : "pill--cobalt"}`}>
                         {entry.status === "ranked" && myRanks.get(entry.book_id)
                           ? `#${myRanks.get(entry.book_id)!.rank} · ${formatScore(myRanks.get(entry.book_id)!.score)}`
-                          : { ranked: "Ranked", want: "Saved", reading: "Reading", unsorted: "To rank" }[entry.status]}
+                          : STATUS_LABEL[entry.status]}
                       </span>
                     )}
                   </button>

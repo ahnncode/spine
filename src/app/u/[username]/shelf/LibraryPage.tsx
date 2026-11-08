@@ -1,5 +1,6 @@
 "use client";
 
+import { STOP_REASON_LABEL } from "@/lib/stopReasons";
 import { progressLabel } from "@/lib/progress";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -24,7 +25,7 @@ export function LibraryPage() {
   );
 }
 
-type Tab = "ranked" | "reading" | "want";
+type Tab = "ranked" | "reading" | "want" | "dropped";
 type Sort = "rank" | "recent" | "title" | "author" | "disagree";
 type Overlap = "all" | "unread" | "both";
 
@@ -80,13 +81,14 @@ function Inner() {
   const ranked = useMemo(() => rankEntries(data?.theirs ?? []), [data]);
   const myRanked = useMemo(() => new Map(rankEntries(data?.mine ?? []).map((e) => [e.book_id, e])), [data]);
   const myStatus = useMemo(() => new Map((data?.mine ?? []).map((e) => [e.book_id, e.status])), [data]);
-  const reading = useMemo(() => (data?.theirs ?? []).filter((e) => e.status === "reading"), [data]);
+  const reading = useMemo(() => (data?.theirs ?? []).filter((e) => e.status === "reading" || e.status === "paused"), [data]);
+  const dropped = useMemo(() => (data?.theirs ?? []).filter((e) => e.status === "dropped"), [data]);
   const want = useMemo(
     () => (data?.theirs ?? []).filter((e) => e.status === "want").sort((a, b) => b.created_at.localeCompare(a.created_at)),
     [data],
   );
 
-  const source: (Entry | RankedEntry)[] = tab === "ranked" ? ranked : tab === "reading" ? reading : want;
+  const source: (Entry | RankedEntry)[] = tab === "ranked" ? ranked : tab === "reading" ? reading : tab === "dropped" ? dropped : want;
   const genresPresent = useMemo(() => GENRES.filter((g) => source.some((e) => e.book.genres?.includes(g.key))), [source]);
   const years = useMemo(
     () => [...new Set(ranked.map((e) => e.finished_on?.slice(0, 4)).filter((y): y is string => Boolean(y)))].sort().reverse().slice(0, 8),
@@ -156,7 +158,7 @@ function Inner() {
             ) : (
               <>
                 <div className="segmented" role="tablist" aria-label="Shelf" style={{ marginTop: 16 }}>
-                  {([["ranked", "Ranked", ranked.length], ["reading", "Reading", reading.length], ["want", "Want", want.length]] as const).map(([id, label, n]) => (
+                  {([["ranked", "Ranked", ranked.length], ["reading", "Reading", reading.length], ["want", "Want", want.length], ...(dropped.length ? [["dropped", "DNF", dropped.length]] as const : [])] as const).map(([id, label, n]) => (
                     <button key={id} role="tab" aria-selected={tab === id} onClick={() => { setTab(id); setGenre(null); }}>
                       {label}<span className="count">{n}</span>
                     </button>
@@ -227,6 +229,8 @@ function Inner() {
                       const sub = !isMe && mine
                         ? `You: ${formatScore(mine.score)}${r && Math.abs(r.score - mine.score) >= 2 ? (r.score > mine.score ? " · they liked it more" : " · you liked it more") : ""}`
                         : !isMe && status === "reading" ? "You’re reading this"
+                        : e.status === "paused" ? `${e.book.author ?? ""} · Put aside`
+                        : e.status === "dropped" ? `${e.book.author ?? ""} · Didn’t finish${e.stop_reason ? ` · ${STOP_REASON_LABEL[e.stop_reason]}` : ""}`
                         : e.status === "reading" && progressLabel(e) ? `${e.book.author ?? ""} · ${progressLabel(e)}`
                         : e.book.author;
                       return (

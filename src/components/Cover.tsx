@@ -17,13 +17,15 @@ interface Props {
   listened?: boolean;
   /** The main picture on the page: load it right away instead of lazily. */
   priority?: boolean;
+  /** Put aside or didn't finish: a small label (big covers) and, for dropped, greyed out. */
+  state?: "paused" | "dropped" | null;
 }
 
 /**
  * Real cover art from Open Library when it exists; otherwise a typographic
  * cover in the app's palette so every shelf still looks designed.
  */
-export function Cover({ book, width, className, listened, priority }: Props) {
+export function Cover({ book, width, className, listened, priority, state }: Props) {
   const height = Math.round(width * 1.5);
   const known = coverCandidates(book, width > 90 ? "L" : "M");
   // A replacement found after every known picture failed (see coverRescue).
@@ -71,7 +73,7 @@ export function Cover({ book, width, className, listened, priority }: Props) {
   const lines = width < 60 ? 4 : 5;
 
   return (
-    <div className={`cover ${className ?? ""}`} style={{ width, height, background: bg, color: fg }}>
+    <div className={`cover ${state === "dropped" ? "cover--dimmed " : ""}${className ?? ""}`} style={{ width, height, background: bg, color: fg }}>
       {/* The drawn cover sits underneath; real art fades in over it once it arrives. */}
       {width < 56 ? (
         // Too small for a readable title: a monogram, like a spine stamp.
@@ -93,6 +95,9 @@ export function Cover({ book, width, className, listened, priority }: Props) {
             </div>
           )}
         </div>
+      )}
+      {state && width >= 96 && (
+        <span className={`state-pill state-pill--${state} cover__state`}>{state === "paused" ? "Put aside" : "Didn’t finish"}</span>
       )}
       {listened && width >= 36 && (
         <span className="cover__listen" style={{ width: Math.round(width * 0.24), height: Math.round(width * 0.24) }} title="Listened">

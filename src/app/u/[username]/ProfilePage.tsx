@@ -1,5 +1,6 @@
 "use client";
 
+import { DroppedRow } from "@/components/PutAside";
 import { ShareCardButton } from "@/components/ShareCard";
 import { dayAgo } from "@/lib/time";
 import Link from "next/link";
@@ -105,7 +106,9 @@ function Inner() {
     .sort((a, b) => b.e.score + b.mine.score - (a.e.score + a.mine.score))
     .slice(0, 8);
   const stamps = passport(ranked).filter((s) => s.count > 0).length;
-  const reading = (data?.theirs ?? []).filter((e) => e.status === "reading");
+  // Put aside books stay in Reading now, marked; dropped ones get their own row.
+  const reading = (data?.theirs ?? []).filter((e) => e.status === "reading" || e.status === "paused");
+  const dropped = (data?.theirs ?? []).filter((e) => e.status === "dropped").sort((a, b) => (b.stopped_at ?? "").localeCompare(a.stopped_at ?? ""));
   const want = (data?.theirs ?? []).filter((e) => e.status === "want");
   // Your status for each book: ranked/reading ones need no button; want-to-read shows as Saved.
   const myStatus = useMemo(() => new Map((data?.mine ?? []).map((e) => [e.book_id, e.status])), [data]);
@@ -196,16 +199,22 @@ function Inner() {
                       {reading.map((e) => (
                         <div key={e.id} className="reading-card">
                           <Link href={`/book/${e.book_id}`} style={{ textDecoration: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-                            <Cover book={e.book} width={64} listened={isListened(e.format)} />
+                            <span style={{ opacity: e.status === "paused" ? 0.7 : 1 }}><Cover book={e.book} width={64} listened={isListened(e.format)} /></span>
                             <span className="reading-card__title">{e.book.title}</span>
                           </Link>
                           <span style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                            {e.progress_pct != null && (
-                              <span className="reading-card__bar" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
+                            {e.status === "paused" ? (
+                              <span style={{ fontSize: 12, fontWeight: 600, color: "var(--amber-ink)" }}>Put aside</span>
+                            ) : (
+                              <>
+                                {e.progress_pct != null && (
+                                  <span className="reading-card__bar" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
+                                )}
+                                <span className="m muted" style={{ fontSize: 12 }}>
+                                  {readingStatus(e.progress_pct, e.last_checkin_on ?? e.started_on)}
+                                </span>
+                              </>
                             )}
-                            <span className="m muted" style={{ fontSize: 12 }}>
-                              {readingStatus(e.progress_pct, e.last_checkin_on ?? e.started_on)}
-                            </span>
                           </span>
                           {wantable(e.book_id) && <WantButton bookId={e.book_id} initialSaved={myStatus.get(e.book_id) === "want"} />}
                         </div>
@@ -219,6 +228,8 @@ function Inner() {
                   <div className="stat"><div className="stat__n">{readInYear(ranked, new Date().getFullYear()).length}</div><div className="stat__l">this year</div></div>
                   <div className="stat"><div className="stat__n">{stamps}</div><div className="stat__l">genre stamps</div></div>
                 </div>
+
+                <DroppedRow items={dropped} />
 
                 <div className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
                   <div className="d stat-big" style={{ fontSize: 44 }}>{data.match?.match != null ? `${data.match.match}%` : "—"}</div>

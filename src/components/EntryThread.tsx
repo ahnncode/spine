@@ -1,12 +1,14 @@
 "use client";
 
+import { progressLabel } from "@/lib/progress";
+import { STOP_REASON_LABEL } from "@/lib/stopReasons";
 import { MentionText, useMentionPicker } from "@/components/Mentions";
 import { timeAgo } from "@/lib/time";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import {
-  addComment, deleteComment, fetchComments, fetchHearts, fetchProfiles, fetchScoredEntry, myId, report,
-  type Comment, type HeartState, type Profile, type ScoredEntry, isListened } from "@/lib/data";
+  addComment, deleteComment, fetchComments, fetchHearts, fetchProfiles, fetchThreadEntry, myId, report, type ThreadEntry,
+  type Comment, type HeartState, type Profile, isListened } from "@/lib/data";
 import { COMMENT_MAX } from "@/lib/thoughts";
 import { Avatar } from "./Avatar";
 import { Name } from "@/components/Badge";
@@ -24,7 +26,7 @@ const ago = timeAgo;
  * thread. Opens as a sheet from the feed, book pages and notifications.
  */
 export function EntryThread({ entryId, onClose, onCountChange }: { entryId: string; onClose: () => void; onCountChange?: (n: number) => void }) {
-  const [entry, setEntry] = useState<ScoredEntry | null | undefined>(undefined);
+  const [entry, setEntry] = useState<ThreadEntry | null | undefined>(undefined);
   const [comments, setComments] = useState<Comment[]>([]);
   const [people, setPeople] = useState<Map<string, Profile>>(new Map());
   const [hearts, setHearts] = useState<HeartState | undefined>(undefined);
@@ -40,7 +42,7 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
 
   const load = useCallback(async () => {
     const [e, cs, uid, h] = await Promise.all([
-      fetchScoredEntry(entryId), fetchComments(entryId), myId(), fetchHearts([{ type: "entry", id: entryId }]),
+      fetchThreadEntry(entryId), fetchComments(entryId), myId(), fetchHearts([{ type: "entry", id: entryId }]),
     ]);
     setEntry(e);
     setComments(cs);
@@ -102,18 +104,27 @@ export function EntryThread({ entryId, onClose, onCountChange }: { entryId: stri
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <Avatar profile={owner} size={36} link />
               <div style={{ flex: 1, minWidth: 0, fontSize: 14 }}>
-                <strong><Name profile={owner} /></strong> ranked
+                <strong><Name profile={owner} /></strong> {entry.dropped ? "didn’t finish" : "ranked"}
               </div>
             </div>
             <Link href={`/book/${entry.book_id}`} style={{ display: "flex", gap: 14, marginTop: 12, textDecoration: "none", color: "inherit", alignItems: "center" }}>
               <Cover book={entry.book} width={52} listened={isListened(entry.format)} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="book-row__title">{entry.book.title}</div>
-                <div className="book-row__sub">#{entry.overall_rank} on their shelf</div>
+                <div className="book-row__sub">
+                  {entry.dropped
+                    ? [progressLabel({ ...entry, progress_pct: entry.progress_pct ?? null }) ? `Got to ${progressLabel({ ...entry, progress_pct: entry.progress_pct ?? null })!.replace(/^Chapter/, "chapter")}` : null, entry.stop_reason ? STOP_REASON_LABEL[entry.stop_reason] : null].filter(Boolean).join(" · ") || "Didn’t finish"
+                    : `#${entry.overall_rank} on their shelf`}
+                </div>
               </div>
-              <ScoreChip score={entry.score} bucket={entry.bucket} size={44} />
+              {entry.dropped ? <span className="state-pill state-pill--dropped">DNF</span> : <ScoreChip score={entry.score} bucket={entry.bucket} size={44} />}
             </Link>
-            {(entry.tags?.length > 0 || entry.note) && (
+            {entry.dropped && entry.stop_note && (
+              <div style={{ marginTop: 12 }}>
+                <NoteText note={entry.stop_note} spoiler={Boolean(entry.stop_note_spoiler)} mine={entry.user_id === me} />
+              </div>
+            )}
+            {!entry.dropped && (entry.tags?.length > 0 || entry.note) && (
               <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                 <TagList tags={entry.tags} />
                 {entry.note && <NoteText note={entry.note} spoiler={entry.note_spoiler} mine={entry.user_id === me} />}

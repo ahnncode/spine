@@ -26,7 +26,7 @@ describe("StoryGraph import", () => {
     const by = Object.fromEntries(s.books.map((b) => [b.book.title, b]));
     expect(by["The Stationery Shop"]).toMatchObject({ status: "ranked", bucket: "loved", stars: 4, finishedOn: "2022-05-04", source: "storygraph" });
     expect(by["Queen of Thieves"]).toMatchObject({ status: "ranked", bucket: "fine" });
-    expect(by["The Wind-Up Bird Chronicle"]).toMatchObject({ status: "ranked", bucket: "disliked", review: "Hated it" });
+    expect(by["The Wind-Up Bird Chronicle"]).toMatchObject({ status: "dropped", bucket: null, review: "Hated it" });
     expect(by["Ariadne"].status).toBe("want");
     expect(by["The Assassin's Blade"]).toMatchObject({ status: "unsorted", finishedOn: "2025-08-01" });
     expect(by["She Gets the Girl"]).toMatchObject({ status: "reading", book: { author: "Rachael Lippincott" } });

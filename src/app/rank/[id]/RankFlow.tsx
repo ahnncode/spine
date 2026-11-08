@@ -150,13 +150,15 @@ function Flow() {
     () => (existing?.status === "ranked" ? rankEntries(entries).find((e) => e.book_id === id) : undefined),
     [entries, existing, id],
   );
+  const wasDropped = existing?.status === "dropped";
 
   async function finish(b: Bucket, index: number, sorted: RankedEntry[]) {
     setPhase("saving");
     let saved = false;
     try {
       // Re-ranking keeps the date already saved; a new finish uses the one picked here.
-      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, finishedOn: current ? undefined : finishedOn });
+      // Ranked anyway after dropping it: there's no finish date.
+      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, finishedOn: current ? undefined : wasDropped ? null : finishedOn });
       saved = true;
       let fresh = await fetchShelf();
       const placed = fresh.find((e) => e.book_id === id);
@@ -285,7 +287,10 @@ function Flow() {
                 Now #{current.rank} · {formatScore(current.score)}
               </span>
             )}
-            {!current && !details && (
+            {wasDropped && (
+              <p className="muted" style={{ margin: "16px 0 0", fontSize: 14, textAlign: "center" }}>Ranking a book you didn&rsquo;t finish. It stays marked that way.</p>
+            )}
+            {!current && !wasDropped && !details && (
               <button type="button" className="details-line" onClick={() => setDetails(true)}>
                 {finishedOn === today() ? "Finished today" : finishedOn === today(1) ? "Finished yesterday" : finishedOn ? `Finished ${new Date(`${finishedOn}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : "Finish date unknown"}
                 {" · "}
@@ -293,7 +298,7 @@ function Flow() {
                 <span className="details-line__change">Change</span>
               </button>
             )}
-            {!current && details && (
+            {!current && !wasDropped && details && (
               <div style={{ alignSelf: "stretch", marginTop: 24 }}>
                 <FinishedPicker value={finishedOn} onChange={setFinishedOn} />
                 <div style={{ marginTop: 16 }}>

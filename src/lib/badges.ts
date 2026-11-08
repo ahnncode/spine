@@ -5,7 +5,7 @@ export type Rarity = "common" | "uncommon" | "rare" | "legendary";
 export type Glyph =
   | "book" | "box" | "bookmark" | "shelf" | "seal" | "worm" | "hundred" | "card" | "brick" | "pages" | "mountain"
   | "flame" | "leaf" | "infinity" | "sun" | "target" | "calendar" | "compass" | "globe" | "hourglass" | "quill"
-  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle" | "headphones" | "both"
+  | "press" | "voices" | "swords" | "pen" | "bolt" | "twin" | "people" | "chat" | "link" | "club" | "candle" | "headphones" | "both" | "door" | "comeback"
   | "leap" | "pumpkin" | "anchor" | "abc" | "coffee" | "crystal" | "glasses" | "knock" | "spark";
 
 export interface BadgeDef {
@@ -51,6 +51,8 @@ export const BADGES: BadgeDef[] = [
   { key: "hot_off_the_press", name: "Hot Off the Press", how: "Finish a book the year it came out", category: "breadth", rarity: "uncommon", glyph: "press" },
   { key: "all_ears", name: "All Ears", how: "Rank 10 books you listened to", category: "breadth", rarity: "uncommon", glyph: "headphones", unit: "audiobook" },
   { key: "both_ways", name: "Both Ways", how: "Finish a book you read and one you listened to in the same month", category: "breadth", rarity: "uncommon", glyph: "both" },
+  { key: "lifes_too_short", name: "Life’s Too Short", how: "Don’t finish 5 books", category: "depth", rarity: "uncommon", glyph: "door", unit: "book" },
+  { key: "comeback", name: "The Comeback", how: "Finish a book you put aside for a month or more", category: "consistency", rarity: "rare", glyph: "comeback" },
   { key: "many_voices", name: "Many Voices", how: "Rank books by 50 different authors", category: "breadth", rarity: "rare", glyph: "voices", unit: "author" },
 
   { key: "decisive", name: "Decisive", how: "Answer 100 head-to-heads", category: "taste", rarity: "uncommon", glyph: "swords", unit: "head-to-head" },

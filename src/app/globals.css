@@ -27,6 +27,9 @@
   --cobalt-soft: #e7e9fd;
   --cobalt-ink: #1d2ba8;
   --amber: #f2c14e;
+  --amber-soft: #fbf0d2;
+  --amber-deep: #4a3600;
+  --amber-ink: #7a5700;
   /* Text on an --ink background (buttons, chips). Flips in dark mode. */
   --on-ink: #ffffff;
   /* Feature panels that stay dark in both themes (mystery pick, goal ring). */
@@ -750,6 +753,9 @@ button.stamp--locked { border: 1.5px dashed var(--dash); }
     --well-2: #262624;
     --dash: #55554f;
     --accent-soft: #3d2115;
+    --amber-soft: #3a2f12;
+    --amber-deep: #f6dfa0;
+    --amber-ink: #f2c14e;
     --accent-ink: #ffb08d;
     --cobalt-soft: #20264f;
     --cobalt-ink: #b3bcff;
@@ -948,3 +954,36 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .date-chip__input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; appearance: none; background: transparent; color: transparent; }
 .date-chip__input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; cursor: pointer; opacity: 0; }
 .date-chip:has(.date-chip__input:focus-visible) .tag-chip { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+
+/* Put aside / didn't finish */
+.stop-saved { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--amber-soft, #fbf0d2); border: 1.5px solid var(--amber); font-size: 14px; line-height: 1.4; color: var(--amber-deep, #4a3600); }
+.switch-list { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px; font-size: 15px; cursor: pointer; }
+.switch-row + .switch-row { border-top: 1px solid var(--line); }
+.switch-row input[type="checkbox"] { appearance: none; -webkit-appearance: none; position: relative; width: 44px; height: 26px; margin: 0; border-radius: 13px; background: var(--line-3); cursor: pointer; flex-shrink: 0; transition: background 0.15s; }
+.switch-row input[type="checkbox"]::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 10px; background: #fff; transition: transform 0.15s; }
+.switch-row input[type="checkbox"]:checked { background: var(--ink); }
+.switch-row input[type="checkbox"]:checked::after { transform: translateX(18px); background: var(--surface); }
+.switch-row input[type="checkbox"]:focus-visible { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+.resume-options { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+.resume-option { display: flex; align-items: center; gap: 14px; min-height: 68px; padding: 12px 16px; border-radius: 16px; border: 1.5px solid var(--line-2); background: var(--surface); text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.resume-option > span:last-child { display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.resume-option strong { font-size: 16px; }
+.resume-option[aria-checked="true"] { border: 2px solid var(--ink); }
+.resume-option__dot { width: 22px; height: 22px; flex-shrink: 0; border-radius: 11px; border: 2px solid var(--field-line); box-sizing: border-box; }
+.resume-option[aria-checked="true"] .resume-option__dot { border: 7px solid var(--ink); }
+.stop-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.stop-btn { min-height: 48px; border-radius: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.stop-btn--pause { border: 1.5px solid var(--amber); background: var(--amber-soft, #fbf0d2); color: var(--amber-deep, #4a3600); }
+.stop-btn--drop { border: 1.5px solid var(--line-3); background: var(--surface); color: var(--ink-2); }
+.state-banner { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; padding: 16px; border-radius: 18px; }
+.state-banner--paused { background: var(--amber-soft, #fbf0d2); border: 1.5px solid var(--amber); color: var(--amber-deep, #3a2a00); }
+.state-banner--dropped { background: var(--surface); border: 1.5px solid var(--line-3); }
+.state-banner__eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.state-pill { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 12px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.state-pill--paused { background: var(--amber); color: #3a2a00; }
+.state-pill--dropped { background: var(--ink-2); color: var(--on-ink); }
+.cover--dimmed { filter: grayscale(0.55); opacity: 0.85; }
+.cover__state { position: absolute; top: 8px; right: 8px; z-index: 3; box-shadow: 0 2px 6px rgba(17,17,17,0.25); }
+.cover--dimmed .cover__state { filter: none; }
+.small-btn--outline { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1.5px var(--line-3); }

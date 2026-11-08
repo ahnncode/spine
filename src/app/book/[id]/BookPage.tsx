@@ -1,5 +1,6 @@
 "use client";
 
+import { StateBanner } from "@/components/StateBanner";
 import { progressLabel } from "@/lib/progress";
 import { MentionText } from "@/components/Mentions";
 import Link from "next/link";
@@ -150,7 +151,7 @@ function Inner() {
               <BackIcon size={20} />
             </button>
           </div>
-          {book ? <Cover book={book} width={140} listened={isListened(mine?.format)} priority /> : <span className="skeleton" style={{ width: 140, height: 210, borderRadius: "3px 6px 6px 3px" }} aria-hidden="true" />}
+          {book ? <Cover book={book} width={140} listened={isListened(mine?.format)} state={mine?.status === "paused" || mine?.status === "dropped" ? mine.status : null} priority /> : <span className="skeleton" style={{ width: 140, height: 210, borderRadius: "3px 6px 6px 3px" }} aria-hidden="true" />}
         </div>
 
         {!book && <BookSkeleton />}
@@ -173,7 +174,8 @@ function Inner() {
             <BookSummary book={book} />
 
             {/* Not ranked yet: what you can do with this book comes first. */}
-            {mine?.status !== "ranked" && (
+            {(mine?.status === "paused" || mine?.status === "dropped") && <StateBanner entry={mine} onChange={loadShelf} />}
+            {mine?.status !== "ranked" && mine?.status !== "paused" && mine?.status !== "dropped" && (
               <div style={{ marginTop: 16 }}>
                 <BookActions bookId={id} entry={mine} onChange={loadShelf} showRemove={false} onStartedReading={() => setCheckIn(true)} />
               </div>

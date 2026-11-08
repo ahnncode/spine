@@ -8,11 +8,21 @@ import { authorToCheck, lookup } from "./openlibrary";
 import { supabase } from "./supabase";
 import { isRemoving } from "./toast";
 
-export type Status = "ranked" | "want" | "unsorted" | "reading";
+export type Status = "ranked" | "want" | "unsorted" | "reading" | "paused" | "dropped";
 
 /** Read, listened (audiobook), or both. */
 export type Format = "read" | "listen" | "both";
 export type ProgressUnit = "chapter" | "page" | "percent";
+
+/** Short label for each shelf state, as shown on pills. */
+export const STATUS_LABEL: Record<Status, string> = {
+  ranked: "Ranked",
+  want: "Saved",
+  reading: "Reading",
+  unsorted: "To rank",
+  paused: "Put aside",
+  dropped: "Didn’t finish",
+};
 export const isListened = (f: Format | null | undefined) => f === "listen" || f === "both";
 
 export interface Entry {
@@ -42,8 +52,20 @@ export interface Entry {
   note_spoiler: boolean;
   /** How you took it in. Doesn't affect ranking. */
   format: Format;
+  /** Put aside or dropped: when, why, and an optional note. */
+  stopped_at?: string | null;
+  stop_reason?: string | null;
+  stop_note?: string | null;
+  stop_note_spoiler?: boolean;
+  /** A drop posts to the feed unless turned off. */
+  stop_shared?: boolean;
+  /** Ranked after being dropped: stays true so stats still know. */
+  did_not_finish?: boolean;
+  /** Picked back up after dropping it ("giving it another go"). */
+  retrying?: boolean;
   source: string;
   created_at: string;
+  updated_at?: string;
   book: Book;
 }
 
@@ -73,7 +95,7 @@ export interface Profile {
 }
 
 const ENTRY_SELECT =
-  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, progress_unit, progress_chapter, chapter_total, last_checkin_on, manual_score, note, tags, note_spoiler, format, source, created_at, book:books(*)";
+  "id, user_id, book_id, status, bucket, sort_key, needs_sort, compare_count, stars, finished_on, started_on, ranked_at, progress_pct, progress_unit, progress_chapter, chapter_total, last_checkin_on, manual_score, note, tags, note_spoiler, format, stopped_at, stop_reason, stop_note, stop_note_spoiler, stop_shared, did_not_finish, retrying, source, created_at, updated_at, book:books(*)";
 
 export async function myId(): Promise<string> {
   const { data } = await supabase().auth.getSession();
@@ -310,12 +332,73 @@ export async function startReading(bookId: string): Promise<void> {
   // Never turn a ranked book back into "reading" — that would drop its ranking.
   const { data: current } = await supabase().from("shelf_entries").select("status").eq("user_id", uid).eq("book_id", bookId).maybeSingle();
   if (current?.status === "ranked" || current?.status === "reading") return;
+  // Put aside or dropped: carry on where they left off instead of starting over.
+  if (current?.status === "paused" || current?.status === "dropped") {
+    const { data: row } = await supabase().from("shelf_entries").select("id").eq("user_id", uid).eq("book_id", bookId).single();
+    return resumeBook(row!.id, { startOver: false, fromDrop: current.status === "dropped" });
+  }
   const { error } = await supabase()
     .from("shelf_entries")
     .upsert(
       { user_id: uid, book_id: bookId, status: "reading", started_on: today(), bucket: null, sort_key: null },
       { onConflict: "user_id,book_id" },
     );
+  if (error) throw error;
+}
+
+/** Put a book you're reading aside: progress is kept; the reason and note stay private. */
+export async function pauseBook(entryId: string, opts: { reason?: string | null; note?: string | null } = {}): Promise<void> {
+  const { error } = await supabase()
+    .from("shelf_entries")
+    .update({
+      status: "paused",
+      stopped_at: new Date().toISOString(),
+      stop_reason: opts.reason || null,
+      stop_note: opts.note?.trim() ? opts.note.trim().slice(0, 280) : null,
+      stop_note_spoiler: false,
+      stop_shared: false,
+      retrying: false,
+    })
+    .eq("id", entryId);
+  if (error) throw error;
+}
+
+/** Didn't finish it: progress is kept, it stays off the ranked list, and it can post to the feed. */
+export async function dropBook(
+  entryId: string,
+  opts: { reason?: string | null; note?: string | null; spoiler?: boolean; shared?: boolean } = {},
+): Promise<void> {
+  const { error } = await supabase()
+    .from("shelf_entries")
+    .update({
+      status: "dropped",
+      stopped_at: new Date().toISOString(),
+      stop_reason: opts.reason || null,
+      stop_note: opts.note?.trim() ? opts.note.trim().slice(0, 280) : null,
+      stop_note_spoiler: Boolean(opts.spoiler),
+      stop_shared: opts.shared ?? true,
+      retrying: false,
+    })
+    .eq("id", entryId);
+  if (error) throw error;
+}
+
+/**
+ * Back to Reading from put aside or didn't finish: carry on from where they
+ * stopped, or start over (old check-ins stay in the diary either way).
+ */
+export async function resumeBook(entryId: string, opts: { startOver?: boolean; fromDrop?: boolean; share?: boolean } = {}): Promise<void> {
+  const fields: Record<string, unknown> = {
+    status: "reading",
+    stopped_at: null,
+    stop_reason: null,
+    stop_note: null,
+    stop_note_spoiler: false,
+    // "Giving it another go" posts only when they chose to share it.
+    retrying: Boolean(opts.fromDrop && opts.share),
+  };
+  if (opts.startOver) Object.assign(fields, { progress_pct: null, progress_chapter: 0, started_on: today() });
+  const { error } = await supabase().from("shelf_entries").update(fields).eq("id", entryId);
   if (error) throw error;
 }
 
@@ -429,6 +512,10 @@ export async function placeBook(opts: {
     manual_score: opts.manualScore ?? null,
     finished_on: opts.finishedOn !== undefined ? opts.finishedOn : existing?.finished_on ?? today(),
     started_on: existing?.started_on ?? null,
+    // Ranked after dropping it ("rank it anyway"): stats still know it wasn't finished.
+    ...(existing?.status === "dropped" ? { did_not_finish: true } : {}),
+    // Finishing a book that was put aside: it's done, so the pause is over.
+    ...(existing?.status === "paused" ? { stopped_at: null, stop_reason: null, stop_note: null } : {}),
     ranked_at: wasRanked ? existing?.ranked_at ?? new Date().toISOString() : new Date().toISOString(),
     source: existing?.source ?? "app",
   };
@@ -486,13 +573,18 @@ export async function importGoodreads(
       sort_key: b.status === "ranked" ? keyFor.get(b.key) ?? 0 : null,
       needs_sort: b.status === "ranked",
       stars: b.stars ? Math.max(1, Math.min(5, Math.round(b.stars))) : null,
-      finished_on: b.finishedOn,
+      // A book they stopped wasn't finished, so it doesn't count toward a year's reading.
+      finished_on: b.status === "paused" || b.status === "dropped" ? null : b.finishedOn,
       started_on: b.status === "reading" ? today() : null,
       // Date read stands in for when it was ranked, so imports don't flood friends' feeds.
       ranked_at: b.status === "ranked" ? (b.finishedOn ? `${b.finishedOn}T12:00:00Z` : "2000-01-01T00:00:00Z") : null,
       note: b.review,
       format: b.format,
       source: b.source,
+      // Stopped books keep the file's date if it has one; imports never post to the feed.
+      ...(b.status === "paused" || b.status === "dropped"
+        ? { stopped_at: b.finishedOn ? `${b.finishedOn}T12:00:00Z` : null, stop_shared: false }
+        : {}),
     }));
 
   for (let i = 0; i < rows.length; i += 200) {
@@ -793,7 +885,8 @@ const CHECKIN_SELECT = "id, user_id, book_id, checked_on, progress_pct, chapter,
 export type FeedItem =
   | { kind: "ranked"; at: string; entry: ScoredEntry }
   | { kind: "checkin"; at: string; checkin: Checkin }
-  | { kind: "reading"; at: string; entry: Entry };
+  | { kind: "reading"; at: string; entry: Entry }
+  | { kind: "dropped"; at: string; entry: Entry };
 
 export function feedUser(item: FeedItem): string {
   return item.kind === "checkin" ? item.checkin.user_id : item.entry.user_id;
@@ -810,7 +903,7 @@ export async function fetchFeed(
   // "Everyone" leans on row security: only public shelves (and your own) come back.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const who = (q: any) => (everyone ? (opts.exclude ? q.neq("user_id", opts.exclude) : q) : q.in("user_id", friendIds));
-  const [ranked, reading, checkins] = await Promise.all([
+  const [ranked, reading, checkins, dropped] = await Promise.all([
     who(supabase().from("ranked_entries").select(SCORED_SELECT))
       .not("ranked_at", "is", null)
       // Imported shelves would flood "Everyone" with hundreds of rows at once.
@@ -828,7 +921,15 @@ export async function fetchFeed(
       .gte("created_at", since)
       .order("created_at", { ascending: false })
       .limit(limit),
+    // Books someone didn't finish and chose to share. Pausing never posts.
+    who(supabase().from("shelf_entries").select(ENTRY_SELECT))
+      .eq("status", "dropped")
+      .eq("stop_shared", true)
+      .gte("stopped_at", since)
+      .order("stopped_at", { ascending: false })
+      .limit(20),
   ]);
+  if (dropped.error) throw dropped.error;
   if (ranked.error) throw ranked.error;
   if (reading.error) throw reading.error;
   if (checkins.error) throw checkins.error;
@@ -850,9 +951,11 @@ export async function fetchFeed(
       .filter((e) => !checkedIn.has(`${e.user_id}:${e.book_id}`))
       .map((e) => ({
         kind: "reading" as const,
-        at: e.started_on ? `${e.started_on}T12:00:00Z` : e.created_at,
+        // "Giving it another go" is news from when they picked it back up.
+        at: e.retrying && e.updated_at ? e.updated_at : e.started_on ? `${e.started_on}T12:00:00Z` : e.created_at,
         entry: e,
       })),
+    ...((dropped.data as unknown as Entry[]) || []).map((e) => ({ kind: "dropped" as const, at: e.stopped_at as string, entry: e })),
   ];
   // A row without a date can't be placed in time; leave it out rather than break the feed.
   const dated = items.filter((i) => typeof i.at === "string");
@@ -997,6 +1100,22 @@ export async function fetchScoredEntry(id: string): Promise<ScoredEntry | null> 
   if (!data) return null;
   const e = data as unknown as ScoredEntry;
   return { ...e, score: Number(e.score), tags: e.tags ?? [] };
+}
+
+/**
+ * The post a comment thread hangs off: a ranking, or a book someone didn't
+ * finish (shared to the feed). Dropped ones come back flagged, with no score.
+ */
+export type ThreadEntry = ScoredEntry & Partial<Pick<Entry, "progress_unit" | "progress_chapter" | "chapter_total" | "stop_reason" | "stop_note" | "stop_note_spoiler">> & { progress_pct?: number | null; dropped?: boolean };
+
+export async function fetchThreadEntry(id: string): Promise<ThreadEntry | null> {
+  const ranked = await fetchScoredEntry(id);
+  if (ranked) return ranked;
+  const { data, error } = await supabase().from("shelf_entries").select(ENTRY_SELECT).eq("id", id).eq("status", "dropped").maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const e = data as unknown as Entry;
+  return { ...e, tags: e.tags ?? [], score: 0, overall_rank: 0, bucket: e.bucket ?? "disliked", dropped: true } as unknown as ThreadEntry;
 }
 
 /* ------------------------------ Weekly picks ----------------------------- */
