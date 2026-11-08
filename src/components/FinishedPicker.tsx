@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { today } from "@/lib/data";
 
 function formatDay(iso: string): string {
@@ -26,20 +25,18 @@ export function FinishedPicker({
   const t = today();
   const y = today(1);
   const custom = value !== null && value !== t && value !== y;
-  const dateRef = useRef<HTMLInputElement>(null);
 
-  // Open the phone's or browser's own calendar. Desktop Chrome only opens it
-  // from its small calendar icon, so ask for it directly where we can.
-  function openCalendar() {
-    const el = dateRef.current;
-    if (!el) return;
+  // The real date field sits invisibly on top of the "Pick a date" chip, so a
+  // tap lands on it and the phone opens its own calendar (iOS Safari ignores
+  // opening it from code). Desktop Chrome only opens from its calendar icon,
+  // so a click on the field also asks for the calendar where allowed.
+  function openCalendar(e: React.MouseEvent<HTMLInputElement>) {
+    const el = e.currentTarget;
     try {
-      if (typeof el.showPicker === "function") return el.showPicker();
+      if (typeof el.showPicker === "function") el.showPicker();
     } catch {
-      /* not allowed here: fall back below */
+      /* already open, or not allowed: the tap itself opens it */
     }
-    el.focus();
-    el.click();
   }
 
   return (
@@ -48,19 +45,18 @@ export function FinishedPicker({
       <div className="tag-list">
         <button type="button" className="tag-chip" aria-pressed={value === t} onClick={() => onChange(t)}>Today</button>
         <button type="button" className="tag-chip" aria-pressed={value === y} onClick={() => onChange(y)}>Yesterday</button>
-        <span style={{ position: "relative", display: "inline-flex" }}>
-          <button type="button" className="tag-chip" aria-pressed={custom} onClick={openCalendar}>
+        <span className="date-chip">
+          <span className="tag-chip" aria-hidden="true" data-pressed={custom || undefined}>
             {custom ? formatDay(value) : "Pick a date"}
-          </button>
+          </span>
           <input
-            ref={dateRef}
             type="date"
-            tabIndex={-1}
-            aria-hidden="true"
+            className="date-chip__input"
+            aria-label={custom ? `Finished ${formatDay(value)}. Pick another date` : "Pick a date"}
             max={t}
             value={custom ? value : ""}
+            onClick={openCalendar}
             onChange={(e) => e.target.value && onChange(e.target.value)}
-            style={{ position: "absolute", left: 0, bottom: 0, width: 1, height: 1, opacity: 0, pointerEvents: "none", border: 0, padding: 0 }}
           />
         </span>
         <button type="button" className="tag-chip" aria-pressed={value === null} onClick={() => onChange(null)}>Don&rsquo;t remember</button>
