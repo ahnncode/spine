@@ -375,6 +375,21 @@ export async function fetchCheckinDays(): Promise<string[]> {
   return (data || []).map((r) => r.checked_on as string);
 }
 
+/**
+ * How many books you've put down part-way: moved from reading back to saved,
+ * or removed while reading. Null if the history can't be read.
+ */
+export async function fetchAbandonedCount(): Promise<number | null> {
+  const uid = await myId();
+  const { count, error } = await supabase()
+    .from("shelf_events")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", uid)
+    .eq("from_status", "reading")
+    .or("to_status.eq.want,event.eq.removed");
+  return error ? null : count ?? 0;
+}
+
 export async function moveToWant(entryId: string): Promise<void> {
   const { error } = await supabase()
     .from("shelf_entries")

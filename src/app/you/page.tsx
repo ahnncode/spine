@@ -25,11 +25,11 @@ import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
 import type { Entry } from "@/lib/data";
-import { deleteMyAccount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, updateMyProfile, isListened } from "@/lib/data";
+import { deleteMyAccount, fetchAbandonedCount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, today, updateMyProfile, isListened } from "@/lib/data";
+import { buildReaderType, MIN_BOOKS, readerInputFromShelf } from "@/lib/readerType";
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
-import { SlidesSheet } from "@/components/WrapShare";
 
 export default function YouPage() {
   return (
@@ -105,7 +105,15 @@ function You() {
     return ok;
   }
   const [badges, setBadges] = useState<BadgeStatus[] | null>(null);
-  const [dating, setDating] = useState(false);
+  // Reader type, worked out the same way as on its own page so the two always agree.
+  const [abandoned, setAbandoned] = useState<number | null | undefined>(undefined);
+  useEffect(() => {
+    fetchAbandonedCount().then(setAbandoned).catch(() => setAbandoned(null));
+  }, []);
+  const readerType = useMemo(
+    () => (entries && abandoned !== undefined ? buildReaderType(readerInputFromShelf(ranked, entries, abandoned, today())) : undefined),
+    [entries, ranked, abandoned],
+  );
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
   const shelfSize = entries?.length ?? -1;
   useEffect(() => {
@@ -293,6 +301,27 @@ function You() {
           </section>
         )}
 
+        {readerType !== undefined && (readerType ? (
+          <Link href="/you/type" className="rt-teaser" style={{ background: readerType.family.bg, color: readerType.family.fg }}>
+            <span className="rt-teaser__code">{readerType.code}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>Your reader type <span className="new-pill">New</span></span>
+              <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{readerType.copy.name}</span>
+            </span>
+            <ArrowIcon size={18} />
+          </Link>
+        ) : (
+          <Link href="/you/type" className="rt-teaser card" style={{ color: "inherit" }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span className="eyebrow" style={{ display: "block" }}>Your reader type <span className="new-pill">New</span></span>
+              <span style={{ display: "block", fontWeight: 600, fontSize: 15, marginTop: 4 }}>
+                What kind of reader are you? Rank {Math.max(1, MIN_BOOKS - ranked.length)} more book{MIN_BOOKS - ranked.length === 1 ? "" : "s"} to find out.
+              </span>
+            </span>
+            <ArrowIcon size={18} />
+          </Link>
+        ))}
+
         <BadgeCase statuses={badges} />
         <NewBadges statuses={badges} />
 
@@ -310,12 +339,6 @@ function You() {
               <ArrowIcon size={18} />
             </Link>
           ))}
-          {ranked.length >= 3 && (
-            <button className="link-group__row" onClick={() => setDating(true)}>
-              <span>Your dating profile, by your books <span className="new-pill">New</span></span>
-              <ArrowIcon size={18} />
-            </button>
-          )}
           {[
             { href: "/people", label: "Find friends" },
             { href: "/import", label: "Import from Goodreads or StoryGraph" },
@@ -327,14 +350,6 @@ function You() {
             </Link>
           ))}
         </nav>
-        {dating && (
-          <SlidesSheet
-            title="Your dating profile"
-            blurb="Written by your shelf. Three slides, sized for an Instagram post."
-            slides={[1, 2, 3].map((n) => ({ src: `/api/card?kind=date&slide=${n}`, filename: `readread-dating-profile-${n}.png` }))}
-            onClose={() => setDating(false)}
-          />
-        )}
 
         <button className="btn btn--ghost btn--block" style={{ marginTop: 20 }} onClick={signOut}>
           Sign out

@@ -4,9 +4,9 @@ import type { NextRequest } from "next/server";
 import { ACCENT, clamp, coverData, GROUND, INK, MUTED, OgAvatar, OgCover, ogFonts, ScoreDisc, Wordmark } from "@/lib/og";
 import type { PublicBookCard } from "@/lib/public";
 import { WRAP_SLIDES, wrapSlide, type WrapBook } from "@/lib/wrapCards";
-import { DATE_SLIDES, dateSlide } from "@/lib/datingCards";
-import { buildDatingProfile } from "@/lib/datingProfile";
-import { coverColors, dedupeKey } from "@/lib/books";
+import { TYPE_SLIDES, typeSlide } from "@/lib/readerTypeCards";
+import { buildReaderType, MIN_BOOKS, type RTBook } from "@/lib/readerType";
+import type { Bucket } from "@/lib/ranking";
 
 /**
  * Share cards (1080×1350, made for Instagram stories and texts), built from
@@ -17,7 +17,7 @@ import { coverColors, dedupeKey } from "@/lib/books";
 const SIZE = { width: 1080, height: 1350 };
 const BOOK_FIELDS = "title, author, cover_id, cover_url, isbn13";
 
-type Card = { kind: "top" } | { kind: "twins"; username: string } | { kind: "verdict"; id: string } | { kind: "wrap"; slide: number; year: number } | { kind: "date"; slide: number };
+type Card = { kind: "top" } | { kind: "twins"; username: string } | { kind: "verdict"; id: string } | { kind: "wrap"; slide: number; year: number } | { kind: "type"; slide: number };
 
 function parse(req: NextRequest): Card | null {
   const p = req.nextUrl.searchParams;
@@ -25,9 +25,9 @@ function parse(req: NextRequest): Card | null {
   if (kind === "top") return { kind };
   if (kind === "twins" && /^[a-z0-9_]{3,20}$/i.test(p.get("u") ?? "")) return { kind, username: p.get("u")!.toLowerCase() };
   if (kind === "verdict" && /^[0-9a-f-]{36}$/i.test(p.get("id") ?? "")) return { kind, id: p.get("id")! };
-  if (kind === "date") {
+  if (kind === "type") {
     const slide = Number(p.get("slide") ?? 1);
-    if (Number.isInteger(slide) && slide >= 1 && slide <= DATE_SLIDES) return { kind, slide };
+    if (Number.isInteger(slide) && slide >= 1 && slide <= TYPE_SLIDES) return { kind, slide };
   }
   if (kind === "wrap") {
     const slide = Number(p.get("slide") ?? 1);
@@ -154,27 +154,28 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  if (card.kind === "date") {
-    const [{ data: rankedRows }, { data: shelfRows }] = await Promise.all([
-      sb.from("ranked_entries").select(`score, overall_rank, finished_on, format, book:books(${BOOK_FIELDS}, pages, genres, year)`).eq("user_id", uid).order("overall_rank"),
-      sb.from("shelf_entries").select("status, started_on, progress_pct, book:books(title)").eq("user_id", uid).in("status", ["want", "reading"]),
+  if (card.kind === "type") {
+    const [{ data: rankedRows }, { data: shelfRows }, { count: abandoned, error: eventsError }] = await Promise.all([
+      sb.from("ranked_entries").select("score, bucket, tags, started_on, finished_on, format, book:books(title, author, pages, genres, year)").eq("user_id", uid).order("overall_rank"),
+      sb.from("shelf_entries").select("status, started_on, last_checkin_on, book:books(title)").eq("user_id", uid).in("status", ["want", "reading"]),
+      sb.from("shelf_events").select("id", { count: "exact", head: true }).eq("user_id", uid).eq("from_status", "reading").or("to_status.eq.want,event.eq.removed"),
     ]);
-    type R = { score: number | string; finished_on: string | null; format?: string | null; book: PublicBookCard & { pages: number | null; genres: string[] | null; year: number | null } };
-    const ranked = (rankedRows ?? []) as unknown as R[];
-    if (ranked.length < 3) return new Response("Rank at least 3 books to get a dating profile", { status: 409 });
-    const shelf = (shelfRows ?? []) as unknown as { status: string; started_on: string | null; progress_pct: number | null; book: { title: string } }[];
-    const profile = buildDatingProfile({
-      name: nameOf(me),
-      ranked: ranked.map((r) => ({ title: r.book.title, score: Number(r.score), genres: r.book.genres ?? [], pages: r.book.pages, year: r.book.year, finished_on: r.finished_on, listened: r.format === "listen" || r.format === "both" })),
+    type R = { score: number | string; bucket: Bucket; tags: string[] | null; started_on: string | null; finished_on: string | null; format: string | null; book: { title: string; author: string | null; pages: number | null; genres: string[] | null; year: number | null } };
+    const ranked: RTBook[] = ((rankedRows ?? []) as unknown as R[]).map((r) => ({
+      title: r.book.title, author: r.book.author, genres: r.book.genres ?? [], pages: r.book.pages, year: r.book.year,
+      score: Number(r.score), bucket: r.bucket, tags: r.tags ?? [], listened: r.format === "listen" || r.format === "both",
+      started_on: r.started_on, finished_on: r.finished_on,
+    }));
+    const shelf = (shelfRows ?? []) as unknown as { status: string; started_on: string | null; last_checkin_on: string | null; book: { title: string } }[];
+    const type = buildReaderType({
+      ranked,
+      reading: shelf.filter((e) => e.status === "reading").map((e) => ({ title: e.book.title, started_on: e.started_on, last_checkin_on: e.last_checkin_on })),
       wantCount: shelf.filter((e) => e.status === "want").length,
-      reading: shelf.filter((e) => e.status === "reading").map((e) => ({ title: e.book.title, started_on: e.started_on, progress_pct: e.progress_pct })),
+      abandoned: eventsError ? null : abandoned ?? 0,
       today: new Date().toISOString().slice(0, 10),
     });
-    const topBook = ranked[0].book;
-    const cover = card.slide === 1 ? await coverData(topBook) : null;
-    // Behind the "photo": a soft wash of the drawn cover's colour, or neutral behind real art.
-    const tint = cover ? "#E7E5DE" : `${coverColors(dedupeKey(topBook.title, topBook.author)).bg}40`;
-    return new ImageResponse(dateSlide(card.slide, profile, { book: topBook, cover, tint }, me?.username ?? null) as React.ReactElement, { ...SIZE, fonts });
+    if (!type) return new Response(`Rank at least ${MIN_BOOKS} books to get your reader type`, { status: 409 });
+    return new ImageResponse(typeSlide(card.slide, type, nameOf(me), me?.username ?? null) as React.ReactElement, { ...SIZE, fonts });
   }
 
   if (card.kind === "wrap") {

@@ -948,3 +948,29 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .date-chip__input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; cursor: pointer; font-size: 16px; -webkit-appearance: none; appearance: none; background: transparent; color: transparent; }
 .date-chip__input::-webkit-calendar-picker-indicator { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; cursor: pointer; opacity: 0; }
 .date-chip:has(.date-chip__input:focus-visible) .tag-chip { outline: 2px solid var(--cobalt); outline-offset: 2px; }
+
+/* ---------- Reader type ---------- */
+.rt-hero { margin-top: 20px; border-radius: var(--radius-l); padding: 22px 20px 24px; overflow: hidden; }
+.rt-code { display: flex; gap: 2px; margin: 18px 0 10px; font-family: var(--font-display); font-weight: 400; font-size: 96px; line-height: 0.9; letter-spacing: 0.01em; }
+.rt-code span { display: inline-block; animation: rt-flip 0.55s cubic-bezier(.2,.9,.3,1.2) both; }
+@keyframes rt-flip { from { transform: translateY(26px) rotateX(70deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.rt-stability { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+.rt-stability .pill { flex-shrink: 0; }
+.rt-poles { display: flex; justify-content: space-between; margin-top: 14px; font-size: 14px; color: var(--faint); font-weight: 600; }
+.rt-poles .on { color: var(--ink); }
+.rt-track { position: relative; height: 10px; margin-top: 8px; border-radius: 5px; background: var(--well); }
+.rt-track__mid { position: absolute; left: 50%; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--line-3); border-radius: 1px; }
+.rt-track__fill { position: absolute; top: 0; bottom: 0; border-radius: 5px; }
+.rt-track__dot { position: absolute; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 10px; border: 3px solid var(--surface); box-shadow: 0 1px 3px rgba(17,17,17,0.25); }
+.rt-receipts { list-style: none; margin: 14px 0 0; padding: 12px 0 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.rt-receipts li { position: relative; padding-left: 20px; font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+.rt-receipts li::before { content: ""; position: absolute; left: 2px; top: 6px; width: 8px; height: 8px; border-radius: 4px; background: var(--ink); }
+.rt-share { flex: 1; height: 8px; border-radius: 4px; background: rgba(127,127,127,0.25); overflow: hidden; }
+.rt-share > span { display: block; height: 100%; border-radius: 4px; }
+.rt-chip { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 64px; height: 40px; padding: 0 10px; border-radius: 12px; font-family: var(--font-display); font-size: 20px; letter-spacing: 0.02em; }
+.rt-how ul { margin: 12px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.45; }
+.rt-dots { display: flex; gap: 8px; margin-top: 24px; }
+.rt-dots span { flex: 1; height: 8px; border-radius: 4px; background: var(--well); }
+.rt-dots span.on { background: var(--accent); }
+.rt-teaser { display: flex; align-items: center; gap: 14px; margin-top: 24px; padding: 16px 18px; border-radius: var(--radius-l); text-decoration: none; }
+.rt-teaser__code { font-family: var(--font-display); font-size: 40px; line-height: 1; letter-spacing: 0.01em; }
