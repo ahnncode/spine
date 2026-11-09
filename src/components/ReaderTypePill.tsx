@@ -25,28 +25,28 @@ export function ReaderTypePill({ person }: { person: Person }) {
   const self = me?.id === person.id;
   const same = mine ? [...theirs.code].filter((l, i) => mine.code[i] === l).length : null;
 
-  const pill = (
+  const match = !self && same != null ? (same === 4 ? "Same type as you" : `${same} of 4 letters match`) : null;
+  const body = (
     <>
-      <span className="type-pill__code">{theirs.code}</span>
-      <span className="type-pill__name">{TYPES[theirs.code].name}</span>
+      <span className="rt-teaser__code">{theirs.code}</span>
+      <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+        <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>{self ? "Your reader type" : "Reader type"}</span>
+        <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{TYPES[theirs.code].name}</span>
+        {match && <span style={{ display: "block", fontSize: 13, marginTop: 4, opacity: 0.85 }}>{match} · Compare</span>}
+      </span>
     </>
   );
   return (
-    <div style={{ marginTop: 8 }}>
+    <>
       {self ? (
-        <Link href="/you/type" className="type-pill" style={{ background: c.bg, color: c.fg, textDecoration: "none" }}>{pill}</Link>
+        <Link href="/you/type" className="rt-teaser rt-teaser--top" style={{ background: c.bg, color: c.fg }}>{body}</Link>
       ) : (
-        <button className="type-pill" style={{ background: c.bg, color: c.fg }} onClick={() => setOpen(true)} aria-haspopup="dialog">
-          {pill}
+        <button className="rt-teaser rt-teaser--top" style={{ background: c.bg, color: c.fg, width: "100%", border: 0, font: "inherit", cursor: "pointer" }} onClick={() => setOpen(true)} aria-haspopup="dialog">
+          {body}
         </button>
       )}
-      {!self && same != null && (
-        <div className="muted" style={{ fontSize: 12, marginTop: 6 }}>
-          {same === 4 ? "Same type as you" : `${same} of 4 letters match yours`}
-        </div>
-      )}
       {open && me && <CompareSheet me={me} mine={mine ?? null} person={person} theirs={theirs} onClose={() => setOpen(false)} />}
-    </div>
+    </>
   );
 }
 

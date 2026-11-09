@@ -170,6 +170,27 @@ function You() {
           </button>
         </div>
 
+        {readerType !== undefined && (readerType ? (
+          <Link href="/you/type" className="rt-teaser rt-teaser--top" style={{ background: readerType.color.bg, color: readerType.color.fg }}>
+            <span className="rt-teaser__code">{readerType.code}</span>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>Your reader type <span className="new-pill">New</span></span>
+              <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{readerType.copy.name}</span>
+            </span>
+            <ArrowIcon size={18} />
+          </Link>
+        ) : (
+          <Link href="/you/type" className="rt-teaser rt-teaser--top card" style={{ color: "inherit" }}>
+            <span style={{ flex: 1, minWidth: 0 }}>
+              <span className="eyebrow" style={{ display: "block" }}>Your reader type <span className="new-pill">New</span></span>
+              <span style={{ display: "block", fontWeight: 600, fontSize: 15, marginTop: 4 }}>
+                What kind of reader are you? Rank {Math.max(1, MIN_BOOKS - ranked.length)} more book{MIN_BOOKS - ranked.length === 1 ? "" : "s"} to find out.
+              </span>
+            </span>
+            <ArrowIcon size={18} />
+          </Link>
+        ))}
+
         {profile?.bio ? (
           <Blurb text={profile.bio} name={displayName(profile)} onEdit={() => setEditing(true)} />
         ) : (
@@ -309,27 +330,6 @@ function You() {
             })}
           </section>
         )}
-
-        {readerType !== undefined && (readerType ? (
-          <Link href="/you/type" className="rt-teaser" style={{ background: readerType.color.bg, color: readerType.color.fg }}>
-            <span className="rt-teaser__code">{readerType.code}</span>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>Your reader type <span className="new-pill">New</span></span>
-              <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{readerType.copy.name}</span>
-            </span>
-            <ArrowIcon size={18} />
-          </Link>
-        ) : (
-          <Link href="/you/type" className="rt-teaser card" style={{ color: "inherit" }}>
-            <span style={{ flex: 1, minWidth: 0 }}>
-              <span className="eyebrow" style={{ display: "block" }}>Your reader type <span className="new-pill">New</span></span>
-              <span style={{ display: "block", fontWeight: 600, fontSize: 15, marginTop: 4 }}>
-                What kind of reader are you? Rank {Math.max(1, MIN_BOOKS - ranked.length)} more book{MIN_BOOKS - ranked.length === 1 ? "" : "s"} to find out.
-              </span>
-            </span>
-            <ArrowIcon size={18} />
-          </Link>
-        ))}
 
         <BadgeCase statuses={badges} />
         <NewBadges statuses={badges} />

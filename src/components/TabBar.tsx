@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ReaderTypeSync } from "./ReaderTypeSync";
 import { HomeIcon, PlusIcon, SearchIcon, ShelfIcon, UserIcon } from "./icons";
 import { useUnread } from "./useUnread";
 
@@ -18,6 +19,7 @@ export function TabBar() {
   const unread = useUnread();
   return (
     <nav className="tabbar" aria-label="Main">
+      <ReaderTypeSync />
       <div className="tabbar__inner">
         {TABS.map(({ href, label, Icon, rank }) => {
           const current = path === href || path.startsWith(href + "/");

@@ -1023,3 +1023,10 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .type-pill__name { font-size: 13px; font-weight: 600; }
 .type-compare { display: grid; grid-template-columns: 62px minmax(0, 1fr) 40px 40px; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
 .type-compare__letter { display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 10px; font-family: var(--font-display); font-size: 21px; }
+
+/* Profile header: name and meta on their own lines; actions in a row below. */
+.profile-name { font-size: 28px; line-height: 1.05; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-meta { font-size: 13px; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.profile-actions .follow-btn { min-width: 116px; justify-content: center; }
+.rt-teaser--top { margin-top: 16px; }

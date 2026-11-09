@@ -136,11 +136,12 @@ function Inner() {
         </div>
         {!data ? <ProfileSkeleton /> : (
           <>
+            {/* Who they are on one line each, then actions, then their reader type: nothing squeezed side by side. */}
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 12 }}>
               <Avatar profile={data.profile} size={64} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <h1 className="h1" style={{ fontSize: 28 }}><Name profile={data.profile} markSize={20} /></h1>
-                <div className="muted" style={{ fontSize: 13 }}>
+                <h1 className="h1 profile-name"><Name profile={data.profile} markSize={20} /></h1>
+                <div className="muted profile-meta">
                   @{data.profile.username} · {data.mutual ? (
                     <>
                       <Link href={`/u/${data.profile.username}/follows`} className="count-link">{data.counts.followers} {data.counts.followers === 1 ? "follower" : "followers"}</Link>
@@ -150,11 +151,13 @@ function Inner() {
                     <>{data.counts.followers} {data.counts.followers === 1 ? "follower" : "followers"} · {data.counts.following} following</>
                   )}
                 </div>
-                {!data.blocked && <ReaderTypePill person={data.profile} />}
-                {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 8 }}><EarlyPill /></div>}
               </div>
+            </div>
+            {!data.blocked && <ReaderTypePill person={data.profile} />}
+            <div className="profile-actions">
               {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} onChange={(following) => setData((d) => (d ? { ...d, following, mutual: following && Boolean(d.theyFollow) } : d))} />}
-              <div style={{ position: "relative" }}>
+              {isEarlyAdopter(data.profile.created_at) && <EarlyPill />}
+              <div style={{ position: "relative", marginLeft: "auto" }}>
                 <button className="icon-btn" aria-label="More options" aria-expanded={menu} onClick={() => setMenu(!menu)}>
                   <MoreIcon size={20} />
                 </button>
