@@ -3,7 +3,7 @@ import { GENRE_BY_KEY } from "./genres";
 import type { Bucket } from "./ranking";
 import { TAG_LABEL } from "./thoughts";
 import {
-  BLIND_SPOTS, DRIVES, FAMILIES, STRETCH, TYPES,
+  BLIND_SPOTS, DRIVES, FAMILIES, STRETCH, TYPE_COLOR, TYPES,
   type DriveCopy, type DriveKey, type Family, type FamilyKey, type TypeCopy,
 } from "./readerTypeCopy";
 
@@ -121,6 +121,8 @@ export interface ReaderType {
   code: string;
   copy: TypeCopy;
   family: Family;
+  /** This type's own colour (the family's hue, toned by rhythm and bar). */
+  color: { bg: string; fg: string };
   axes: AxisResult[];
   drive: DriveResult;
   wing: DriveResult | null;
@@ -522,7 +524,7 @@ export function buildReaderType(input: RTInput): ReaderType | null {
   };
 
   return {
-    code, copy, family, axes, drive, wing, stability, toNextStability,
+    code, copy, family, color: TYPE_COLOR[code], axes, drive, wing, stability, toNextStability,
     stats: signatureStats(books, input.reading.length),
     blindSpot, stretch, partner, bookCount: n,
   };

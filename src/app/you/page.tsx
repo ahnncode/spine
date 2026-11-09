@@ -28,6 +28,7 @@ import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
 import type { Entry } from "@/lib/data";
 import { deleteMyAccount, fetchAbandonedCount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, today, updateMyProfile, isListened } from "@/lib/data";
 import { buildReaderType, MIN_BOOKS, readerInputFromShelf } from "@/lib/readerType";
+import { useSyncMyReaderType } from "@/components/useReaderTypes";
 import { GENRES } from "@/lib/genres";
 import { passport, readInYear, TASTE_UNLOCK } from "@/lib/stats";
 import { supabase } from "@/lib/supabase";
@@ -119,6 +120,7 @@ function You() {
     () => (entries && abandoned !== undefined ? buildReaderType(readerInputFromShelf(ranked, entries, abandoned, today())) : undefined),
     [entries, ranked, abandoned],
   );
+  useSyncMyReaderType(profile?.id, readerType);
   // Re-check badges whenever the shelf or profile changes (a new goal can earn one).
   const shelfSize = entries?.length ?? -1;
   useEffect(() => {
@@ -309,7 +311,7 @@ function You() {
         )}
 
         {readerType !== undefined && (readerType ? (
-          <Link href="/you/type" className="rt-teaser" style={{ background: readerType.family.bg, color: readerType.family.fg }}>
+          <Link href="/you/type" className="rt-teaser" style={{ background: readerType.color.bg, color: readerType.color.fg }}>
             <span className="rt-teaser__code">{readerType.code}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>Your reader type <span className="new-pill">New</span></span>

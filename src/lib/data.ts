@@ -458,6 +458,37 @@ export async function fetchCheckinDays(): Promise<string[]> {
   return (data || []).map((r) => r.checked_on as string);
 }
 
+/* ------------------------------ Reader types ----------------------------- */
+
+/** A reader's saved type, as others see it. pcts = Range, Lens, Rhythm, Bar (0–100 toward W, H, F, E). */
+export interface StoredReaderType {
+  user_id: string;
+  code: string;
+  pcts: number[];
+  drive: string;
+  wing: string | null;
+  book_count: number;
+}
+
+/** Saved types for these readers (private or blocked readers are left out). */
+export async function fetchReaderTypes(ids: string[]): Promise<StoredReaderType[]> {
+  if (!ids.length) return [];
+  const { data, error } = await supabase()
+    .from("reader_types")
+    .select("user_id, code, pcts, drive, wing, book_count")
+    .in("user_id", ids);
+  if (error) throw error;
+  return (data as StoredReaderType[]) || [];
+}
+
+export async function saveMyReaderType(t: Omit<StoredReaderType, "user_id">): Promise<void> {
+  const uid = await myId();
+  const { error } = await supabase()
+    .from("reader_types")
+    .upsert({ user_id: uid, ...t, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+  if (error) throw error;
+}
+
 /**
  * How many books you've put down part-way: moved from reading back to saved,
  * or removed while reading. Null if the history can't be read.

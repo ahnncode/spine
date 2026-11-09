@@ -9,6 +9,7 @@ import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
 import { EarlyPill, Name } from "@/components/Badge";
+import { ReaderTypePill } from "@/components/ReaderTypePill";
 import { Blurb } from "@/components/Blurb";
 import { BadgeStrip } from "@/components/BadgeCase";
 import { isEarlyAdopter } from "@/lib/badges";
@@ -149,6 +150,7 @@ function Inner() {
                     <>{data.counts.followers} {data.counts.followers === 1 ? "follower" : "followers"} · {data.counts.following} following</>
                   )}
                 </div>
+                {!data.blocked && <ReaderTypePill person={data.profile} />}
                 {isEarlyAdopter(data.profile.created_at) && <div style={{ marginTop: 8 }}><EarlyPill /></div>}
               </div>
               {!data.blocked && <FollowButton userId={data.profile.id} initial={data.following} onChange={(following) => setData((d) => (d ? { ...d, following, mutual: following && Boolean(d.theyFollow) } : d))} />}

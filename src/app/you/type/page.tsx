@@ -7,10 +7,11 @@ import { displayName } from "@/components/Avatar";
 import { ArrowIcon, BackIcon, ShareIcon } from "@/components/icons";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useShelf } from "@/components/useShelf";
+import { useSyncMyReaderType } from "@/components/useReaderTypes";
 import { SlidesSheet } from "@/components/WrapShare";
 import { fetchAbandonedCount, rankEntries, today } from "@/lib/data";
 import { AXES, buildReaderType, driveShares, MIN_BOOKS, readerInputFromShelf, withArticle, type AxisResult } from "@/lib/readerType";
-import { DRIVES, FAMILIES, TYPES } from "@/lib/readerTypeCopy";
+import { DRIVES, TYPE_COLOR, TYPES } from "@/lib/readerTypeCopy";
 
 export default function Page() {
   return (
@@ -42,6 +43,7 @@ function ReaderTypePage() {
   );
   const type = useMemo(() => (input ? buildReaderType(input) : null), [input]);
   const shares = useMemo(() => (input ? driveShares(input.ranked).slice(0, 3) : []), [input]);
+  useSyncMyReaderType(profile?.id, type);
 
   if (!input) {
     return (
@@ -86,7 +88,7 @@ function ReaderTypePage() {
         <TopBar onShare={() => setSharing(true)} />
 
         {/* The reveal */}
-        <section className="rt-hero" style={{ background: f.bg, color: f.fg }} aria-labelledby="rt-name">
+        <section className="rt-hero" style={{ background: type.color.bg, color: type.color.fg }} aria-labelledby="rt-name">
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <span className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>{first}&rsquo;s reader type</span>
             <span className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>{f.label}</span>
@@ -121,7 +123,7 @@ function ReaderTypePage() {
           Nobody is all one thing. Each letter is just the side you lean toward, and how far.
         </p>
         <div className="stack" style={{ marginTop: 14 }}>
-          {type.axes.map((a) => <AxisCard key={a.key} a={a} accent={f.bg} />)}
+          {type.axes.map((a) => <AxisCard key={a.key} a={a} accent={type.color.bg} />)}
         </div>
 
         <h2 className="section-title" style={{ marginTop: 36 }}>Why you read</h2>
@@ -184,7 +186,7 @@ function ReaderTypePage() {
 
         <h2 className="section-title" style={{ marginTop: 36 }}>Your book-club match</h2>
         <section className="card" style={{ marginTop: 12, display: "flex", gap: 14, alignItems: "flex-start" }}>
-          <span className="rt-chip" style={{ background: FAMILIES[familyKey(type.partner.code)].bg, color: FAMILIES[familyKey(type.partner.code)].fg }}>{type.partner.code}</span>
+          <span className="rt-chip" style={{ background: TYPE_COLOR[type.partner.code].bg, color: TYPE_COLOR[type.partner.code].fg }}>{type.partner.code}</span>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontWeight: 600, fontSize: 16 }}>{type.partner.name}</div>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.45 }}>{type.partner.why}</p>
@@ -219,9 +221,6 @@ function ReaderTypePage() {
   );
 }
 
-function familyKey(code: string) {
-  return code[0] === "W" ? (code[1] === "H" ? "wayfarers" : "cartographers") : code[1] === "H" ? "keepers" : "scholars";
-}
 
 function TopBar({ onShare }: { onShare?: () => void }) {
   return (

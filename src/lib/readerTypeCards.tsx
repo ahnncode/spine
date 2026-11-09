@@ -44,7 +44,7 @@ function Spectrum({ a, fg, quiet, track }: { a: AxisResult; fg: string; quiet: s
 }
 
 export function typeSlide(slide: number, t: ReaderType, name: string, handle: string | null): ReactNode {
-  const f = t.family;
+  const f = { ...t.family, bg: t.color.bg, fg: t.color.fg, soft: t.color.fg === INK ? "rgba(17,17,17,0.18)" : "rgba(255,255,255,0.28)" };
   if (slide === 1) {
     return (
       <Slide n={1} bg={f.bg} fg={f.fg} quiet={f.fg === INK ? "rgba(17,17,17,0.6)" : "rgba(255,255,255,0.72)"} handle={handle}>

@@ -163,6 +163,26 @@ export const TYPES: Record<string, TypeCopy> = {
   },
 };
 
+/**
+ * One colour per type. The hue is the family; brighter = Enthusiast, deeper =
+ * Critic; Grazers sit one step along the colour wheel from Finishers.
+ * Used for the type pill, the ring around avatars, the result page and slides.
+ */
+export const TYPE_COLOR: Record<string, { bg: string; fg: string }> = {
+  WHFE: { bg: "#FF7A3D", fg: "#111111" }, WHGE: { bg: "#F5A524", fg: "#111111" },
+  WHFC: { bg: "#B83A0E", fg: "#FFFFFF" }, WHGC: { bg: "#8C4A0B", fg: "#FFFFFF" },
+  WMFE: { bg: "#2D3FE0", fg: "#FFFFFF" }, WMGE: { bg: "#3E9BEA", fg: "#111111" },
+  WMFC: { bg: "#1A237E", fg: "#FFFFFF" }, WMGC: { bg: "#0F4C75", fg: "#FFFFFF" },
+  DHFE: { bg: "#E0457B", fg: "#111111" }, DHGE: { bg: "#F27C8F", fg: "#111111" },
+  DHFC: { bg: "#7A2E4D", fg: "#F7E7EE" }, DHGC: { bg: "#5E1F5C", fg: "#F6E8F6" },
+  DMFE: { bg: "#2FA36B", fg: "#111111" }, DMGE: { bg: "#9BC53D", fg: "#111111" },
+  DMFC: { bg: "#1F5C3A", fg: "#EAF3EC" }, DMGC: { bg: "#14504F", fg: "#E6F2F1" },
+};
+
+export function familyKeyOf(code: string): FamilyKey {
+  return code[0] === "W" ? (code[1] === "H" ? "wayfarers" : "cartographers") : code[1] === "H" ? "keepers" : "scholars";
+}
+
 export type DriveKey = "escape" | "thrill" | "feeling" | "wonder" | "understanding" | "craft";
 
 export interface DriveCopy {

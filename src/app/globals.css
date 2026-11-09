@@ -1013,3 +1013,13 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .rt-dots span.on { background: var(--accent); }
 .rt-teaser { display: flex; align-items: center; gap: 14px; margin-top: 24px; padding: 16px 18px; border-radius: var(--radius-l); text-decoration: none; }
 .rt-teaser__code { font-family: var(--font-display); font-size: 40px; line-height: 1; letter-spacing: 0.01em; }
+
+/* Reader type ring around avatars, and the profile pill */
+.type-ring { display: inline-flex; flex-shrink: 0; border-radius: 50%; }
+.avatar-stack > .type-ring { margin-left: -8px; }
+.avatar-stack > .type-ring:first-child { margin-left: 0; }
+.type-pill { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px 0 4px; border: 0; border-radius: 999px; font: inherit; cursor: pointer; }
+.type-pill__code { display: inline-flex; align-items: center; justify-content: center; height: 22px; padding: 0 7px; border-radius: 999px; background: rgba(255,255,255,0.2); font-family: var(--font-display); font-size: 13px; letter-spacing: 0.03em; }
+.type-pill__name { font-size: 13px; font-weight: 600; }
+.type-compare { display: grid; grid-template-columns: 62px minmax(0, 1fr) 40px 40px; align-items: center; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.type-compare__letter { display: flex; align-items: center; justify-content: center; height: 38px; border-radius: 10px; font-family: var(--font-display); font-size: 21px; }

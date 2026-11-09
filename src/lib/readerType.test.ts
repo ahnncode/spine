@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AXES, buildReaderType, driveShares, MIN_BOOKS, type RTBook, type RTInput } from "./readerType";
-import { FAMILIES, TYPES } from "./readerTypeCopy";
+import { FAMILIES, TYPE_COLOR, TYPES } from "./readerTypeCopy";
 
 const TODAY = "2026-11-08";
 
@@ -174,6 +174,8 @@ describe("copy", () => {
     for (const c of codes) expect(TYPES[c], c).toBeDefined();
     expect(new Set(Object.values(TYPES).map((t) => t.name)).size).toBe(16);
     expect(Object.keys(FAMILIES)).toHaveLength(4);
+    for (const c of codes) expect(TYPE_COLOR[c], c).toBeDefined();
+    expect(new Set(Object.values(TYPE_COLOR).map((c) => c.bg)).size).toBe(16);
   });
 });
 

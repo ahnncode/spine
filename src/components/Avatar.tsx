@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AVATAR_ART } from "@/components/AvatarArt";
 import { AVATAR_COLOR } from "@/lib/avatars";
 import type { Profile } from "@/lib/data";
+import { TypeRing } from "./TypeRing";
 
 const COLORS = ["#2D3FE0", "#0F5257", "#7A2E4D", "#B5452B", "#3E6B48", "#1F3A5F", "#111111"];
 
@@ -34,7 +35,8 @@ export function AvatarIconArt({ icon, color, size }: { icon: string; color: stri
 
 type AvatarProfile = Pick<Profile, "id" | "display_name" | "username"> & Partial<Pick<Profile, "avatar_icon" | "avatar_color">>;
 
-export function Avatar({ profile, size = 40, link = false }: { profile: AvatarProfile | undefined | null; size?: number; link?: boolean }) {
+/** `ring` (default on): a thin ring in the reader's type colour, once they have one. */
+export function Avatar({ profile, size = 40, link = false, ring = true }: { profile: AvatarProfile | undefined | null; size?: number; link?: boolean; ring?: boolean }) {
   const name = displayName(profile);
   const el =
     profile?.avatar_icon && AVATAR_ART[profile.avatar_icon] ? (
@@ -54,11 +56,12 @@ export function Avatar({ profile, size = 40, link = false }: { profile: AvatarPr
         {initials(name)}
       </span>
     );
+  const ringed = ring ? <TypeRing userId={profile?.id} size={size}>{el}</TypeRing> : el;
   return link && profile?.username ? (
     <Link href={`/u/${profile.username}`} aria-label={name} style={{ textDecoration: "none", flexShrink: 0 }}>
-      {el}
+      {ringed}
     </Link>
   ) : (
-    el
+    ringed
   );
 }
