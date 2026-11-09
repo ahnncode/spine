@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useProfile } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
+import { ArrowIcon } from "@/components/icons";
 import { useReaderType } from "@/components/useReaderTypes";
 import type { Profile, StoredReaderType } from "@/lib/data";
 import { AXES } from "@/lib/readerType";
@@ -49,6 +50,18 @@ export function ReaderTypePill({ person }: { person: Person }) {
     </>
   );
 }
+
+/** Each letter in a few words, about someone else. */
+const POLE_ABOUT: Record<string, string> = {
+  W: "Roams across genres and subjects.",
+  D: "Goes deep in the kinds of books they love.",
+  H: "Reads for people and feeling.",
+  M: "Reads for ideas, puzzles and how things work.",
+  F: "One book at a time, all the way to the end.",
+  G: "A few books going at once, following their mood.",
+  E: "Goes in hoping to love it, and often does.",
+  C: "A book has to earn it. Their 9s mean something.",
+};
 
 /** One line per spectrum on what a match or a difference means in practice. */
 function note(axis: number, mine: string, theirs: string, them: string): string {
@@ -108,9 +121,33 @@ function CompareSheet({ me, mine, person, theirs, onClose }: {
           <Avatar profile={person} size={64} />
         </div>
         <h2 className="g" style={{ margin: "14px 0 0", textAlign: "center", fontSize: 26, lineHeight: 1.05 }}>{heading}</h2>
-        <p className="muted" style={{ margin: "6px 0 0", textAlign: "center", fontSize: 14 }}>
-          {mine ? TYPES[theirs.code].tagline : "Rank 5 books to get your own type and see how you compare."}
-        </p>
+
+        <section className="rt-about" aria-label={`${them}’s reader type`} style={{ background: tc.bg, color: tc.fg }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <span className="g" style={{ fontSize: 22, lineHeight: 1.1 }}>{TYPES[theirs.code].name}</span>
+            <span style={{ marginLeft: "auto", fontFamily: "var(--font-book)", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", opacity: 0.85 }}>{theirs.code}</span>
+          </div>
+          <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.35, opacity: 0.9 }}>
+            {TYPES[theirs.code].tagline} {FAMILIES[famB].label}: {FAMILIES[famB].gist.toLowerCase()}.
+          </p>
+          <ul className="rt-about__poles">
+            {AXES.map((a, i) => {
+              const pole = a.poles.find((x) => x.letter === theirs.code[i]);
+              return (
+                <li key={a.key}>
+                  <span className="rt-about__letter" style={{ background: tc.fg === "#111111" ? "rgba(17,17,17,0.14)" : "rgba(255,255,255,0.2)" }}>{theirs.code[i]}</span>
+                  <span><strong>{pole?.name}</strong> · {POLE_ABOUT[theirs.code[i]]}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <Link href={`/u/${person.username}/type`} className="rt-about__more" style={{ color: "inherit" }}>
+            More about {them}&rsquo;s type <ArrowIcon size={14} />
+          </Link>
+        </section>
+        {!mine && (
+          <p className="muted" style={{ margin: "12px 0 0", textAlign: "center", fontSize: 14 }}>Rank 5 books to get your own type and see how you compare.</p>
+        )}
 
         {mine && mc && (
           <>

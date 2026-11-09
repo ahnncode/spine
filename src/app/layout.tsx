@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "@/components/Auth";
 import { SheetFocus } from "@/components/SheetFocus";
+import { SheetScrollLock } from "@/components/SheetScrollLock";
 import { SheetSwipe } from "@/components/SheetSwipe";
 import { Toaster } from "@/components/Toaster";
 import "./globals.css";
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body>
         <AuthProvider>{children}</AuthProvider>
+        <SheetScrollLock />
         <SheetSwipe />
         <SheetFocus />
         <Toaster />
