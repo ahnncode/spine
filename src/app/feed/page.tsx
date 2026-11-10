@@ -64,7 +64,15 @@ function Feed() {
   // "Following" is friends' activity; "Everyone" is public activity across readread,
   // which is also what someone who follows nobody yet sees first.
   const [scope, setScope] = useState<"following" | "everyone">("following");
-  const [cache, setCache] = useState<Partial<Record<"following" | "everyone", Loaded>>>({});
+  const [cache, setCache] = useState<Partial<Record<"following" | "everyone", Loaded & { at: number }>>>({});
+  // Screens stay alive in the background; effects re-run each time this one is
+  // shown again, so this marks when. Older caches still show at once, then
+  // refresh quietly, so a book you just ranked or checked in on appears.
+  const [shownAt, setShownAt] = useState(0);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- runs on each show
+    setShownAt(Date.now());
+  }, []);
   const [followingIds, setFollowingIds] = useState<string[] | null>(null);
   const [picked, setPicked] = useState(false);
   const [openedAt] = useState(() => Date.now());
@@ -81,14 +89,21 @@ function Feed() {
   }, []);
 
   useEffect(() => {
-    if (followingIds === null) return;
-    if (cache[scope] || (scope === "everyone" && !profile)) {
+    if (followingIds === null || !shownAt) return;
+    const cached = cache[scope];
+    if (scope === "everyone" && !profile) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setData(cache[scope] ?? null);
+      setData(null);
       return;
     }
-    setData(null);
+    if (cached) {
+      setData(cached);
+      if (cached.at >= shownAt) return;
+    } else {
+      setData(null);
+    }
     setError(null);
+    let live = true;
     (async () => {
       const ids = followingIds;
       const [items, togetherAll] = await Promise.all([
@@ -110,11 +125,19 @@ function Feed() {
         commentCounts(items.flatMap((i) => (i.kind === "ranked" || i.kind === "dropped" ? [i.entry.id] : []))),
       ]);
       const books = new Map((await fetchBooks([...new Set(together.map((t) => t.book_id))]).catch(() => [])).map((b) => [b.id, b]));
-      const loaded = { items, profiles, matches, hearts, comments, following: ids.length, together, books };
+      const loaded = { items, profiles, matches, hearts, comments, following: ids.length, together, books, at: Date.now() };
+      if (!live) return;
       setCache((c) => ({ ...c, [scope]: loaded }));
       setData(loaded);
-    })().catch((e) => setError(e instanceof Error ? e.message : "Couldn’t load your feed"));
-  }, [scope, profile, cache, followingIds]);
+    })().catch((e) => {
+      // A quiet refresh that fails keeps what's already on screen.
+      if (live && !cached) setError(e instanceof Error ? e.message : "Couldn’t load your feed");
+    });
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cache is read, not watched: watching it would refetch after every load
+  }, [scope, profile, followingIds, shownAt]);
   const followSet = useMemo(() => new Set(followingIds ?? []), [followingIds]);
 
 
