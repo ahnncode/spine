@@ -45,3 +45,16 @@ describe("check-ins keep streaks alive", () => {
     expect(weeklyStreak(dates, d("2026-11-04")).weeks).toBe(3);
   });
 });
+
+describe("imported books finished in the app", () => {
+  it("counts a ranking made in the app on a book that came in with an import", async () => {
+    const { activityDates, rankedInApp } = await import("./stats");
+    const finishedHere = { source: "goodreads", status: "ranked", ranked_at: "2026-11-10T04:30:00Z", created_at: "2026-11-02T18:00:00Z", started_on: null };
+    const importedRanking = { source: "goodreads", status: "ranked", ranked_at: "2024-05-01T12:00:00Z", created_at: "2026-11-02T18:00:00Z", started_on: null };
+    expect(rankedInApp(finishedHere)).toBe(true);
+    expect(rankedInApp(importedRanking)).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dates = activityDates([finishedHere, importedRanking] as any);
+    expect(dates.map((x) => x.toISOString())).toEqual(["2026-11-10T04:30:00.000Z"]);
+  });
+});

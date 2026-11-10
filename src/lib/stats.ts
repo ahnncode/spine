@@ -20,14 +20,24 @@ function parseDay(iso: string): Date {
 }
 
 /**
+ * Whether a ranking happened in the app rather than coming in with an import.
+ * A book imported as want-to-read or currently-reading and ranked here later
+ * counts; imported rankings carry the finish date, never after the import.
+ */
+export function rankedInApp(e: Pick<Entry, "source" | "ranked_at" | "created_at">): boolean {
+  if (!isImported(e.source)) return true;
+  if (!e.ranked_at || !e.created_at) return false;
+  return new Date(e.ranked_at).getTime() > new Date(e.created_at).getTime() + 10 * 60 * 1000;
+}
+
+/**
  * Days a reader did something worth counting: checked in on a book they're
  * reading, started one, or ranked one.
  */
 export function activityDates(entries: Entry[], checkinDays: string[] = []): Date[] {
   const out: Date[] = checkinDays.map(parseDay);
   for (const e of entries) {
-    if (isImported(e.source) && e.status === "ranked") continue; // history, not activity
-    if (e.ranked_at && e.status === "ranked") out.push(new Date(e.ranked_at));
+    if (e.ranked_at && e.status === "ranked" && rankedInApp(e)) out.push(new Date(e.ranked_at));
     if (e.started_on) out.push(parseDay(e.started_on));
   }
   return out;
