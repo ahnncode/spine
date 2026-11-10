@@ -8,6 +8,7 @@ import { CHECKIN_NOTE_MAX, VIBES } from "@/lib/thoughts";
 import { FormatToggle } from "./FormatToggle";
 import { Cover } from "./Cover";
 import { StopSheet } from "./StopSheet";
+import { RoomPrompt } from "./ChapterRooms";
 
 /**
  * Check in on a book you're reading. Progress is optional and goes by chapter
@@ -69,6 +70,8 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   // Not reading it right now: put it aside or drop it, from the same sheet.
   const [stop, setStop] = useState<"pause" | "drop" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // After saving: the chapter whose room just opened.
+  const [opened, setOpened] = useState<number | null>(null);
   const today = new Date();
   const doneToday =
     entry.last_checkin_on ===
@@ -96,6 +99,14 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
       });
       // First reader to count the chapters shares it with everyone after.
       if (totalN && !entry.book.chapters) await suggestChapters(entry.book_id, totalN).catch(() => {});
+      // Reached a new chapter: its room just opened, so offer it before closing.
+      const at = !withProgress ? null : unit === "chapter" ? chapter : totalN ? fromPct(pct, totalN) : null;
+      const before = entry.progress_chapter ?? (entry.progress_pct != null && totalN ? fromPct(entry.progress_pct, totalN) : 0);
+      if (at && at > 0 && at > before) {
+        setOpened(at);
+        setBusy(false);
+        return;
+      }
       await onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t check in");
@@ -104,6 +115,22 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
   }
 
   if (stop) return <StopSheet entry={entry} mode={stop} onClose={() => setStop(null)} onDone={onDone} />;
+  if (opened != null) {
+    return (
+      <div className="sheet-backdrop" onClick={() => onDone()}>
+        <div className="sheet" role="dialog" aria-modal="true" aria-label="Checked in" onClick={(e) => e.stopPropagation()}>
+          <div className="sheet__grab" />
+          <p className="eyebrow" style={{ color: "#2D6A3E" }}>Checked in</p>
+          <h2 className="g" style={{ margin: "4px 0 0", fontSize: 26, lineHeight: 1.1, fontWeight: 400 }}>
+            Chapter {opened}{totalN ? ` of ${totalN}` : ""}
+          </h2>
+          <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{entry.book.title}</p>
+          <RoomPrompt bookId={entry.book_id} chapter={opened} onOpen={() => void onDone()} />
+          <button className="link-btn" style={{ minHeight: 44, width: "100%", marginTop: 8 }} onClick={() => onDone()}>Done</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>

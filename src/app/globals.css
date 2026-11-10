@@ -1102,3 +1102,26 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .pick-faces { display: flex; margin-top: 8px; }
 .pick-faces > * + * { margin-left: -8px; }
 .pick-faces .avatar { box-shadow: 0 0 0 2px var(--surface); }
+
+/* Chapter rooms: the list on the book page, the room, the prompt after a check-in. */
+.rooms { margin-top: 24px; }
+.rooms__list { list-style: none; margin: 12px 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; background: var(--surface); }
+.rooms__list > li + li { border-top: 1px solid var(--line); }
+.rooms__row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; color: inherit; text-decoration: none; font: inherit; font-size: 14px; width: 100%; background: transparent; border: 0; text-align: left; cursor: pointer; }
+.rooms__num { width: 34px; flex-shrink: 0; font-family: var(--font-book); font-weight: 700; font-size: 17px; }
+.rooms__num--word { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; }
+.rooms__label { flex: 1; min-width: 0; }
+.rooms__locked { color: var(--muted); cursor: default; background: var(--ground); }
+.room-chips { display: flex; gap: 8px; overflow-x: auto; margin: 14px -16px 0; padding: 2px 16px 4px; scrollbar-width: none; }
+.room-chips::-webkit-scrollbar { display: none; }
+.room-chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); color: inherit; text-decoration: none; font-size: 13px; font-weight: 600; }
+.room-chip[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
+.room-chip__n { font-weight: 400; opacity: 0.75; }
+.room-chip--locked { border-style: dashed; background: transparent; color: var(--muted); font-weight: 500; }
+.room-thread { display: flex; flex-direction: column; gap: 12px; padding: 14px; }
+.room-comment { display: flex; gap: 10px; align-items: flex-start; }
+.room-comment--reply { margin-left: 40px; }
+.room-comment__actions { display: flex; align-items: center; gap: 12px; margin-top: 2px; flex-wrap: wrap; }
+.room-composer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 15; padding: 10px 16px calc(14px + env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--line); max-width: 560px; margin: 0 auto; }
+.room-composer__reply { display: flex; align-items: center; justify-content: space-between; margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+.room-prompt { margin-top: 16px; padding: 16px; border-radius: var(--radius-l); border: 1px solid var(--cobalt-soft); background: color-mix(in srgb, var(--cobalt-soft) 55%, var(--surface)); display: flex; flex-direction: column; gap: 12px; }

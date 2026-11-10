@@ -32,6 +32,7 @@ import { BookSummary } from "@/components/BookSummary";
 import { ElsewhereRatings } from "@/components/ElsewhereRatings";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { CheckInSheet } from "@/components/CheckInSheet";
+import { BookRooms } from "@/components/ChapterRooms";
 import { formatScore } from "@/lib/ranking";
 import { BookSkeleton } from "@/components/Skeleton";
 import { useCoverTint } from "@/components/useCoverTint";
@@ -200,6 +201,8 @@ function Inner() {
                 Read with friends
               </button>
             )}
+
+            <BookRooms book={book} entry={mine} />
 
             {myRanked ? (
               <>
