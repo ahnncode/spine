@@ -1248,6 +1248,44 @@ export async function fetchNotifications(): Promise<Notification[]> {
   return (data as Notification[]) || [];
 }
 
+/** Unread hearts and comments on your posts: what's new since you last looked. */
+export async function fetchUnreadReactions(): Promise<Notification[]> {
+  const uid = await myId();
+  const { data, error } = await supabase()
+    .from("notifications")
+    .select("id, actor_id, kind, badge, detail, target_type, target_id, created_at, read_at")
+    .eq("user_id", uid)
+    .in("kind", ["reaction", "comment"])
+    .neq("actor_id", uid)
+    .is("read_at", null)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return (data as Notification[]) || [];
+}
+
+/** Mark these notifications read (the reactions card, once seen or dismissed). */
+export async function markNotificationsRead(ids: string[]): Promise<void> {
+  if (!ids.length) return;
+  const { error } = await supabase().from("notifications").update({ read_at: new Date().toISOString() }).in("id", ids);
+  if (error) throw error;
+}
+
+/** Comments other readers left on your posts since a moment, newest first. */
+export async function fetchCommentsOnMe(since: string): Promise<Array<Comment & { target_id: string }>> {
+  const uid = await myId();
+  const { data, error } = await supabase()
+    .from("comments")
+    .select("id, user_id, target_owner, target_id, body, created_at")
+    .eq("target_owner", uid)
+    .neq("user_id", uid)
+    .gte("created_at", since)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data as Array<Comment & { target_id: string }>) || [];
+}
+
 export async function unreadCount(): Promise<number> {
   const uid = await myId();
   const { count, error } = await supabase()

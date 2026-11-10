@@ -23,6 +23,11 @@ function refresh(force = false): void {
     });
 }
 
+/** Re-count unread notifications now (after marking some read). */
+export function refreshUnread() {
+  refresh(true);
+}
+
 /** Call after reading notifications so the dot clears everywhere at once. */
 export function clearUnread() {
   cached = { n: 0, at: Date.now() };

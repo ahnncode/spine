@@ -1063,3 +1063,15 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .receipt-facts > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--surface); font-size: 14px; }
 .receipt-facts dt { color: var(--muted); }
 .receipt-facts dd { margin: 0; font-weight: 700; }
+
+/* Reactions: the card at the top of the feed, and the list it opens. */
+.reactions-card { margin-top: 16px; padding: 16px; border-radius: var(--radius-l); background: var(--panel); border: 1px solid var(--panel-line); color: #ffffff; display: flex; flex-direction: column; gap: 12px; }
+.reactions-card__close { width: 32px; height: 32px; min-height: 32px; background: transparent; border: 0; color: #8a8984; }
+.reactions-card__body { display: flex; gap: 12px; align-items: center; color: inherit; text-decoration: none; }
+.reactions-card__faces { display: flex; flex-shrink: 0; }
+.reactions-card__faces > * + * { margin-left: -10px; }
+.reactions-card__faces .avatar { box-shadow: 0 0 0 2px var(--panel); }
+.reactions-card__chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.reactions-card__chips > span { padding: 6px 10px; border-radius: 14px; background: #2a2a2a; font-size: 13px; }
+.activity-group__head { display: flex; gap: 12px; align-items: center; color: inherit; text-decoration: none; }
+.activity-comment { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }

@@ -5,6 +5,7 @@ import { STOP_REASON_LABEL } from "@/lib/stopReasons";
 import { MentionText } from "@/components/Mentions";
 import { timeAgo } from "@/lib/time";
 import Link from "next/link";
+import { ReactionsCard } from "@/components/Reactions";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
@@ -195,6 +196,8 @@ function Feed() {
             <Link href="/people" className="btn" style={{ flexShrink: 0, minHeight: 40 }}>Find people</Link>
           </div>
         )}
+
+        <ReactionsCard entries={entries} />
 
         {scope === "following" && data && <WeekCard finished={weekRanked.length} finishers={weekFinishers} streakWeeks={streak.weeks} />}
 
