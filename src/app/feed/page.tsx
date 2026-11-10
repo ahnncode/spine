@@ -107,8 +107,8 @@ function Feed() {
     (async () => {
       const ids = followingIds;
       const [items, togetherAll] = await Promise.all([
-        // Your own posts show in both tabs, so you can see what you shared and who reacted.
-        scope === "everyone" ? fetchFeed("everyone", { days: 21 }) : fetchFeed(profile ? [...ids, profile.id] : ids),
+        // Following is only people you follow; Everyone is all public activity, yours included.
+        scope === "everyone" ? fetchFeed("everyone", { days: 21 }) : fetchFeed(ids),
         scope === "everyone" ? Promise.resolve([]) : feedReadAlongs(),
       ]);
       const together = togetherAll;
