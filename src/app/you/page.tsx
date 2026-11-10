@@ -1,6 +1,7 @@
 "use client";
 
 import { DroppedRow } from "@/components/PutAside";
+import { RecentlyFinished } from "@/components/RecentlyFinished";
 import { ShareCardButton } from "@/components/ShareCard";
 import { useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
@@ -218,6 +219,16 @@ function You() {
             </div>
           </section>
         )}
+
+        {ranked.length > 0 && (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 28 }}>
+            <div className="stat"><div className="stat__n">{ranked.length}</div><div className="stat__l">ranked</div></div>
+            <div className="stat"><div className="stat__n">{thisYear}</div><div className="stat__l">this year</div></div>
+            <div className="stat"><div className="stat__n">{stamps.filter((st) => st.count > 0).length}</div><div className="stat__l">genre stamps</div></div>
+          </div>
+        )}
+
+        <RecentlyFinished ranked={ranked} mine />
 
         <div className="stats-pair">
           <button className="card stats-goal" onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>

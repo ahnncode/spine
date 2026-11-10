@@ -5,6 +5,7 @@ import type { BadgeStatus } from "./badges";
 import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
 import { findAppleAuthor } from "./applecovers";
 import { authorToCheck, lookup } from "./openlibrary";
+import { rankedInApp } from "./stats";
 import { supabase } from "./supabase";
 import { isRemoving } from "./toast";
 
@@ -860,6 +861,8 @@ export interface ScoredEntry {
   score: number;
   overall_rank: number;
   ranked_at: string | null;
+  created_at: string;
+  source: string | null;
   note: string | null;
   tags: string[];
   note_spoiler: boolean;
@@ -867,7 +870,7 @@ export interface ScoredEntry {
   book: Book;
 }
 
-const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, note, tags, note_spoiler, format, book:books(*)";
+const SCORED_SELECT = "id, user_id, book_id, bucket, score, overall_rank, ranked_at, created_at, source, note, tags, note_spoiler, format, book:books(*)";
 
 /** How the people you follow ranked any of these books (for "you split on" cards). */
 export async function friendsRankedOn(bookIds: string[], friendIds: string[]): Promise<ScoredEntry[]> {
@@ -890,13 +893,14 @@ export async function rankedThisMonth(userIds: string[]): Promise<Map<string, nu
   const start = new Date(d.getFullYear(), d.getMonth(), 1).toISOString();
   const { data, error } = await supabase()
     .from("ranked_entries")
-    .select("user_id")
+    .select("user_id, source, ranked_at, created_at")
     .in("user_id", userIds.slice(0, 300))
-    .not("source", "in", "(goodreads,storygraph)")
     .gte("ranked_at", start)
     .limit(2000);
   if (error) throw error;
-  for (const r of (data as Array<{ user_id: string }>) || []) counts.set(r.user_id, (counts.get(r.user_id) ?? 0) + 1);
+  for (const r of (data as Array<{ user_id: string; source: string | null; ranked_at: string | null; created_at: string }>) || []) {
+    if (rankedInApp(r)) counts.set(r.user_id, (counts.get(r.user_id) ?? 0) + 1);
+  }
   return counts;
 }
 
@@ -952,11 +956,10 @@ export async function fetchFeed(
   const [ranked, reading, checkins, dropped] = await Promise.all([
     who(supabase().from("ranked_entries").select(SCORED_SELECT))
       .not("ranked_at", "is", null)
-      // Imported shelves would flood "Everyone" with hundreds of rows at once.
-      .not("source", "in", "(goodreads,storygraph)")
       .gte("ranked_at", since)
       .order("ranked_at", { ascending: false })
-      .limit(limit),
+      // Room for imported rankings, which are filtered out below.
+      .limit(limit * 2),
     who(supabase().from("shelf_entries").select(ENTRY_SELECT))
       .eq("status", "reading")
       // Friends' current reads stay up however long they take; strangers' only while fresh.
@@ -986,7 +989,9 @@ export async function fetchFeed(
   const checkedIn = new Set(cis.map((c) => `${c.user_id}:${c.book_id}`));
 
   const items: FeedItem[] = [
-    ...((ranked.data as unknown as ScoredEntry[]) || []).map((e) => ({
+    // Rankings that came in with an import are history, not news (and would
+    // flood the feed); a book imported and then finished here still posts.
+    ...((ranked.data as unknown as ScoredEntry[]) || []).filter((e) => rankedInApp(e)).slice(0, limit).map((e) => ({
       kind: "ranked" as const,
       at: e.ranked_at as string,
       entry: { ...e, score: Number(e.score), tags: e.tags ?? [] },

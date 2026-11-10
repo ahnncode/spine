@@ -1,6 +1,7 @@
 "use client";
 
 import { DroppedRow } from "@/components/PutAside";
+import { RecentlyFinished } from "@/components/RecentlyFinished";
 import { ShareCardButton } from "@/components/ShareCard";
 import { dayAgo } from "@/lib/time";
 import Link from "next/link";
@@ -227,6 +228,8 @@ function Inner() {
                     </div>
                   </>
                 )}
+
+                <RecentlyFinished ranked={ranked} />
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 8, marginTop: 20 }}>
                   <div className="stat"><div className="stat__n">{ranked.length}</div><div className="stat__l">ranked</div></div>

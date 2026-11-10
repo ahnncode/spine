@@ -24,7 +24,7 @@ function parseDay(iso: string): Date {
  * A book imported as want-to-read or currently-reading and ranked here later
  * counts; imported rankings carry the finish date, never after the import.
  */
-export function rankedInApp(e: Pick<Entry, "source" | "ranked_at" | "created_at">): boolean {
+export function rankedInApp(e: { source?: string | null; ranked_at?: string | null; created_at?: string | null }): boolean {
   if (!isImported(e.source)) return true;
   if (!e.ranked_at || !e.created_at) return false;
   return new Date(e.ranked_at).getTime() > new Date(e.created_at).getTime() + 10 * 60 * 1000;
