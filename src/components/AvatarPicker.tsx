@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarIconArt } from "@/components/Avatar";
 import { AVATAR_ART } from "@/components/AvatarArt";
 import { LockIcon } from "@/components/icons";
 import { AVATAR_COLORS, AVATAR_ICONS, iconUnlocked } from "@/lib/avatars";
 import { BADGE } from "@/lib/badges";
-import { updateMyProfile, type Profile } from "@/lib/data";
+import { fetchMyTypeCodes, updateMyProfile, type Profile } from "@/lib/data";
+import { TYPES } from "@/lib/readerTypeCopy";
+import { typeIconCode, typeIconKey } from "./TypeAvatarArt";
 
 /** Choose a profile picture: initials or an icon, on one of ten colors. */
 export function AvatarPicker({
@@ -23,6 +25,12 @@ export function AvatarPicker({
   const [hint, setHint] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Reader-type icons: one for every type you've had.
+  const [typeCodes, setTypeCodes] = useState<string[]>([]);
+  useEffect(() => {
+    fetchMyTypeCodes().then((c) => setTypeCodes(c.reverse())).catch(() => {});
+  }, []);
+  const typed = typeIconCode(icon) != null;
 
   const free = AVATAR_ICONS.filter((i) => !i.unlock);
   const locked = AVATAR_ICONS.filter((i) => i.unlock);
@@ -30,7 +38,7 @@ export function AvatarPicker({
 
   function choose(key: string | null) {
     setError(null);
-    if (key && !iconUnlocked(key, earned)) {
+    if (key && !typeIconCode(key) && !iconUnlocked(key, earned)) {
       const def = AVATAR_ICONS.find((i) => i.key === key)!;
       const badge = BADGE[def.unlock!];
       setHint(`${def.label} unlocks with the ${badge.name} badge. ${badge.how}.`);
@@ -67,13 +75,27 @@ export function AvatarPicker({
         </div>
 
         <div style={{ maxHeight: "58vh", overflowY: "auto", margin: "14px -4px 0", padding: "0 4px" }}>
-          <p className="eyebrow" style={{ margin: "4px 0 8px" }}>Color</p>
+          <p className="eyebrow" style={{ margin: "4px 0 8px" }}>Color{typed ? <span style={{ textTransform: "none", letterSpacing: 0, fontWeight: 400 }}> · reader type icons keep their own</span> : null}</p>
           <div className="swatch-grid" role="radiogroup" aria-label="Color">
             {AVATAR_COLORS.map((c) => (
               <button key={c.key} role="radio" aria-checked={color === c.key} aria-label={c.label} className="swatch"
                 style={{ background: c.bg }} onClick={() => setColor(c.key)} />
             ))}
           </div>
+
+          {typeCodes.length > 0 && (
+            <>
+              <p className="eyebrow" style={{ margin: "18px 0 8px" }}>Your reader type</p>
+              <div className="pic-grid" role="radiogroup" aria-label="Reader type icons">
+                {typeCodes.map((c) => (
+                  <button key={c} role="radio" aria-checked={icon === typeIconKey(c)} className="pic" onClick={() => choose(typeIconKey(c))} aria-label={TYPES[c].name}>
+                    <AvatarIconArt icon={typeIconKey(c)} color={color} size={52} />
+                    <span className="pic__label">{TYPES[c].name.replace(/^The /, "")}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           <p className="eyebrow" style={{ margin: "18px 0 8px" }}>Icon</p>
           <div className="pic-grid" role="radiogroup" aria-label="Icon">

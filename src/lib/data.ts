@@ -491,6 +491,22 @@ export async function saveMyReaderType(t: Omit<StoredReaderType, "user_id">): Pr
 }
 
 /**
+ * Every reader type you've had, oldest first (your current one included).
+ * Each one earns its profile-picture icon.
+ */
+export async function fetchMyTypeCodes(): Promise<string[]> {
+  const uid = await myId();
+  const [hist, now] = await Promise.all([
+    supabase().from("reader_type_history").select("code, recorded_at").eq("user_id", uid).order("recorded_at", { ascending: true }).limit(500),
+    supabase().from("reader_types").select("code").eq("user_id", uid).limit(1),
+  ]);
+  const codes = ((hist.data as Array<{ code: string }> | null) ?? []).map((r) => r.code);
+  const current = (now.data as Array<{ code: string }> | null)?.[0]?.code;
+  if (current) codes.push(current);
+  return [...new Set(codes)];
+}
+
+/**
  * How many books you've put down part-way: moved from reading back to saved,
  * or removed while reading. Null if the history can't be read.
  */

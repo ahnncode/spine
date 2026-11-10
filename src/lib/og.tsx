@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { ReactNode } from "react";
 import { AVATAR_ART } from "@/components/AvatarArt";
+import { typeIconArt } from "@/components/TypeAvatarArt";
 import { AVATAR_COLOR } from "@/lib/avatars";
 import { coverCandidates, coverColors, dedupeKey } from "@/lib/books";
 import type { PublicBookCard } from "@/lib/public";
@@ -103,6 +104,15 @@ export function ScoreDisc({ score, size, top = true }: { score: number; size: nu
 /** A reader's picture: their chosen icon, or initials on a color. */
 export function OgAvatar({ name, icon, color, size }: { name: string; icon: string | null; color: string | null; size: number }) {
   const c = AVATAR_COLOR[color ?? ""] ?? null;
+  const typed = typeIconArt(icon);
+  if (typed) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 48 48">
+        <circle cx="24" cy="24" r="24" fill={typed.bg} />
+        {typed.art}
+      </svg>
+    );
+  }
   if (icon && AVATAR_ART[icon]) {
     const cc = c ?? AVATAR_COLOR.ink;
     return (

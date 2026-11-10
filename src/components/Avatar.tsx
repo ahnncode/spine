@@ -3,6 +3,7 @@ import { AVATAR_ART } from "@/components/AvatarArt";
 import { AVATAR_COLOR } from "@/lib/avatars";
 import type { Profile } from "@/lib/data";
 import { TypeRing } from "./TypeRing";
+import { typeIconArt } from "./TypeAvatarArt";
 
 const COLORS = ["#2D3FE0", "#0F5257", "#7A2E4D", "#B5452B", "#3E6B48", "#1F3A5F", "#111111"];
 
@@ -23,14 +24,21 @@ function initials(name: string): string {
 
 /** Just the picture: a chosen icon on its color. */
 export function AvatarIconArt({ icon, color, size }: { icon: string; color: string; size: number }) {
+  // Reader-type icons always sit on their type's own color.
+  const typed = typeIconArt(icon);
   const c = AVATAR_COLOR[color] ?? AVATAR_COLOR.ink;
   const art = AVATAR_ART[icon];
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden="true" style={{ display: "block", flexShrink: 0 }}>
-      <circle cx="24" cy="24" r="24" fill={c.bg} />
-      {art?.(c.fg, c.bg)}
+      <circle cx="24" cy="24" r="24" fill={typed?.bg ?? c.bg} />
+      {typed ? typed.art : art?.(c.fg, c.bg)}
     </svg>
   );
+}
+
+/** Whether `icon` is a picture we can draw (a regular or a reader-type icon). */
+export function hasIconArt(icon: string | null | undefined): icon is string {
+  return Boolean(icon && (AVATAR_ART[icon] || typeIconArt(icon)));
 }
 
 type AvatarProfile = Pick<Profile, "id" | "display_name" | "username"> & Partial<Pick<Profile, "avatar_icon" | "avatar_color">>;
@@ -39,9 +47,9 @@ type AvatarProfile = Pick<Profile, "id" | "display_name" | "username"> & Partial
 export function Avatar({ profile, size = 40, link = false, ring = true }: { profile: AvatarProfile | undefined | null; size?: number; link?: boolean; ring?: boolean }) {
   const name = displayName(profile);
   const el =
-    profile?.avatar_icon && AVATAR_ART[profile.avatar_icon] ? (
+    hasIconArt(profile?.avatar_icon) ? (
       <span className="avatar avatar--art" style={{ width: size, height: size }} aria-hidden={link ? undefined : true}>
-        <AvatarIconArt icon={profile.avatar_icon} color={profile.avatar_color ?? "ink"} size={size} />
+        <AvatarIconArt icon={profile!.avatar_icon!} color={profile!.avatar_color ?? "ink"} size={size} />
       </span>
     ) : (
       <span

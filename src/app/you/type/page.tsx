@@ -7,6 +7,7 @@ import { displayName } from "@/components/Avatar";
 import { ArrowIcon, BackIcon, ShareIcon } from "@/components/icons";
 import { CardSkeleton } from "@/components/Skeleton";
 import { useShelf } from "@/components/useShelf";
+import { TypeIconReward } from "@/components/TypeIconReward";
 import { useSyncMyReaderType } from "@/components/useReaderTypes";
 import { SlidesSheet } from "@/components/WrapShare";
 import { fetchAbandonedCount, rankEntries, today } from "@/lib/data";
@@ -117,6 +118,8 @@ function ReaderTypePage() {
         <button className="btn btn--block" style={{ marginTop: 16 }} onClick={() => setSharing(true)}>
           <ShareIcon size={16} /> Share your type as slides
         </button>
+
+        <TypeIconReward code={type.code} />
 
         <h2 className="section-title" style={{ marginTop: 36 }}>Your four spectrums</h2>
         <p className="muted" style={{ fontSize: 14, margin: "6px 0 0" }}>
