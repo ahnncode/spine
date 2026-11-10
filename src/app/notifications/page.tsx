@@ -159,7 +159,7 @@ function Inner() {
                   ) : n.kind === "read_along" && n.target_id ? (
                     <Link href={`/together/${n.target_id}`} style={rowStyle}>{body}</Link>
                   ) : badge ? (
-                    <Link href="/you#badges" style={rowStyle}>{body}</Link>
+                    <Link href={`/badges/${badge.key}`} style={rowStyle}>{body}</Link>
                   ) : opensThread ? (
                     <button style={rowStyle} onClick={() => setThread(n.target_id)}>{body}</button>
                   ) : n.kind === "poke" ? (

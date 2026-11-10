@@ -1053,3 +1053,13 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .type-icon-reveal__art > svg { border-radius: 50%; animation: type-icon-pop 0.7s cubic-bezier(0.2, 1.4, 0.4, 1) both; box-shadow: 0 10px 30px rgba(17, 17, 17, 0.18); }
 @keyframes type-icon-pop { from { transform: scale(0.4) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .type-icon-reveal__art > svg { animation: none; } }
+
+/* Badge page: the books behind a badge. */
+.receipt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 16px 10px; margin-top: 16px; }
+.receipt-book { display: flex; flex-direction: column; gap: 6px; color: inherit; text-decoration: none; min-width: 0; }
+.receipt-book__title { font-size: 12px; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.receipt-book__caption { font-size: 11px; line-height: 1.25; }
+.receipt-facts { margin: 18px 0 0; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; }
+.receipt-facts > div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--surface); font-size: 14px; }
+.receipt-facts dt { color: var(--muted); }
+.receipt-facts dd { margin: 0; font-weight: 700; }

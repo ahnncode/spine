@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Medallion } from "@/components/Badge";
 import {
@@ -37,7 +38,10 @@ export function BadgeSheet({ status, onClose, theirs = false }: { status: BadgeS
             </div>
           )
         )}
-        <button className="btn btn--quiet btn--block" style={{ marginTop: 20 }} onClick={onClose}>Close</button>
+        {!theirs && !hidden && (
+          <Link href={`/badges/${def.key}`} className="btn btn--block" style={{ marginTop: 20 }}>{earned ? "See how you earned it" : "See your progress"}</Link>
+        )}
+        <button className="btn btn--quiet btn--block" style={{ marginTop: theirs || hidden ? 20 : 10 }} onClick={onClose}>Close</button>
       </div>
     </div>
   );
