@@ -1075,7 +1075,7 @@ export async function saveFinishedOn(entryId: string, finishedOn: string | null)
 
 /* ------------------------------ Hearts & comments ------------------------ */
 
-export type TargetType = "entry" | "checkin" | "read_along";
+export type TargetType = "entry" | "checkin" | "read_along" | "chapter_comment" | "pick_poll";
 export interface HeartState {
   count: number;
   mine: boolean;
@@ -1225,7 +1225,7 @@ export async function respondToPick(id: string, response: "want" | "reading" | "
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks";
+  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks" | "ask" | "room";
   /** For read-along notifications: invite, joined, message or verdict. */
   detail?: string | null;
   /** For badge notifications: which badge. */
@@ -1255,7 +1255,7 @@ export async function fetchUnreadReactions(): Promise<Notification[]> {
     .from("notifications")
     .select("id, actor_id, kind, badge, detail, target_type, target_id, created_at, read_at")
     .eq("user_id", uid)
-    .in("kind", ["reaction", "comment"])
+    .in("kind", ["reaction", "comment", "ask"])
     .neq("actor_id", uid)
     .is("read_at", null)
     .order("created_at", { ascending: false })
@@ -1335,7 +1335,7 @@ export async function unblock(userId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function report(targetType: "comment" | "entry" | "checkin" | "profile", targetId: string, reason?: string): Promise<void> {
+export async function report(targetType: "comment" | "entry" | "checkin" | "profile" | "chapter_comment", targetId: string, reason?: string): Promise<void> {
   const { error } = await supabase()
     .from("reports")
     .insert({ target_type: targetType, target_id: targetId, reason: reason?.trim().slice(0, 500) || null });
@@ -1585,4 +1585,158 @@ export async function feedReadAlongs(): Promise<FeedReadAlong[]> {
   const { data, error } = await supabase().rpc("feed_read_alongs", { p_days: 60 });
   if (error) return [];
   return (data as FeedReadAlong[]) || [];
+}
+
+/* ------------------------------ Ask a friend ----------------------------- */
+
+export interface PickPoll {
+  id: string;
+  user_id: string;
+  book_ids: string[];
+  note: string | null;
+  created_at: string;
+  closes_at: string;
+  closed_at: string | null;
+  chosen_book: string | null;
+}
+
+export interface PickVote {
+  poll_id: string;
+  voter_id: string;
+  book_id: string;
+  reason: string | null;
+  created_at: string;
+}
+
+const POLL_SELECT = "id, user_id, book_ids, note, created_at, closes_at, closed_at, chosen_book";
+
+/** Open: not closed and inside its 48 hours. */
+export function pollOpen(p: PickPoll, now = Date.now()): boolean {
+  return !p.closed_at && new Date(p.closes_at).getTime() > now;
+}
+
+/** Ask the people who follow you to pick between 2 and 4 books. Closes any poll you had open. */
+export async function askFriends(bookIds: string[], note: string): Promise<string> {
+  const { data, error } = await supabase().rpc("ask_friends", { p_books: bookIds, p_note: note.trim() || null });
+  if (error) throw error;
+  return data as string;
+}
+
+export async function fetchPoll(id: string): Promise<PickPoll | null> {
+  const { data, error } = await supabase().from("pick_polls").select(POLL_SELECT).eq("id", id).maybeSingle();
+  if (error) throw error;
+  return (data as PickPoll | null) ?? null;
+}
+
+/** Your most recent poll, open or not. */
+export async function fetchMyLatestPoll(): Promise<PickPoll | null> {
+  const uid = await myId();
+  const { data, error } = await supabase().from("pick_polls").select(POLL_SELECT).eq("user_id", uid).order("created_at", { ascending: false }).limit(1);
+  if (error) throw error;
+  return ((data as PickPoll[]) ?? [])[0] ?? null;
+}
+
+/** Open polls from people you follow (the database only shows you theirs). */
+export async function fetchFriendsOpenPolls(): Promise<PickPoll[]> {
+  const uid = await myId();
+  const { data, error } = await supabase()
+    .from("pick_polls")
+    .select(POLL_SELECT)
+    .neq("user_id", uid)
+    .is("closed_at", null)
+    .gt("closes_at", new Date().toISOString())
+    .order("created_at", { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  return (data as PickPoll[]) ?? [];
+}
+
+/** Votes on a poll you can see the votes of: yours, or one you voted on. */
+export async function fetchPollVotes(pollIds: string[]): Promise<PickVote[]> {
+  if (!pollIds.length) return [];
+  const { data, error } = await supabase().from("pick_votes").select("poll_id, voter_id, book_id, reason, created_at").in("poll_id", pollIds);
+  if (error) throw error;
+  return (data as PickVote[]) ?? [];
+}
+
+/** Vote (or change your vote) on a friend's poll. */
+export async function votePoll(pollId: string, bookId: string, reason?: string): Promise<void> {
+  const uid = await myId();
+  const { error } = await supabase()
+    .from("pick_votes")
+    .upsert({ poll_id: pollId, voter_id: uid, book_id: bookId, reason: reason?.trim() || null }, { onConflict: "poll_id,voter_id" });
+  if (error) throw error;
+}
+
+/** Close your poll early, optionally with the book you went with. */
+export async function closeMyPoll(pollId: string, chosen?: string): Promise<void> {
+  const { error } = await supabase().rpc("close_my_poll", { p_poll: pollId, p_chosen: chosen ?? null });
+  if (error) throw error;
+}
+
+/* ------------------------------ Chapter rooms ---------------------------- */
+
+export interface RoomComment {
+  id: string;
+  user_id: string;
+  book_id: string;
+  chapter: number;
+  parent_id: string | null;
+  body: string;
+  created_at: string;
+}
+
+const ROOM_SELECT = "id, user_id, book_id, chapter, parent_id, body, created_at";
+/** Chapter 0 is the whole-book room, open once you've finished. */
+export const WHOLE_BOOK = 0;
+/** reached_chapter() for a finished book. */
+export const FINISHED = 999;
+
+/** The furthest chapter you've reached in a book (999 when finished), or null. */
+export async function reachedChapter(bookId: string): Promise<number | null> {
+  const { data, error } = await supabase().rpc("reached_chapter", { p_book: bookId });
+  if (error) throw error;
+  return (data as number | null) ?? null;
+}
+
+/** Comment counts for each of a book's rooms, open to you or not. */
+export async function fetchRoomCounts(bookId: string): Promise<Map<number, { comments: number; latest: string }>> {
+  const { data, error } = await supabase().rpc("chapter_room_counts", { p_book: bookId });
+  if (error) throw error;
+  return new Map(((data as Array<{ chapter: number; comments: number; latest: string }>) ?? []).map((r) => [r.chapter, { comments: Number(r.comments), latest: r.latest }]));
+}
+
+/** One room's comments, oldest first (the database only returns rooms you've reached). */
+export async function fetchRoom(bookId: string, chapter: number): Promise<RoomComment[]> {
+  const { data, error } = await supabase()
+    .from("chapter_comments")
+    .select(ROOM_SELECT)
+    .eq("book_id", bookId)
+    .eq("chapter", chapter)
+    .order("created_at", { ascending: true })
+    .limit(500);
+  if (error) throw error;
+  return (data as RoomComment[]) ?? [];
+}
+
+export async function fetchRoomCommentsById(ids: string[]): Promise<Map<string, RoomComment>> {
+  if (!ids.length) return new Map();
+  const { data, error } = await supabase().from("chapter_comments").select(ROOM_SELECT).in("id", ids);
+  if (error) throw error;
+  return new Map(((data as RoomComment[]) ?? []).map((c) => [c.id, c]));
+}
+
+export async function postRoomComment(bookId: string, chapter: number, body: string, parentId?: string | null): Promise<RoomComment> {
+  const { data, error } = await supabase()
+    .from("chapter_comments")
+    .insert({ book_id: bookId, chapter, body: body.trim(), parent_id: parentId ?? null })
+    .select(ROOM_SELECT)
+    .single();
+  if (error) throw new Error(error.message.includes("row-level security") ? "You can post here once you’ve reached this chapter." : error.message);
+  return data as RoomComment;
+}
+
+export async function deleteRoomComment(id: string): Promise<void> {
+  const { error } = await supabase().from("chapter_comments").delete().eq("id", id);
+  if (error) throw error;
 }

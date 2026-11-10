@@ -19,7 +19,7 @@ import { Cover } from "@/components/Cover";
 import type { Entry } from "@/lib/data";
 import {
   fetchCheckinsById, fetchFollowing, fetchNotifications, fetchProfiles, markAllRead,
-  fetchMyReadAlongs, type Checkin, type Notification, type Profile, type ReadAlong,
+  fetchMyReadAlongs, fetchRoomCommentsById, type Checkin, type Notification, type Profile, type ReadAlong, type RoomComment,
 } from "@/lib/data";
 
 export default function NotificationsPage() {
@@ -38,6 +38,7 @@ interface Loaded {
   checkins: Map<string, Checkin>;
   following: Set<string>;
   readAlongs: Map<string, ReadAlong>;
+  rooms: Map<string, RoomComment>;
 }
 
 function Inner() {
@@ -52,16 +53,18 @@ function Inner() {
   useEffect(() => {
     (async () => {
       const items = await fetchNotifications();
-      const [people, checkins, following, readAlongs] = await Promise.all([
+      const roomIds = items.filter((n) => n.target_type === "chapter_comment" && n.target_id).map((n) => n.target_id!);
+      const [people, checkins, following, readAlongs, rooms] = await Promise.all([
         fetchProfiles([...new Set(items.map((n) => n.actor_id))]),
         fetchCheckinsById(items.filter((n) => n.target_type === "checkin" && n.target_id).map((n) => n.target_id!)),
         fetchFollowing(),
         items.some((n) => n.kind === "read_along") ? fetchMyReadAlongs().catch(() => []) : Promise.resolve([] as ReadAlong[]),
+        fetchRoomCommentsById([...new Set(roomIds)]).catch(() => new Map<string, RoomComment>()),
       ]);
-      setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])) });
+      setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])), rooms });
       // Opening the list counts as reading it.
       if (items.some((n) => !n.read_at)) markAllRead().then(clearUnread).catch(() => {});
-    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set(), readAlongs: new Map() }));
+    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set(), readAlongs: new Map(), rooms: new Map() }));
   }, []);
 
   function describe(n: Notification): string {
@@ -84,6 +87,19 @@ function Inner() {
         return c ? `mentioned you in a check-in on ${c.book.title}` : "mentioned you in a check-in";
       }
       return "mentioned you";
+    }
+    if (n.kind === "ask") {
+      if (n.detail === "voted") return "voted on what you should read next";
+      if (n.detail === "called") return "started the book you voted for. You called it";
+      return "wants help picking their next book";
+    }
+    if (n.kind === "room") {
+      const c = data?.rooms.get(n.target_id ?? "");
+      return c ? `replied to you in ${c.chapter === 0 ? "the whole-book room" : `the chapter ${c.chapter} room`}` : "replied to you in a chapter room";
+    }
+    if (n.target_type === "chapter_comment") {
+      const c = data?.rooms.get(n.target_id ?? "");
+      return c ? `hearted your comment in ${c.chapter === 0 ? "the whole-book room" : `the chapter ${c.chapter} room`}` : "hearted your comment in a chapter room";
     }
     if (n.kind === "comment") return "commented on your ranking";
     if (n.target_type === "checkin") {
@@ -156,6 +172,10 @@ function Inner() {
                 <li key={n.id}>
                   {picks ? (
                     <Link href="/search#picks" style={rowStyle}>{body}</Link>
+                  ) : n.kind === "ask" && n.target_id ? (
+                    <Link href={`/picks/${n.target_id}`} style={rowStyle}>{body}</Link>
+                  ) : n.target_type === "chapter_comment" && data.rooms.get(n.target_id ?? "") ? (
+                    <Link href={`/book/${data.rooms.get(n.target_id!)!.book_id}/room/${data.rooms.get(n.target_id!)!.chapter}`} style={rowStyle}>{body}</Link>
                   ) : n.kind === "read_along" && n.target_id ? (
                     <Link href={`/together/${n.target_id}`} style={rowStyle}>{body}</Link>
                   ) : badge ? (

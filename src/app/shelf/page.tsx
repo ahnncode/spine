@@ -18,6 +18,7 @@ import { useAuthorFix } from "@/components/useAuthorFix";
 import { useCoverBackfill } from "@/components/useCoverBackfill";
 import { useEnrichment } from "@/components/useEnrichment";
 import { useShelf } from "@/components/useShelf";
+import { AskPrompt } from "@/components/AskPrompt";
 import { useStreak } from "@/components/useStreak";
 import { rankEntries, type Entry, type RankedEntry, isListened } from "@/lib/data";
 import { GENRES } from "@/lib/genres";
@@ -207,6 +208,8 @@ function Shelf() {
         )}
 
         {entries && entries.length > 0 && tab === "dropped" && <DroppedList items={dropped} />}
+
+        {entries && tab === "want" && <AskPrompt entries={entries} compact />}
 
         {entries && entries.length > 0 && (tab === "want" || tab === "unsorted") && (
           <PlainList
