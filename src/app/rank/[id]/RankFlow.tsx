@@ -7,6 +7,7 @@ import { RequireAuth } from "@/components/Auth";
 import { Cover } from "@/components/Cover";
 import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
+import { AskPrompt } from "@/components/AskPrompt";
 import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { FormatToggle } from "@/components/FormatToggle";
@@ -423,6 +424,7 @@ function Flow() {
               ))}
             </ol>
             <ThoughtsEditor entry={result.me} genres={book.genres} showDate={false} />
+            {queueLeft.length === 0 && !current && <AskPrompt entries={entries} finished={book.title} />}
             <div className="spacer" style={{ minHeight: 24 }} />
             {queueLeft.length > 0 ? (
               <>

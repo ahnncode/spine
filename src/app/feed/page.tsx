@@ -6,6 +6,7 @@ import { MentionText } from "@/components/Mentions";
 import { timeAgo } from "@/lib/time";
 import Link from "next/link";
 import { ReactionsCard } from "@/components/Reactions";
+import { FriendPolls } from "@/components/FriendPolls";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth, useProfile } from "@/components/Auth";
@@ -198,6 +199,7 @@ function Feed() {
         )}
 
         <ReactionsCard entries={entries} />
+        <FriendPolls mine={mine} />
 
         {scope === "following" && data && <WeekCard finished={weekRanked.length} finishers={weekFinishers} streakWeeks={streak.weeks} />}
 
