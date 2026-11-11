@@ -8,7 +8,7 @@ import { LockIcon } from "@/components/icons";
 import { RowsSkeleton } from "@/components/Skeleton";
 import { TabBar } from "@/components/TabBar";
 import type { Book } from "@/lib/books";
-import { booksFor, fetchClubCards, fetchClubMembers, fetchMyClubs, type ClubCard } from "@/lib/clubs";
+import { booksFor, fetchClubCards, fetchMyClubs, friendsInClubs, type ClubCard } from "@/lib/clubs";
 import { fetchFollowing, fetchProfiles, type Profile } from "@/lib/data";
 
 export function ClubsPage() {
@@ -27,47 +27,67 @@ function Inner() {
   const [friendsIn, setFriendsIn] = useState<Map<string, string[]>>(new Map());
   const [people, setPeople] = useState<Map<string, Profile>>(new Map());
   const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [base, setBase] = useState<{ myIds: string[]; following: string[] } | null>(null);
 
+  // Wait for a pause in typing before searching.
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Your clubs and who you follow: once.
   useEffect(() => {
     let live = true;
     (async () => {
-      const myIds = (await fetchMyClubs()).map((m) => m.club_id);
-      const [myCards, all, following] = await Promise.all([
-        fetchClubCards({ ids: myIds }),
-        fetchClubCards({ query: query || undefined, limit: 40 }),
-        fetchFollowing().catch(() => [] as string[]),
-      ]);
-      const rest = all.filter((c) => !myIds.includes(c.id));
-      const bookMap = await booksFor([...myCards, ...rest].map((c) => c.current_book ?? "").filter(Boolean));
-      // Friends in clubs you could join.
-      const follow = new Set(following);
-      const pairs = await Promise.all(rest.slice(0, 20).map(async (c) => [c.id, (await fetchClubMembers(c.id).catch(() => [])).map((m) => m.user_id).filter((u) => follow.has(u))] as const));
-      const friendMap = new Map(pairs.filter(([, f]) => f.length));
-      const ps = await fetchProfiles([...new Set([...friendMap.values()].flat())]);
+      const [mineRows, following] = await Promise.all([fetchMyClubs(), fetchFollowing().catch(() => [] as string[])]);
+      const myIds = mineRows.map((m) => m.club_id);
+      const myCards = await fetchClubCards({ ids: myIds });
       if (!live) return;
+      setBase({ myIds, following });
       setMine(myCards);
-      setOthers(rest);
-      setBooks(bookMap);
-      setFriendsIn(friendMap);
-      setPeople(ps);
+      const bookMap = await booksFor(myCards.map((c) => c.current_book ?? "").filter(Boolean));
+      if (live) setBooks((prev) => new Map([...prev, ...bookMap]));
     })().catch(() => {
-      if (live) {
-        setMine([]);
-        setOthers([]);
-      }
+      if (!live) return;
+      setBase({ myIds: [], following: [] });
+      setMine([]);
     });
     return () => {
       live = false;
     };
-  }, [query]);
+  }, []);
+
+  // Clubs to join, with friends in them (one query for all of them).
+  useEffect(() => {
+    if (!base) return;
+    let live = true;
+    (async () => {
+      const all = await fetchClubCards({ query: debounced || undefined, limit: 40 });
+      const rest = all.filter((c) => !base.myIds.includes(c.id));
+      const [bookMap, friendMap] = await Promise.all([
+        booksFor(rest.map((c) => c.current_book ?? "").filter(Boolean)),
+        friendsInClubs(rest.map((c) => c.id), base.following).catch(() => new Map<string, string[]>()),
+      ]);
+      const ps = await fetchProfiles([...new Set([...friendMap.values()].flat())]);
+      if (!live) return;
+      setOthers(rest);
+      setBooks((prev) => new Map([...prev, ...bookMap]));
+      setFriendsIn(friendMap);
+      setPeople(ps);
+    })().catch(() => live && setOthers([]));
+    return () => {
+      live = false;
+    };
+  }, [base, debounced]);
 
   const searching = useMemo(() => query.trim().length > 0, [query]);
 
-  function Row({ c, member }: { c: ClubCard; member: boolean }) {
+  function renderRow(c: ClubCard, member: boolean) {
     const book = c.current_book ? books.get(c.current_book) : undefined;
     const friends = friendsIn.get(c.id) ?? [];
     return (
-      <Link href={`/clubs/${c.id}`} className="club-row">
+      <Link key={c.id} href={`/clubs/${c.id}`} className="club-row">
         <ClubTile name={c.name} color={c.color} size={member ? 52 : 48} />
         <span style={{ minWidth: 0, flex: 1 }}>
           <span className="club-row__name">
@@ -98,7 +118,7 @@ function Inner() {
             {mine.length > 0 && !searching && (
               <section aria-label="Your clubs" style={{ marginTop: 20 }}>
                 <h2 className="eyebrow">Your clubs</h2>
-                <div className="stack" style={{ marginTop: 10, gap: 10 }}>{mine.map((c) => <Row key={c.id} c={c} member />)}</div>
+                <div className="stack" style={{ marginTop: 10, gap: 10 }}>{mine.map((c) => renderRow(c, true))}</div>
               </section>
             )}
 
@@ -111,11 +131,11 @@ function Inner() {
               ) : others.length === 0 ? (
                 <div className="empty" style={{ marginTop: 12 }}>
                   <p className="h2">{searching ? "No clubs by that name" : "No other clubs yet"}</p>
-                  <p style={{ margin: 0, fontSize: 14 }}>Start one: pick a reading list, invite friends, and read together.</p>
+                  <p style={{ margin: 0, fontSize: 14 }}>Start one: pick a reading list, send friends the invite link, and read together.</p>
                   <Link href="/clubs/new" className="btn" style={{ marginTop: 12 }}>Start a club</Link>
                 </div>
               ) : (
-                <div className="stack" style={{ marginTop: 12, gap: 10 }}>{others.map((c) => <Row key={c.id} c={c} member={false} />)}</div>
+                <div className="stack" style={{ marginTop: 12, gap: 10 }}>{others.map((c) => renderRow(c, false))}</div>
               )}
             </section>
           </>

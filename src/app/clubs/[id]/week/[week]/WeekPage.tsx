@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { RequireAuth } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
@@ -30,7 +30,11 @@ function Inner() {
   const clubId = params.id;
   const week = Math.max(0, Math.min(52, parseInt(params.week, 10) || 0));
   const { data, me } = useClub(clubId);
-  const read = data?.current ?? null;
+  // ?read= opens a past book's rooms (from the club shelf); otherwise the current read.
+  const readParam = useSearchParams().get("read");
+  const read = (readParam ? data?.reads.find((r) => r.id === readParam) : data?.current) ?? null;
+  const past = Boolean(read?.finished_at);
+  const q = readParam ? `?read=${readParam}` : "";
   const book = read ? data?.books.get(read.book_id) : undefined;
   const [state, setState] = useState<{ open: boolean; comments: ClubComment[]; people: Map<string, Profile>; hearts: Map<string, HeartState>; counts: Map<number, number>; reached: number | null; before: boolean } | null>(null);
   const [text, setText] = useState("");
@@ -38,7 +42,8 @@ function Inner() {
   const [menu, setMenu] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const isHost = data?.role === "host" || data?.role === "cohost";
 
   const load = useCallback(async () => {
@@ -70,6 +75,7 @@ function Inner() {
   }
 
   const label = week === WHOLE_BOOK ? "Whole book" : `Week ${week}`;
+  const titleRange = week === WHOLE_BOOK ? "" : ` · ${weekRange(read.plan, week).replace(/^Chapters?/, "ch.")}`;
   const questions = week === WHOLE_BOOK ? [] : (read.plan[week - 1]?.questions ?? []);
   const top = (state?.comments ?? []).filter((c) => !c.parent_id);
   const replies = (id: string) => (state?.comments ?? []).filter((c) => c.parent_id === id);
@@ -113,7 +119,7 @@ function Inner() {
               <button type="button" className="small-btn small-btn--outline" style={{ minHeight: 32 }} onClick={async () => {
                 setMenu(null);
                 if (canDelete) await deleteWeekComment(c.id).catch(() => {});
-                else { await report("club_comment", c.id).catch(() => {}); setError("Thanks. The host and we will take a look."); }
+                else { await report("club_comment", c.id).catch(() => {}); setNotice("Thanks for flagging it. We’ll take a look."); }
                 await load();
               }}>{canDelete ? "Delete it" : "Report it"}</button>
             )}
@@ -124,14 +130,14 @@ function Inner() {
   }
 
   return (
-    <ClubScreen eyebrow={`${data.card.name} · ${book.title}`} title={`${label} · ${weekRange(read.plan, week).replace(/^Chapters/, "ch.").replace(/^Chapter/, "ch.")}`} back={`/clubs/${clubId}`}>
+    <ClubScreen eyebrow={`${data.card.name} · ${book.title}${past ? " · finished" : ""}`} title={`${label}${titleRange}`} back={`/clubs/${clubId}`}>
       <nav className="room-chips" aria-label="Weeks">
         {weeks.map((w) => {
           const open = state ? weekOpen(read.plan, w, state.reached, state.before) : false;
           const n = state?.counts.get(w) ?? 0;
           const name = w === WHOLE_BOOK ? "Whole book" : `Week ${w}`;
           return open ? (
-            <Link key={w} href={`/clubs/${clubId}/week/${w}`} replace className="room-chip" aria-current={w === week ? "page" : undefined}>
+            <Link key={w} href={`/clubs/${clubId}/week/${w}${q}`} replace className="room-chip" aria-current={w === week ? "page" : undefined}>
               {name}{n ? <span className="room-chip__n"> · {n}</span> : null}
             </Link>
           ) : (
@@ -189,12 +195,20 @@ function Inner() {
             </p>
           )}
           {error && <p className="error" role="alert" style={{ margin: "0 0 8px" }}>{error}</p>}
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {notice && <p role="status" style={{ margin: "0 0 8px", fontSize: 13, fontWeight: 600 }}>{notice}</p>}
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
             <label htmlFor="week-say" className="visually-hidden">Say something about {label.toLowerCase()}</label>
-            <input id="week-say" ref={inputRef} className="input" style={{ flex: 1, minHeight: 44, borderRadius: 22 }} maxLength={COMMENT_MAX} value={text}
-              placeholder={replyTo ? "Write a reply" : `Say something about ${label.toLowerCase()}`} onChange={(e) => setText(e.target.value)} />
+            <textarea id="week-say" ref={inputRef} className="textarea" rows={1} maxLength={COMMENT_MAX} value={text}
+              placeholder={replyTo ? "Write a reply" : `Say something about ${label.toLowerCase()}`}
+              onChange={(e) => {
+                setText(e.target.value);
+                // Grow with the text, up to the max height.
+                e.currentTarget.style.height = "auto";
+                e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`;
+              }} />
             <button className="btn" style={{ minHeight: 44, padding: "0 18px" }} disabled={busy || !text.trim()}>{busy ? "…" : "Post"}</button>
           </div>
+          {text.length > COMMENT_MAX - 100 && <p className="muted" style={{ margin: "6px 0 0", fontSize: 12, textAlign: "right" }}>{COMMENT_MAX - text.length} left</p>}
         </form>
       )}
     </ClubScreen>

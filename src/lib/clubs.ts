@@ -11,15 +11,25 @@ import { supabase } from "./supabase";
 export type ClubRole = "host" | "cohost" | "member";
 export type ClubColor = "ember" | "cobalt" | "forest" | "plum" | "ink" | "gold" | "teal";
 
-export const CLUB_COLORS: Record<ClubColor, { bg: string; fg: string }> = {
-  ember: { bg: "#9A3412", fg: "#FFF1E6" },
-  cobalt: { bg: "#1D2BA8", fg: "#E7E9FD" },
-  forest: { bg: "#2D5A3D", fg: "#EAF4EC" },
-  plum: { bg: "#6B2A4E", fg: "#F7E7EE" },
-  ink: { bg: "#1F1F1F", fg: "#F4F3EF" },
-  gold: { bg: "#B07A12", fg: "#1A1300" },
-  teal: { bg: "#0F5257", fg: "#E8F3F1" },
+/**
+ * bg/fg: the club tile. text/textDark: the club's colour as text or a thin
+ * mark, picked to pass 4.5:1 on the light and dark surfaces.
+ */
+export const CLUB_COLORS: Record<ClubColor, { bg: string; fg: string; text: string; textDark: string }> = {
+  ember: { bg: "#9A3412", fg: "#FFF1E6", text: "#9A3412", textDark: "#FDBA8C" },
+  cobalt: { bg: "#1D2BA8", fg: "#E7E9FD", text: "#1D2BA8", textDark: "#A5B4FC" },
+  forest: { bg: "#2D5A3D", fg: "#EAF4EC", text: "#2D5A3D", textDark: "#86EFAC" },
+  plum: { bg: "#6B2A4E", fg: "#F7E7EE", text: "#6B2A4E", textDark: "#F0ABFC" },
+  ink: { bg: "#1F1F1F", fg: "#F4F3EF", text: "#1F1F1F", textDark: "#E7E5E4" },
+  gold: { bg: "#B07A12", fg: "#1A1300", text: "#7A5300", textDark: "#FCD34D" },
+  teal: { bg: "#0F5257", fg: "#E8F3F1", text: "#0F5257", textDark: "#5EEAD4" },
 };
+
+/** CSS variables for a club's colours; `.club-accent` and the week bars read them. */
+export function clubVars(color: ClubColor): Record<string, string> {
+  const c = CLUB_COLORS[color] ?? CLUB_COLORS.ember;
+  return { "--club": c.text, "--club-text": c.text, "--club-text-dark": c.textDark };
+}
 
 export const COMMENT_MAX = 1000;
 /** Week 0 is the whole-book room. */
@@ -156,6 +166,52 @@ export async function joinClub(clubId: string, password?: string): Promise<JoinR
   const { data, error } = await supabase().rpc("join_club", { p_club: clubId, p_password: password ?? null });
   if (error) throw new Error(error.message);
   return data as JoinResult;
+}
+
+export type InviteJoinResult = "joined" | "bad_invite" | "locked";
+
+export async function joinClubByInvite(clubId: string, code: string): Promise<InviteJoinResult> {
+  const { data, error } = await supabase().rpc("join_club_by_invite", { p_club: clubId, p_code: code });
+  if (error) throw new Error(error.message);
+  return data as InviteJoinResult;
+}
+
+/** The club's private invite code (members only). */
+export async function fetchInviteCode(clubId: string): Promise<string | null> {
+  const { data, error } = await supabase().rpc("club_invite_code", { p_club: clubId });
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}
+
+export async function resetInviteCode(clubId: string): Promise<string> {
+  const { data, error } = await supabase().rpc("reset_club_invite", { p_club: clubId });
+  if (error) throw new Error(error.message);
+  return data as string;
+}
+
+export function inviteUrl(clubId: string, code: string): string {
+  const origin = typeof window === "undefined" ? "https://readread.app" : window.location.origin;
+  return `${origin}/clubs/${clubId}?invite=${encodeURIComponent(code)}`;
+}
+
+/** Club ids, with how many of each club's members you follow. One query. */
+export async function friendsInClubs(clubIds: string[], following: string[]): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  if (!clubIds.length || !following.length) return out;
+  const { data, error } = await supabase().from("club_members").select("club_id, user_id").in("club_id", clubIds.slice(0, 100)).in("user_id", following.slice(0, 300));
+  if (error) throw error;
+  for (const r of (data as Array<{ club_id: string; user_id: string }>) || []) out.set(r.club_id, [...(out.get(r.club_id) ?? []), r.user_id]);
+  return out;
+}
+
+/** Problems with a weekly plan, or null if it's fine. */
+export function planProblem(plan: PlanWeek[], chapters: number): string | null {
+  for (let i = 0; i < plan.length; i++) {
+    if (!(plan[i].through >= 1)) return `Week ${i + 1} needs a chapter`;
+    if (i > 0 && plan[i].through <= plan[i - 1].through) return `Week ${i + 1} has to end after week ${i}`;
+  }
+  if (plan.length && plan[plan.length - 1].through !== chapters) return `The last week should end at chapter ${chapters}`;
+  return null;
 }
 
 export async function leaveClub(clubId: string): Promise<void> {
@@ -364,9 +420,9 @@ export interface ClubLink {
 }
 
 /** Where a club notification should go: keyed by the read or comment id it points at. */
-export async function fetchClubLinks(readIds: string[], commentIds: string[]): Promise<Map<string, ClubLink>> {
+export async function fetchClubLinks(readIds: string[], commentIds: string[], clubIds: string[] = []): Promise<Map<string, ClubLink>> {
   const out = new Map<string, ClubLink>();
-  if (!readIds.length && !commentIds.length) return out;
+  if (!readIds.length && !commentIds.length && !clubIds.length) return out;
   const comments = commentIds.length
     ? (((await supabase().from("club_comments").select("id, read_id, week").in("id", commentIds.slice(0, 200))).data as Array<{ id: string; read_id: string; week: number }>) || [])
     : [];
@@ -374,7 +430,7 @@ export async function fetchClubLinks(readIds: string[], commentIds: string[]): P
   const { data } = await supabase().from("club_reads").select("id, club_id, book_id").in("id", allReads.slice(0, 200));
   const reads = new Map(((data as Array<{ id: string; club_id: string; book_id: string }>) || []).map((r) => [r.id, r]));
   const [cards, books] = await Promise.all([
-    fetchClubCards({ ids: [...new Set([...reads.values()].map((r) => r.club_id))] }).catch(() => [] as ClubCard[]),
+    fetchClubCards({ ids: [...new Set([...[...reads.values()].map((r) => r.club_id), ...clubIds])] }).catch(() => [] as ClubCard[]),
     booksFor([...reads.values()].map((r) => r.book_id)).catch(() => new Map<string, Book>()),
   ]);
   const names = new Map(cards.map((c) => [c.id, c.name]));
@@ -382,6 +438,7 @@ export async function fetchClubLinks(readIds: string[], commentIds: string[]): P
     const r = reads.get(id);
     if (r) out.set(id, { href: `/clubs/${r.club_id}`, club: names.get(r.club_id) ?? "your club", where: books.get(r.book_id)?.title ?? "a new book" });
   }
+  for (const id of clubIds) out.set(id, { href: `/clubs/${id}`, club: names.get(id) ?? "your club", where: "" });
   for (const c of comments) {
     const r = reads.get(c.read_id);
     if (r) out.set(c.id, { href: `/clubs/${r.club_id}/week/${c.week}`, club: names.get(r.club_id) ?? "your club", where: c.week === WHOLE_BOOK ? "the whole-book room" : `the week ${c.week} room` });

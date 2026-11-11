@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
-import { RequireAuth, useAuth, useProfile } from "@/components/Auth";
+import { RequireAuth, peekDestination, takeDestination, useAuth, useProfile } from "@/components/Auth";
 import { claimPendingReferral, fetchMyProfile, refreshBadges, updateMyProfile, usernameAvailable } from "@/lib/data";
 
 export default function WelcomePage() {
@@ -65,7 +65,9 @@ function Welcome() {
       await claimPendingReferral();
       await refreshBadges().catch(() => {});
       await reloadProfile();
-      router.replace("/start");
+      // Arriving from a club invite: go join the club; picking books can wait.
+      const next = peekDestination();
+      router.replace(next.startsWith("/clubs/") ? takeDestination() : "/start");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn’t save that");
       setBusy(false);

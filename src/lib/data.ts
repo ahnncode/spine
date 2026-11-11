@@ -1230,7 +1230,7 @@ export interface Notification {
   detail?: string | null;
   /** For badge notifications: which badge. */
   badge?: string | null;
-  target_type: TargetType | "club_read" | null;
+  target_type: TargetType | "club_read" | "club" | null;
   target_id: string | null;
   created_at: string;
   read_at: string | null;

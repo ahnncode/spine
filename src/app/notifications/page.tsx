@@ -58,13 +58,14 @@ function Inner() {
       const roomIds = items.filter((n) => n.target_type === "chapter_comment" && n.target_id).map((n) => n.target_id!);
       const clubReads = items.filter((n) => n.target_type === "club_read" && n.target_id).map((n) => n.target_id!);
       const clubComments = items.filter((n) => n.target_type === "club_comment" && n.target_id).map((n) => n.target_id!);
+      const clubIds = items.filter((n) => n.target_type === "club" && n.target_id).map((n) => n.target_id!);
       const [people, checkins, following, readAlongs, rooms, clubs] = await Promise.all([
         fetchProfiles([...new Set(items.map((n) => n.actor_id))]),
         fetchCheckinsById(items.filter((n) => n.target_type === "checkin" && n.target_id).map((n) => n.target_id!)),
         fetchFollowing(),
         items.some((n) => n.kind === "read_along") ? fetchMyReadAlongs().catch(() => []) : Promise.resolve([] as ReadAlong[]),
         fetchRoomCommentsById([...new Set(roomIds)]).catch(() => new Map<string, RoomComment>()),
-        fetchClubLinks([...new Set(clubReads)], [...new Set(clubComments)]).catch(() => new Map<string, ClubLink>()),
+        fetchClubLinks([...new Set(clubReads)], [...new Set(clubComments)], [...new Set(clubIds)]).catch(() => new Map<string, ClubLink>()),
       ]);
       setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])), rooms, clubs });
       // Opening the list counts as reading it.
@@ -104,6 +105,8 @@ function Inner() {
     }
     if (n.kind === "club") {
       const c = data?.clubs.get(n.target_id ?? "");
+      if (n.detail === "joined") return `joined ${c?.club ?? "your club"}`;
+      if (n.detail === "finished") return c ? `wrapped up ${c.where} in ${c.club}. Rank it to add to the verdict` : "wrapped up your club’s book";
       if (n.detail === "new_read") return c ? `picked ${c.where} for ${c.club}` : "picked your club’s next book";
       return c ? `replied to you in ${c.club}, ${c.where}` : "replied to you in your club";
     }
@@ -188,8 +191,8 @@ function Inner() {
                     <Link href="/search#picks" style={rowStyle}>{body}</Link>
                   ) : n.kind === "ask" && n.target_id ? (
                     <Link href={`/picks/${n.target_id}`} style={rowStyle}>{body}</Link>
-                  ) : (n.target_type === "club_read" || n.target_type === "club_comment") && data.clubs.get(n.target_id ?? "") ? (
-                    <Link href={data.clubs.get(n.target_id!)!.href} style={rowStyle}>{body}</Link>
+                  ) : (n.target_type === "club_read" || n.target_type === "club_comment" || n.target_type === "club") && data.clubs.get(n.target_id ?? "") ? (
+                    <Link href={data.clubs.get(n.target_id!)!.href + (n.detail === "finished" ? "/shelf" : "")} style={rowStyle}>{body}</Link>
                   ) : n.target_type === "chapter_comment" && data.rooms.get(n.target_id ?? "") ? (
                     <Link href={`/book/${data.rooms.get(n.target_id!)!.book_id}/room/${data.rooms.get(n.target_id!)!.chapter}`} style={rowStyle}>{body}</Link>
                   ) : n.kind === "read_along" && n.target_id ? (

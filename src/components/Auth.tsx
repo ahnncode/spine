@@ -134,7 +134,8 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (supabaseConfigured && !loading && !session) {
-      rememberDestination(path);
+      // Keep the query too, so an invite link survives signing in.
+      rememberDestination(path + window.location.search);
       router.replace("/login");
     }
   }, [loading, session, router, path]);
@@ -146,8 +147,11 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   const needsWelcome = profileLoaded && !profile?.username && path !== "/welcome";
   useEffect(() => {
-    if (needsWelcome) router.replace("/welcome");
-  }, [needsWelcome, router]);
+    if (!needsWelcome) return;
+    // New readers finish setting up first, then come back here (e.g. a club invite).
+    rememberDestination(path + window.location.search);
+    router.replace("/welcome");
+  }, [needsWelcome, router, path]);
 
   if (!supabaseConfigured) return <SetupNotice />;
   if (profileFailed && !profileLoaded) {
