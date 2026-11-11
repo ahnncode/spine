@@ -143,6 +143,9 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   const onShelf = term.length >= 2
     ? (entries || []).filter((e) => `${e.book.title} ${e.book.author ?? ""}`.toLowerCase().includes(term)).slice(0, 3)
     : [];
+  // Books already listed under "On your shelf" aren't repeated in the results below.
+  const shownOnShelf = new Set(onShelf.map((e) => e.id));
+  const catalogue = results ? results.filter((b) => !shownOnShelf.has(entryFor(b)?.id ?? "")) : null;
   const pickedEntry = picked ? entryFor(picked) : undefined;
 
   return (
@@ -287,14 +290,14 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
               </li>
             ))}
           </ul>
-        ) : results.length === 0 && !searching ? (
+        ) : catalogue!.length === 0 && !searching ? (
           <div className="empty">
             <p className="h2">{onShelf.length ? "Nothing else in the catalogue" : "No matches"}</p>
             <p style={{ margin: 0, fontSize: 14 }}>Try the author&rsquo;s last name, or fewer words.</p>
           </div>
         ) : (
           <ul style={{ listStyle: "none", margin: "8px 0 0", padding: 0 }} aria-busy={searching}>
-            {results.map((b) => {
+            {catalogue!.map((b) => {
               const entry = entryFor(b);
               return (
                 <li key={(b.ol_work_key || "") + b.title}>
