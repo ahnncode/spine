@@ -64,13 +64,13 @@ function Inner() {
               <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)}>{f === "all" ? "All" : f === "left" ? "Not yet" : "Read together"}</button>
             ))}
           </div>
-          <ul className="pick-list card" style={{ marginTop: 12, padding: 0 }}>
+          <ul className="club-list card" style={{ marginTop: 12, padding: 0 }}>
             {shown.map((it) => {
               const r = byPos.get(it.position);
               const status = r ? (r.finished_at ? <>Read together<br />{shortDate(r.finished_at.slice(0, 10))}</> : "Reading now") : null;
               const body = (
                 <>
-                  <span className="pick-list__year">{it.year}</span>
+                  <span className="club-list__year">{it.year}</span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <strong style={{ display: "block", fontSize: 15 }}>{it.title}</strong>
                     <span className="muted" style={{ fontSize: 12 }}>{[it.author, it.note].filter(Boolean).join(" · ")}</span>
@@ -81,9 +81,9 @@ function Inner() {
               return (
                 <li key={it.position}>
                   {r ? (
-                    <button type="button" className="pick-list__row" onClick={() => router.push(r.finished_at ? `/clubs/${clubId}/shelf` : `/clubs/${clubId}`)}>{body}</button>
+                    <button type="button" className="club-list__row" onClick={() => router.push(r.finished_at ? `/clubs/${clubId}/shelf` : `/clubs/${clubId}`)}>{body}</button>
                   ) : (
-                    <div className="pick-list__row" style={{ cursor: "default" }}>{body}</div>
+                    <div className="club-list__row" style={{ cursor: "default" }}>{body}</div>
                   )}
                 </li>
               );

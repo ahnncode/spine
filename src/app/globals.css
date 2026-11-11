@@ -1174,8 +1174,8 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .seg > button { min-height: 48px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
 .seg > button[aria-checked="true"], .seg > button[aria-pressed="true"] { border: 2px solid var(--ink); font-weight: 600; }
-.pick-list { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; background: var(--surface); }
-.pick-list:empty { display: none; }
-.pick-list > li + li { border-top: 1px solid var(--line); }
-.pick-list__row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 14px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.pick-list__year { width: 38px; flex-shrink: 0; font-family: var(--font-book); font-weight: 700; font-size: 14px; color: var(--muted); }
+.club-list { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; background: var(--surface); }
+.club-list:empty { display: none; }
+.club-list > li + li { border-top: 1px solid var(--line); }
+.club-list__row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 14px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.club-list__year { width: 38px; flex-shrink: 0; font-family: var(--font-book); font-weight: 700; font-size: 14px; color: var(--muted); }

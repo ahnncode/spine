@@ -138,14 +138,14 @@ export function ClubPick({
             {items && items.length > 0 && (
               <section aria-label="From the club's list" style={{ marginTop: 16 }}>
                 <h3 className="eyebrow">From the list</h3>
-                <ul className="pick-list">
+                <ul className="club-list">
                   {items.map((it, idx) => {
                     const done = readPositions.includes(it.position);
                     const upNext = !done && items.findIndex((x) => !readPositions.includes(x.position)) === idx;
                     return (
                       <li key={it.position}>
-                        <button type="button" className="pick-list__row" disabled={busy !== null} onClick={() => choose(() => bookForListItem(it), it.position, `l${it.position}`)}>
-                          <span className="pick-list__year">{it.year}</span>
+                        <button type="button" className="club-list__row" disabled={busy !== null} onClick={() => choose(() => bookForListItem(it), it.position, `l${it.position}`)}>
+                          <span className="club-list__year">{it.year}</span>
                           <span style={{ flex: 1, minWidth: 0 }}>
                             <strong style={{ display: "block", fontSize: 15 }}>{it.title}</strong>
                             <span className="muted" style={{ fontSize: 12 }}>{[it.author, it.note, done ? "Read together" : null].filter(Boolean).join(" · ")}</span>
@@ -165,10 +165,10 @@ export function ClubPick({
               <input id="pick-search" className="input" type="search" style={{ marginTop: 8, width: "100%" }} placeholder="Title or author" value={query} onChange={(e) => setQuery(e.target.value)} />
               {searching && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>Searching…</p>}
               {!searching && query.trim().length >= 3 && results.length === 0 && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>No books found. Try the author&rsquo;s name too.</p>}
-              <ul className="pick-list">
+              <ul className="club-list">
                 {results.map((b, i) => (
                   <li key={`${b.title}-${i}`}>
-                    <button type="button" className="pick-list__row" disabled={busy !== null} onClick={() => choose(() => ensureBook(b), null, `s${i}`)}>
+                    <button type="button" className="club-list__row" disabled={busy !== null} onClick={() => choose(() => ensureBook(b), null, `s${i}`)}>
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <strong style={{ display: "block", fontSize: 15 }}>{b.title}</strong>
                         <span className="muted" style={{ fontSize: 12 }}>{[b.author, b.year].filter(Boolean).join(" · ")}</span>
