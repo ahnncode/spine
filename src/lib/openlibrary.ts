@@ -197,7 +197,11 @@ function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInpu
   if (nativeScript(query)) {
     // Searching in Korean: drop English books that only matched loosely (아몬드 → Amor Towles).
     const olKept = ol.filter((b) => covers(b, q));
-    return [...fits, ...olKept, ...extra.filter((b) => !fits.includes(b) && nativeScript(b.title)).slice(0, 4)].slice(0, 20);
+    const all = [...fits, ...olKept, ...extra.filter((b) => !fits.includes(b) && nativeScript(b.title)).slice(0, 4)];
+    // The exact title first, then titles that start with the search, then the rest (sort is stable).
+    const nq = norm(query);
+    const closeness = (b: BookInput) => (norm(b.title) === nq ? 2 : norm(b.title).startsWith(nq) ? 1 : 0);
+    return all.sort((a, b) => closeness(b) - closeness(a)).slice(0, 20);
   }
   if (!olFits && fits.length) return [...fits.slice(0, 3), ...ol, ...extra.filter((b) => !fits.includes(b)).slice(0, 2)];
   return [...ol, ...extra.slice(0, 3)];
