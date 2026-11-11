@@ -79,28 +79,29 @@ export function genresFromSubjects(subjects: string[] | undefined | null, year?:
 }
 
 /** Apple Books' genre names → ours, for books Open Library can't place. First match wins per name. */
+// English names, then the Korean names Apple's Korean store uses.
 const APPLE: Array<[RegExp, string]> = [
-  [/true crime/i, "truecrime"],
-  [/comics|graphic novels|manga/i, "graphic"],
-  [/young adult|teens?\b/i, "ya"],
-  [/business|self-improvement|management|leadership|careers|investing|personal finance|entrepreneur|marketing|negotiat/i, "business"],
-  [/science fiction|sci-fi/i, "scifi"],
-  [/fantasy/i, "fantasy"],
-  [/mysteries|thrillers|mystery|suspense|crime/i, "mystery"],
-  [/romance/i, "romance"],
-  [/horror/i, "horror"],
-  [/historical fiction/i, "historical"],
-  [/classics/i, "classics"],
-  [/biographies|memoirs|autobiograph/i, "memoir"],
-  [/^history|history$/i, "history"],
-  [/science|psychology|nature|philosophy|economics/i, "science"],
-  [/poetry/i, "poetry"],
-  [/travel|essays|outdoors/i, "essays"],
-  [/literary|fiction & literature/i, "literary"],
+  [/true crime|실화 범죄|범죄 실화/i, "truecrime"],
+  [/comics|graphic novels|manga|만화|그래픽 노블|웹툰/i, "graphic"],
+  [/young adult|teens?\b|청소년/i, "ya"],
+  [/business|self-improvement|management|leadership|careers|investing|personal finance|entrepreneur|marketing|negotiat|비즈니스|경제경영|경영|자기\s?계발|재테크|투자|마케팅|리더십/i, "business"],
+  [/science fiction|sci-fi|과학 소설|^sf|sf\b/i, "scifi"],
+  [/fantasy|판타지/i, "fantasy"],
+  [/mysteries|thrillers|mystery|suspense|crime|미스터리|미스테리|스릴러|추리|범죄/i, "mystery"],
+  [/romance|로맨스|연애/i, "romance"],
+  [/horror|공포|호러/i, "horror"],
+  [/historical fiction|역사 소설|역사소설/i, "historical"],
+  [/classics|고전/i, "classics"],
+  [/biographies|memoirs|autobiograph|전기|회고록|자서전|평전/i, "memoir"],
+  [/^history|history$|^역사|역사$/i, "history"],
+  [/science|psychology|nature|philosophy|economics|과학|심리|철학|인문/i, "science"],
+  [/poetry|^시$|시집/i, "poetry"],
+  [/travel|essays|outdoors|여행|에세이|수필|산문/i, "essays"],
+  [/literary|fiction & literature|소설|문학/i, "literary"],
 ];
-const APPLE_SKIP = /^(books|fiction|nonfiction|non-fiction|sci-fi & fantasy|kids)$/i;
+const APPLE_SKIP = /^(books|fiction|nonfiction|non-fiction|sci-fi & fantasy|kids|도서|책|전자책|소설|비소설|어린이)$/i;
 
-const APPLE_NOVEL = /fiction|classics|literature|romance|mysteries|thrillers|sci-fi|fantasy|horror|poetry/i;
+const APPLE_NOVEL = /fiction|classics|literature|romance|mysteries|thrillers|sci-fi|fantasy|horror|poetry|소설|문학|로맨스|미스터리|스릴러|판타지|공포|시집/i;
 
 export function genresFromApple(names: string[] | undefined | null): string[] {
   const trueCrime = (names ?? []).some((n) => /true crime/i.test(n));

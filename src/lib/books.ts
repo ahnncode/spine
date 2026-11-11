@@ -1,3 +1,5 @@
+import { NOT_A_KEY_CHAR, fold } from "./scripts";
+
 /** A book as we know it before it has a row in the catalog. */
 export interface BookInput {
   title: string;
@@ -37,12 +39,11 @@ export function cleanTitle(title: string): string {
 }
 
 function norm(s: string): string {
-  return s
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
+  // Korean, Japanese and other scripts stay in the key: dropping them gave
+  // every Korean book the same empty key, so they all became one book.
+  return fold(s)
     .replace(/&/g, " and ")
-    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(NOT_A_KEY_CHAR, " ")
     .replace(/\b(the|a|an)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();

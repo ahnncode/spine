@@ -2,6 +2,7 @@ import { englishAuthorName, isLatin } from "./authors";
 import { cleanTitle, dedupeKey, sameBookKey, type BookInput } from "./books";
 import { genresFromApple, genresFromSubjects } from "./genres";
 import { findAppleBook } from "./applecovers";
+import { NOT_A_KEY_CHAR, NOT_A_WORD_CHAR, appleCountry, fold, isbnCountry, nativeScript, openLibraryLanguage } from "./scripts";
 
 interface OLDoc {
   key: string;
@@ -38,10 +39,13 @@ const QUICK_FIELDS =
   "key,title,author_name,author_alternative_name,first_publish_year,cover_i,number_of_pages_median,readinglog_count,edition_count";
 const ENGLISH_FIELDS = `${QUICK_FIELDS},editions,editions.title,editions.language,editions.cover_i,editions.isbn`;
 
-/** readread is for English readers: prefer English editions' titles and covers. */
-function englishEdition(d: OLDoc): OLEdition | null {
+/**
+ * The edition to show: English by default, or the reader's own language when
+ * they searched in it (a Korean search keeps Korean titles).
+ */
+function englishEdition(d: OLDoc, language = "eng"): OLEdition | null {
   const ed = d.editions?.docs?.[0];
-  return ed?.title && ed.language?.includes("eng") ? ed : null;
+  return ed?.title && ed.language?.includes(language) ? ed : null;
 }
 
 /**
@@ -52,17 +56,20 @@ const authorSpellings = new Map<string, string[]>();
 
 /** Spellings to check for a book's author, if it needs checking. */
 export function authorToCheck(book: BookInput): string[] | null {
+  // A Korean (or Japanese, …) title: keep the author as written in that script.
+  if (nativeScript(book.title)) return null;
   const key = dedupeKey(book.title, book.author);
   if (authorSpellings.has(key)) return authorSpellings.get(key)!;
   return book.author && !isLatin(book.author) ? [book.author] : null;
 }
 
-function toBook(d: OLDoc, isbn13?: string): BookInput {
-  const en = englishEdition(d);
+function toBook(d: OLDoc, isbn13?: string, nativeLanguage?: string): BookInput {
+  const en = englishEdition(d, nativeLanguage ?? "eng");
   const native = d.author_name?.[0] ?? null;
-  const english = englishAuthorName(native, d.author_alternative_name);
+  // Searched in Korean (or another script): keep the author as written.
+  const english = nativeLanguage ? { name: native, guessed: false } : englishAuthorName(native, d.author_alternative_name);
   const title = cleanTitle(en?.title ?? d.title);
-  if (english.guessed || (english.name && !isLatin(english.name))) {
+  if (!nativeLanguage && (english.guessed || (english.name && !isLatin(english.name)))) {
     const alts = (d.author_alternative_name ?? []).filter((a) => isLatin(a) && !a.includes(";"));
     authorSpellings.set(dedupeKey(title, english.name), [english.name!, ...alts].slice(0, 12));
     if (authorSpellings.size > 500) authorSpellings.delete(authorSpellings.keys().next().value!);
@@ -88,7 +95,7 @@ async function search(params: Record<string, string>, signal?: AbortSignal, fiel
 const STOP_WORDS = new Set(["the", "a", "an", "of", "and", "to", "in", "on", "by"]);
 
 function norm(s: string): string {
-  return s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  return fold(s).replace(NOT_A_KEY_CHAR, " ").replace(/\s+/g, " ").trim();
 }
 
 /**
@@ -96,29 +103,30 @@ function norm(s: string): string {
  * Library's own relevance still counts a little, an exact title match gets a
  * nudge, and stubs (no author, no English edition) sink.
  */
-export function rankScore(d: OLDoc, query: string, position: number): number {
+export function rankScore(d: OLDoc, query: string, position: number, language = "eng"): number {
   const q = norm(query);
-  const title = norm(englishEdition(d)?.title ?? d.title);
+  const title = norm(englishEdition(d, language)?.title ?? d.title);
   const popularity = Math.log10(1 + (d.readinglog_count ?? 0)) + 0.3 * Math.log10(1 + (d.edition_count ?? 0));
   const match = title === q ? 0.6 : title.startsWith(`${q} `) ? 0.3 : 0;
   // Popular books that only matched on some description or subject (search
   // "project hail mary", get Macbeth) don't get to jump the line.
   const words = new Set(`${title} ${norm((d.author_name ?? []).join(" "))}`.split(" "));
   const missing = q.split(" ").filter((w) => w.length > 1 && !STOP_WORDS.has(w) && !words.has(w)).length;
-  const stub = (d.author_name?.length ? 0 : 3) + (d.editions !== undefined && !englishEdition(d) ? 1 : 0);
+  const stub = (d.author_name?.length ? 0 : 3) + (d.editions !== undefined && !englishEdition(d, language) ? 1 : 0);
   return popularity + match - 0.05 * position - stub - (missing ? 2 + missing : 0);
 }
 
 function tidy(docs: OLDoc[], query: string): BookInput[] {
+  const native = nativeScript(query) ? openLibraryLanguage(query).edition : undefined;
   const ranked = docs
-    .map((d, i) => ({ d, score: rankScore(d, query, i) }))
+    .map((d, i) => ({ d, score: rankScore(d, query, i, native) }))
     .sort((a, b) => b.score - a.score);
   // One result per title + author. Open Library often has the same book as
   // several "works" (reissues, new editions); keep the best-ranked one but the
   // earliest year any of them gives, so a 1983 novel doesn't say 2014.
   const byKey = new Map<string, BookInput>();
   for (const { d } of ranked) {
-    const book = toBook(d);
+    const book = toBook(d, undefined, native);
     const key = dedupeKey(book.title, book.author);
     // Near-identical titles too: some entries cut a word short ("A Confed of Dunces").
     const keptKey = byKey.has(key) ? key : [...byKey.keys()].find((k) => sameBookKey(k, key));
@@ -135,11 +143,15 @@ function tidy(docs: OLDoc[], query: string): BookInput[] {
 
 const cache = new Map<string, BookInput[]>();
 
-const words = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter((w) => w.length > 1);
+// Korean words can be a single syllable, so they count at any length.
+const words = (s: string) => fold(s).split(NOT_A_WORD_CHAR).filter((w) => w.length > 1 || nativeScript(w));
 /** Every word of the query appears in the book's title or author. */
 function covers(b: BookInput, q: string[]): boolean {
-  const have = new Set(words(`${b.title} ${b.author ?? ""}`));
-  return q.length > 0 && q.every((w) => have.has(w));
+  const text = `${b.title} ${b.author ?? ""}`;
+  const have = new Set(words(text));
+  const folded = fold(text);
+  // Korean has no spaces inside compound words, so part of a word counts ("채식" in "채식주의자").
+  return q.length > 0 && q.every((w) => have.has(w) || (nativeScript(w) !== null && folded.includes(w)));
 }
 
 /**
@@ -147,7 +159,8 @@ function covers(b: BookInput, q: string[]): boolean {
  * releases especially). Companion books like summaries are left out.
  */
 async function appleSearch(q: string, signal?: AbortSignal): Promise<BookInput[]> {
-  const params = new URLSearchParams({ term: q, media: "ebook", entity: "ebook", limit: "10", country: "us" });
+  // A Korean search looks in Apple's Korean store, which has far more Korean books.
+  const params = new URLSearchParams({ term: q, media: "ebook", entity: "ebook", limit: nativeScript(q) ? "15" : "10", country: appleCountry(q) });
   const res = await fetch(`https://itunes.apple.com/search?${params}`, { signal });
   if (!res.ok) return [];
   const { results } = (await res.json()) as { results?: Array<{ trackName?: string; artistName?: string; releaseDate?: string; artworkUrl100?: string }> };
@@ -176,6 +189,8 @@ function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInpu
   const q = words(query);
   const olFits = ol.some((b) => covers(b, q));
   const fits = extra.filter((b) => covers(b, q));
+  // Searching in Korean: Apple's Korean store usually knows these books best, so lead with it.
+  if (nativeScript(query) && !olFits) return [...fits, ...extra.filter((b) => !fits.includes(b)).slice(0, 4), ...ol].slice(0, 20);
   if (!olFits && fits.length) return [...fits.slice(0, 3), ...ol, ...extra.filter((b) => !fits.includes(b)).slice(0, 2)];
   return [...ol, ...extra.slice(0, 3)];
 }
@@ -195,13 +210,14 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
     return hit;
   }
   let finalDone = false;
-  const quick = search({ q, limit: "20" }, signal, QUICK_FIELDS)
+  const lang = openLibraryLanguage(q).lang;
+  const quick = search({ q, limit: "20", lang }, signal, QUICK_FIELDS)
     .then((docs) => {
       if (!finalDone) onResults?.(tidy(docs, q), false);
     })
     .catch(() => {});
   const apple = appleSearch(q, signal).catch(() => [] as BookInput[]);
-  const english = search({ q, limit: "25" }, signal, ENGLISH_FIELDS).then(async (docs) => {
+  const english = search({ q, limit: "25", lang }, signal, ENGLISH_FIELDS).then(async (docs) => {
     finalDone = true;
     const books = withApple(tidy(docs, q), await apple, q);
     cache.set(key, books);
@@ -215,16 +231,44 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
     // The English pass failed: keep whatever the quick pass found.
     await quick;
     if (signal?.aborted) throw e;
-    const fallback = withApple(await search({ q, limit: "15" }, signal, QUICK_FIELDS).then((docs) => tidy(docs, q)).catch(() => []), await apple, q);
+    const fallback = withApple(await search({ q, limit: "15", lang }, signal, QUICK_FIELDS).then((docs) => tidy(docs, q)).catch(() => []), await apple, q);
     onResults?.(fallback, true);
     return fallback;
   }
 }
 
-/** Look a scanned barcode up by ISBN. */
+/** Look a scanned barcode up by ISBN: Open Library, then Apple (Korean books are mostly only there). */
 export async function findByIsbn(isbn: string): Promise<BookInput | null> {
-  const docs = await search({ isbn, limit: "1" });
-  return docs[0] ? toBook(docs[0], isbn.length === 13 ? isbn : undefined) : null;
+  const docs = await search({ isbn, limit: "1" }).catch(() => [] as OLDoc[]);
+  if (docs[0]) {
+    const native = nativeScript(docs[0].title) ? openLibraryLanguage(docs[0].title).edition : undefined;
+    return toBook(docs[0], isbn.length === 13 ? isbn : undefined, native);
+  }
+  return appleIsbn(isbn);
+}
+
+async function appleIsbn(isbn: string): Promise<BookInput | null> {
+  const first = isbnCountry(isbn);
+  for (const country of [...new Set([first, "us", "kr"])]) {
+    try {
+      const res = await fetch(`https://itunes.apple.com/lookup?${new URLSearchParams({ isbn, country })}`);
+      if (!res.ok) continue;
+      const { results } = (await res.json()) as { results?: Array<{ trackName?: string; artistName?: string; artworkUrl100?: string }> };
+      const r = results?.find((x) => x.trackName && x.artistName);
+      if (r) {
+        return {
+          title: cleanTitle(r.trackName!),
+          author: r.artistName!.split(/\s*(?:&|,| and )\s*/)[0],
+          isbn13: isbn.length === 13 ? isbn : null,
+          year: null,
+          cover_url: r.artworkUrl100 ? r.artworkUrl100.replace(/\/\d+x\d+bb\.(jpg|png)$/, "/400x600bb.jpg") : null,
+        };
+      }
+    } catch {
+      /* try the next store */
+    }
+  }
+  return null;
 }
 
 /** Best Open Library match for a title and author (used to fill in imports). */
