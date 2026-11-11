@@ -185,12 +185,16 @@ function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInpu
     seen.push(k);
     return true;
   });
-  if (!extra.length) return ol;
+  if (!extra.length) return nativeScript(query) ? ol.filter((b) => covers(b, words(query))) : ol;
   const q = words(query);
   const olFits = ol.some((b) => covers(b, q));
   const fits = extra.filter((b) => covers(b, q));
   // Searching in Korean: Apple's Korean store usually knows these books best, so lead with it.
-  if (nativeScript(query) && !olFits) return [...fits, ...extra.filter((b) => !fits.includes(b)).slice(0, 4), ...ol].slice(0, 20);
+  if (nativeScript(query)) {
+    // Searching in Korean: drop English books that only matched loosely (아몬드 → Amor Towles).
+    const olKept = ol.filter((b) => covers(b, q));
+    return [...fits, ...olKept, ...extra.filter((b) => !fits.includes(b) && nativeScript(b.title)).slice(0, 4)].slice(0, 20);
+  }
   if (!olFits && fits.length) return [...fits.slice(0, 3), ...ol, ...extra.filter((b) => !fits.includes(b)).slice(0, 2)];
   return [...ol, ...extra.slice(0, 3)];
 }

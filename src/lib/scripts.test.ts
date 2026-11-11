@@ -63,3 +63,15 @@ describe("Korean and other non-Latin books", () => {
     expect(genresFromApple(["자기계발"])).toEqual(["business"]);
   });
 });
+
+describe("Korean store titles", () => {
+  it("drops edition labels and the marketing tail", async () => {
+    const { cleanTitle } = await import("./books");
+    expect(cleanTitle("아몬드 (양장) - 제10회 창비 청소년문학상 수상작")).toBe("아몬드");
+    expect(cleanTitle("채식주의자 (리커버 특별판)")).toBe("채식주의자");
+    expect(cleanTitle("소년이 온다 [큰글자책]")).toBe("소년이 온다");
+    expect(cleanTitle("82년생 김지영 (개정판)")).toBe("82년생 김지영");
+    expect(cleanTitle("작별하지 않는다")).toBe("작별하지 않는다");
+    expect(cleanTitle("Mrs. Dalloway - A Novel")).toBe("Mrs. Dalloway - A Novel");
+  });
+});

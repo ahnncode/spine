@@ -29,8 +29,24 @@ export interface Book extends BookInput {
 }
 
 /** Drop a trailing series marker like "(The Expanse, #1)". */
-export function cleanTitle(title: string): string {
+/** Korean store edition labels: hardcover, revised, recover, special, large print, … */
+const KOREAN_EDITION = /\s*[(\[](?:[^()[\]]*\s)?(?:양장|반양장|무선|개정(?:증보)?판|리커버|특별판|한정판|기념판|큰\s?글(?:자|씨)?(?:책|판)?|에디션|합본|세트|전자책|ebook|e북)(?:\s[^()[\]]*)?[)\]]/gi;
+
+/**
+ * Korean titles from Apple's Korean store carry edition labels and a
+ * marketing tail: "아몬드 (양장) - 제10회 창비 청소년문학상 수상작" → "아몬드".
+ */
+function cleanKoreanTitle(title: string): string {
+  if (!/\p{Script=Hangul}/u.test(title)) return title;
   return title
+    .replace(KOREAN_EDITION, "")
+    // " - prize winner / tagline" after the title (a spaced dash, so 1984-style titles survive).
+    .replace(/\s+[-–—]\s+.*$/, "")
+    .trim();
+}
+
+export function cleanTitle(title: string): string {
+  return cleanKoreanTitle(title)
     .replace(/\s*\([^()]*#\s*[\d.]+[^()]*\)\s*$/, "")
     // "(Harry Potter, Book 3)", "(Wings of Fire Series Vol. 2)" — but not a bare "(Book II)" that is the title.
     .replace(/\s*\([^()]*[A-Za-z][^()]*,?\s+(book|vol\.?|volume)\s*[\d.]+\)\s*$/i, "")
