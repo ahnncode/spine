@@ -41,9 +41,21 @@ export function fromVolume(v: GoogleVolume): BookInput | null {
   };
 }
 
+/**
+ * Google limits searches made without a key, and refuses them when busy. With
+ * a browser key (restricted to readread.app in Google Cloud), searches go
+ * through reliably. Without one, Korean search falls back to Open Library.
+ */
+const KEY = process.env.NEXT_PUBLIC_GOOGLE_BOOKS_KEY;
+
 async function volumes(params: Record<string, string>, signal?: AbortSignal): Promise<BookInput[]> {
-  const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${new URLSearchParams({ printType: "books", maxResults: "20", ...params })}`, { signal });
-  if (!res.ok) return [];
+  const query = new URLSearchParams({ printType: "books", maxResults: "20", ...params, ...(KEY ? { key: KEY } : {}) });
+  const res = await fetch(`https://www.googleapis.com/books/v1/volumes?${query}`, { signal });
+  if (!res.ok) {
+    // Visible in the browser console, so a quota problem is easy to spot.
+    console.warn(`[readread] Google Books search failed (${res.status})${KEY ? "" : ": no API key set"}`);
+    return [];
+  }
   const { items } = (await res.json()) as { items?: GoogleVolume[] };
   return (items ?? []).map(fromVolume).filter((b): b is BookInput => b !== null);
 }
