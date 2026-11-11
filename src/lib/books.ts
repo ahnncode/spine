@@ -30,7 +30,7 @@ export interface Book extends BookInput {
 
 /** Drop a trailing series marker like "(The Expanse, #1)". */
 /** Korean store edition labels: hardcover, revised, recover, special, large print, … */
-const KOREAN_EDITION = /\s*[(\[](?:[^()[\]]*\s)?(?:양장|반양장|무선|개정(?:증보)?판|리커버|특별판|한정판|기념판|큰\s?글(?:자|씨)?(?:책|판)?|에디션|합본|세트|전자책|ebook|e북)(?:\s[^()[\]]*)?[)\]]/gi;
+const KOREAN_EDITION = /\s*[(\[][^()[\]]*(?:양장|무선|개정|증보|리커버|특별|한정|기념|큰\s?글|에디션|합본|세트|전자책|ebook|e북|hard\s?cover|paperback|페이퍼백|special edition)[^()[\]]*[)\]]/gi;
 
 /**
  * Korean titles from Apple's Korean store carry edition labels and a

@@ -59,4 +59,19 @@ describe("searching in Korean", () => {
     expect(books.map((b) => b.title)).toEqual(expect.arrayContaining(["아몬드", "서른의 반격"]));
     expect(books.map((b) => b.title)).not.toContain("아몬드 쿠키 레시피");
   });
+
+  it("cleans a cross-script author and merges the same book from both sources", async () => {
+    const ol = { key: "/works/OL5W", title: "Human Acts", author_name: ["한강/ハン・カン"], author_alternative_name: ["Han Kang"], cover_i: 7, readinglog_count: 50, edition_count: 30,
+      editions: { docs: [{ title: "소년이 온다", language: ["kor"], cover_i: 7 }] } };
+    const g = { items: [
+      { volumeInfo: { title: "소년이 온다", authors: ["한강"], publishedDate: "2014-05-19" } },
+      { volumeInfo: { title: "소년이 온다(특별한정판)(양장본 HardCover)", authors: ["한강"], publishedDate: "2020-01-01" } },
+      { volumeInfo: { title: "한강, 소년이 온다 깊게 읽기", authors: ["정미숙"], publishedDate: "2024-01-01" } },
+    ] };
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => new Response(JSON.stringify(url.includes("openlibrary") ? { docs: [ol] } : g), { status: 200 })));
+    const books = await searchBooks("소년이 온다");
+    expect(books.map((b) => `${b.title} · ${b.author}`)).toEqual(["소년이 온다 · 한강", "한강, 소년이 온다 깊게 읽기 · 정미숙"]);
+    // The one kept is Open Library's, so it stays linked to the English edition (Human Acts).
+    expect(books[0].ol_work_key).toBe("/works/OL5W");
+  });
 });

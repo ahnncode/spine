@@ -70,7 +70,12 @@ function toBook(d: OLDoc, isbn13?: string, nativeLanguage?: string): BookInput {
   // Searched in Korean (or another script): use the author's name in that
   // script when Open Library has it (it often lists "Wŏn-p'yŏng Son" first).
   const script = nativeScript(en?.title ?? d.title);
-  const inScript = script ? [...(d.author_name ?? []), ...(d.author_alternative_name ?? [])].find((n) => nativeScript(n) === script && !n.includes(";")) : undefined;
+  // Names can come joined across scripts: "한강/ハン・カン" → "한강".
+  const inScript = script
+    ? [...(d.author_name ?? []), ...(d.author_alternative_name ?? [])]
+        .flatMap((n) => n.split("/").map((x) => x.trim()))
+        .find((n) => n && nativeScript(n) === script && !n.includes(";"))
+    : undefined;
   const english = nativeLanguage ? { name: inScript ?? native, guessed: false } : englishAuthorName(native, d.author_alternative_name);
   const title = cleanTitle(en?.title ?? d.title);
   if (!nativeLanguage && (english.guessed || (english.name && !isLatin(english.name)))) {
