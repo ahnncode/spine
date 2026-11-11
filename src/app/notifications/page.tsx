@@ -17,6 +17,7 @@ import { useShelf } from "@/components/useShelf";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { Cover } from "@/components/Cover";
 import type { Entry } from "@/lib/data";
+import { fetchClubLinks, type ClubLink } from "@/lib/clubs";
 import {
   fetchCheckinsById, fetchFollowing, fetchNotifications, fetchProfiles, markAllRead,
   fetchMyReadAlongs, fetchRoomCommentsById, type Checkin, type Notification, type Profile, type ReadAlong, type RoomComment,
@@ -39,6 +40,7 @@ interface Loaded {
   following: Set<string>;
   readAlongs: Map<string, ReadAlong>;
   rooms: Map<string, RoomComment>;
+  clubs: Map<string, ClubLink>;
 }
 
 function Inner() {
@@ -54,17 +56,20 @@ function Inner() {
     (async () => {
       const items = await fetchNotifications();
       const roomIds = items.filter((n) => n.target_type === "chapter_comment" && n.target_id).map((n) => n.target_id!);
-      const [people, checkins, following, readAlongs, rooms] = await Promise.all([
+      const clubReads = items.filter((n) => n.target_type === "club_read" && n.target_id).map((n) => n.target_id!);
+      const clubComments = items.filter((n) => n.target_type === "club_comment" && n.target_id).map((n) => n.target_id!);
+      const [people, checkins, following, readAlongs, rooms, clubs] = await Promise.all([
         fetchProfiles([...new Set(items.map((n) => n.actor_id))]),
         fetchCheckinsById(items.filter((n) => n.target_type === "checkin" && n.target_id).map((n) => n.target_id!)),
         fetchFollowing(),
         items.some((n) => n.kind === "read_along") ? fetchMyReadAlongs().catch(() => []) : Promise.resolve([] as ReadAlong[]),
         fetchRoomCommentsById([...new Set(roomIds)]).catch(() => new Map<string, RoomComment>()),
+        fetchClubLinks([...new Set(clubReads)], [...new Set(clubComments)]).catch(() => new Map<string, ClubLink>()),
       ]);
-      setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])), rooms });
+      setData({ items, people, checkins, following: new Set(following), readAlongs: new Map(readAlongs.map((r) => [r.id, r])), rooms, clubs });
       // Opening the list counts as reading it.
       if (items.some((n) => !n.read_at)) markAllRead().then(clearUnread).catch(() => {});
-    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set(), readAlongs: new Map(), rooms: new Map() }));
+    })().catch(() => setData({ items: [], people: new Map(), checkins: new Map(), following: new Set(), readAlongs: new Map(), rooms: new Map(), clubs: new Map() }));
   }, []);
 
   function describe(n: Notification): string {
@@ -96,6 +101,15 @@ function Inner() {
     if (n.kind === "room") {
       const c = data?.rooms.get(n.target_id ?? "");
       return c ? `replied to you in ${c.chapter === 0 ? "the whole-book room" : `the chapter ${c.chapter} room`}` : "replied to you in a chapter room";
+    }
+    if (n.kind === "club") {
+      const c = data?.clubs.get(n.target_id ?? "");
+      if (n.detail === "new_read") return c ? `picked ${c.where} for ${c.club}` : "picked your club’s next book";
+      return c ? `replied to you in ${c.club}, ${c.where}` : "replied to you in your club";
+    }
+    if (n.target_type === "club_comment") {
+      const c = data?.clubs.get(n.target_id ?? "");
+      return c ? `hearted your comment in ${c.club}, ${c.where}` : "hearted your comment in your club";
     }
     if (n.target_type === "chapter_comment") {
       const c = data?.rooms.get(n.target_id ?? "");
@@ -174,6 +188,8 @@ function Inner() {
                     <Link href="/search#picks" style={rowStyle}>{body}</Link>
                   ) : n.kind === "ask" && n.target_id ? (
                     <Link href={`/picks/${n.target_id}`} style={rowStyle}>{body}</Link>
+                  ) : (n.target_type === "club_read" || n.target_type === "club_comment") && data.clubs.get(n.target_id ?? "") ? (
+                    <Link href={data.clubs.get(n.target_id!)!.href} style={rowStyle}>{body}</Link>
                   ) : n.target_type === "chapter_comment" && data.rooms.get(n.target_id ?? "") ? (
                     <Link href={`/book/${data.rooms.get(n.target_id!)!.book_id}/room/${data.rooms.get(n.target_id!)!.chapter}`} style={rowStyle}>{body}</Link>
                   ) : n.kind === "read_along" && n.target_id ? (

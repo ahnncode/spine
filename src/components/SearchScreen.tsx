@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { dedupeKey, type Book, type BookInput } from "@/lib/books";
 import { addToWant, ensureBook, fetchShelf, rankEntries, recommendations, startReading, STATUS_LABEL, type Entry } from "@/lib/data";
 import { WeeklyPicks } from "@/components/WeeklyPicks";
+import { YourClubs } from "@/components/YourClubs";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { searchBooks } from "@/lib/openlibrary";
 import { formatScore } from "@/lib/ranking";
@@ -270,6 +271,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
           ) : (
             <>
               <WeeklyPicks />
+              {mode === "discover" && <YourClubs where="discover" />}
               <Recommendations recs={recs} rankedCount={rankedCount} />
             </>
           )

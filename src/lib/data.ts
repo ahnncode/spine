@@ -1075,7 +1075,7 @@ export async function saveFinishedOn(entryId: string, finishedOn: string | null)
 
 /* ------------------------------ Hearts & comments ------------------------ */
 
-export type TargetType = "entry" | "checkin" | "read_along" | "chapter_comment" | "pick_poll";
+export type TargetType = "entry" | "checkin" | "read_along" | "chapter_comment" | "pick_poll" | "club_comment";
 export interface HeartState {
   count: number;
   mine: boolean;
@@ -1225,12 +1225,12 @@ export async function respondToPick(id: string, response: "want" | "reading" | "
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks" | "ask" | "room";
+  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks" | "ask" | "room" | "club";
   /** For read-along notifications: invite, joined, message or verdict. */
   detail?: string | null;
   /** For badge notifications: which badge. */
   badge?: string | null;
-  target_type: TargetType | null;
+  target_type: TargetType | "club_read" | null;
   target_id: string | null;
   created_at: string;
   read_at: string | null;
@@ -1335,7 +1335,7 @@ export async function unblock(userId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function report(targetType: "comment" | "entry" | "checkin" | "profile" | "chapter_comment", targetId: string, reason?: string): Promise<void> {
+export async function report(targetType: "comment" | "entry" | "checkin" | "profile" | "chapter_comment" | "club_comment", targetId: string, reason?: string): Promise<void> {
   const { error } = await supabase()
     .from("reports")
     .insert({ target_type: targetType, target_id: targetId, reason: reason?.trim().slice(0, 500) || null });

@@ -2,6 +2,7 @@
 
 import { DroppedRow } from "@/components/PutAside";
 import { RecentlyFinished } from "@/components/RecentlyFinished";
+import { YourClubs } from "@/components/YourClubs";
 import { ShareCardButton } from "@/components/ShareCard";
 import { useReadAlongs } from "@/components/useReadAlongs";
 import Link from "next/link";
@@ -341,6 +342,8 @@ function You() {
             })}
           </section>
         )}
+
+        <YourClubs where="you" />
 
         <BadgeCase statuses={badges} />
         <NewBadges statuses={badges} />
