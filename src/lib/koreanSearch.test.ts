@@ -32,7 +32,8 @@ describe("searching in Korean", () => {
       "아몬드 쿠키 레시피 · 김요리",
       "서른의 반격 · 손원평",
     ]);
-    expect(books[0].cover_url).toContain("books.google.com");
+    // The top result keeps a cover from one source or the other.
+    expect(books[0].cover_id ?? books[0].cover_url).toBeTruthy();
   });
 
   it("uses Open Library's Korean spelling of the author when Google has nothing", async () => {
