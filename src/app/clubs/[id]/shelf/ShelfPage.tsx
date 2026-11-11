@@ -8,10 +8,12 @@ import { displayName } from "@/components/Avatar";
 import { ClubScreen, NotAMember, shortDate, useClub } from "@/components/ClubBits";
 import { Cover } from "@/components/Cover";
 import { RowsSkeleton } from "@/components/Skeleton";
+import { WHOLE_BOOK } from "@/lib/clubs";
 import { friendsRankedOn, type ScoredEntry } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
 
 interface Verdict {
+  readId: string;
   bookId: string;
   finished: string;
   avg: number | null;
@@ -45,7 +47,7 @@ function Inner() {
       .then((entries) => {
         setVerdicts(finished.map((r) => {
           const scores = entries.filter((e) => e.book_id === r.book_id).sort((a, b) => b.score - a.score);
-          return { bookId: r.book_id, finished: r.finished_at!, avg: average(scores.map((s) => s.score)), scores };
+          return { readId: r.id, bookId: r.book_id, finished: r.finished_at!, avg: average(scores.map((s) => s.score)), scores };
         }));
       })
       .catch(() => setVerdicts([]));
@@ -106,8 +108,11 @@ function Inner() {
             </div>
           )}
 
-          {latest && latestBook && !mine && (
-            <Link href={`/book/${latestBook.id}`} className="btn btn--block" style={{ marginTop: 10 }}>Rank {latestBook.title}</Link>
+          {latest && latestBook && (
+            <div style={{ display: "grid", gridTemplateColumns: mine ? "1fr" : "1fr 1fr", gap: 8, marginTop: 10 }}>
+              {!mine && <Link href={`/book/${latestBook.id}`} className="btn">Rank it</Link>}
+              <Link href={`/clubs/${clubId}/week/${WHOLE_BOOK}?read=${latest.readId}`} className="btn btn--outline">The discussion</Link>
+            </div>
           )}
 
           <section aria-label="Club shelf" style={{ marginTop: 20 }}>
@@ -120,7 +125,7 @@ function Inner() {
                 const b = data.books.get(v.bookId);
                 return (
                   <li key={v.bookId} style={{ borderTop: i ? "1px solid var(--line)" : undefined }}>
-                    <Link href={`/book/${v.bookId}`} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 14px", color: "inherit", textDecoration: "none" }}>
+                    <Link href={`/clubs/${clubId}/week/${WHOLE_BOOK}?read=${v.readId}`} aria-label={`${b?.title ?? "A book"}: club score ${formatScore(v.avg!)}. Open the discussion`} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 14px", color: "inherit", textDecoration: "none" }}>
                       <span style={{ width: 18, fontFamily: "var(--font-book)", fontWeight: 700 }}>{i + 1}</span>
                       <span style={{ flex: 1, minWidth: 0 }}>
                         <span style={{ display: "block", fontSize: 15, fontWeight: 600 }}>{b?.title ?? "A book"}</span>
@@ -135,7 +140,7 @@ function Inner() {
                 const b = data.books.get(v.bookId);
                 return (
                   <li key={v.bookId} style={{ borderTop: ranked.length || i ? "1px solid var(--line)" : undefined }}>
-                    <Link href={`/book/${v.bookId}`} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 14px", color: "inherit", textDecoration: "none" }}>
+                    <Link href={`/clubs/${clubId}/week/${WHOLE_BOOK}?read=${v.readId}`} style={{ display: "flex", gap: 12, alignItems: "center", padding: "12px 14px", color: "inherit", textDecoration: "none" }}>
                       <span style={{ width: 18 }} className="muted">–</span>
                       <span style={{ flex: 1, minWidth: 0, fontSize: 15, fontWeight: 600 }}>{b?.title ?? "A book"}</span>
                       <span className="muted" style={{ fontSize: 12 }}>Not ranked yet</span>
@@ -146,7 +151,7 @@ function Inner() {
             </ol>
           </section>
           <p className="muted" style={{ margin: "12px 0 40px", fontSize: 13, lineHeight: 1.45 }}>
-            Everyone ranks the book on their own shelf as usual; the club score is the average. Members who read it before count with their existing ranking.
+            Everyone ranks the book on their own shelf as usual; the club score is the average. Members who read it before count with their existing ranking. Tap a book to revisit the club&rsquo;s discussion.
           </p>
         </>
       )}

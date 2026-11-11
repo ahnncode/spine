@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Cover } from "@/components/Cover";
 import type { Book, BookInput } from "@/lib/books";
 import {
-  bookForListItem, buildPlan, fetchListItems, startRead, updateRead,
+  bookForListItem, buildPlan, fetchListItems, planProblem, startRead, updateRead,
   type ClubRead, type ListItem, type PlanWeek,
 } from "@/lib/clubs";
 import { ensureBook, fetchBooks, suggestChapters } from "@/lib/data";
@@ -26,13 +26,15 @@ type Picked = { bookId: string; book: Book; listPosition: number | null };
  * read's finish date, plan and questions instead.
  */
 export function ClubPick({
-  clubId, listId, readPositions, editing, onClose, onDone,
+  clubId, listId, readPositions, editing, ending, onClose, onDone,
 }: {
   clubId: string;
   listId: string | null;
   /** List positions the club has already read. */
   readPositions: number[];
   editing?: { read: ClubRead; book: Book } | null;
+  /** The current read's title, when picking a new book will end it. */
+  ending?: string | null;
   onClose: () => void;
   onDone: () => void | Promise<void>;
 }) {
@@ -40,6 +42,7 @@ export function ClubPick({
   const [items, setItems] = useState<ListItem[] | null>(null);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<BookInput[]>([]);
+  const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState<Picked | null>(editing ? { bookId: editing.book.id, book: editing.book, listPosition: editing.read.list_position } : null);
   const [starts, setStarts] = useState(editing?.read.starts_on ?? today());
   const [ends, setEnds] = useState(editing?.read.ends_on ?? addDays(today(), 28));
@@ -56,7 +59,11 @@ export function ClubPick({
     if (step !== "book" || query.trim().length < 3) return;
     const ctl = new AbortController();
     const t = setTimeout(() => {
-      searchBooks(query, ctl.signal).then((r) => setResults(r.slice(0, 8))).catch(() => {});
+      setSearching(true);
+      searchBooks(query, ctl.signal)
+        .then((r) => setResults(r.slice(0, 8)))
+        .catch(() => {})
+        .finally(() => !ctl.signal.aborted && setSearching(false));
     }, 300);
     return () => {
       clearTimeout(t);
@@ -96,6 +103,8 @@ export function ClubPick({
     if (!picked) return;
     if (!(n > 0)) return setError("How many chapters does it have?");
     if (!(ends > starts)) return setError("The finish date has to be after the start");
+    const problem = planProblem(touched ? plan : autoPlan, n);
+    if (problem) return setError(problem);
     const final = (touched ? plan : autoPlan).map((w) => ({ ...w, questions: (w.questions ?? []).map((q) => q.trim()).filter(Boolean) }));
     setBusy("save");
     setError(null);
@@ -116,8 +125,13 @@ export function ClubPick({
         <div className="sheet__grab" />
         <p className="eyebrow" style={{ color: "var(--amber-ink)" }}>{editing ? "The plan" : "You’re the host"}</p>
         <h2 className="g" style={{ margin: "4px 0 0", fontSize: 28, lineHeight: 1.1, fontWeight: 400 }}>
-          {editing ? editing.book.title : step === "book" ? "Pick the next book" : "Dates and plan"}
+          {editing ? editing.book.title : step === "book" ? (ending ? "Pick the next book" : "Pick the club’s book") : "Dates and plan"}
         </h2>
+        {ending && !editing && (
+          <p className="club-notice" style={{ marginTop: 12 }}>
+            Starting a new book wraps up <strong>{ending}</strong> for everyone. Its verdict and rooms move to the club shelf.
+          </p>
+        )}
 
         {step === "book" && (
           <>
@@ -125,8 +139,9 @@ export function ClubPick({
               <section aria-label="From the club's list" style={{ marginTop: 16 }}>
                 <h3 className="eyebrow">From the list</h3>
                 <ul className="pick-list">
-                  {items.map((it) => {
+                  {items.map((it, idx) => {
                     const done = readPositions.includes(it.position);
+                    const upNext = !done && items.findIndex((x) => !readPositions.includes(x.position)) === idx;
                     return (
                       <li key={it.position}>
                         <button type="button" className="pick-list__row" disabled={busy !== null} onClick={() => choose(() => bookForListItem(it), it.position, `l${it.position}`)}>
@@ -134,6 +149,7 @@ export function ClubPick({
                           <span style={{ flex: 1, minWidth: 0 }}>
                             <strong style={{ display: "block", fontSize: 15 }}>{it.title}</strong>
                             <span className="muted" style={{ fontSize: 12 }}>{[it.author, it.note, done ? "Read together" : null].filter(Boolean).join(" · ")}</span>
+                            {upNext && <span className="club-accent" style={{ display: "block", fontSize: 12, fontWeight: 700 }}>Next on the list</span>}
                           </span>
                           {busy === `l${it.position}` && <span className="muted" style={{ fontSize: 12 }}>Finding…</span>}
                         </button>
@@ -146,7 +162,9 @@ export function ClubPick({
             <section aria-label="Any book" style={{ marginTop: 16 }}>
               <h3 className="eyebrow">{items && items.length ? "Or any book" : "Find the book"}</h3>
               <label htmlFor="pick-search" className="visually-hidden">Search for a book</label>
-              <input id="pick-search" className="input" type="search" style={{ marginTop: 8 }} placeholder="Title or author" value={query} onChange={(e) => setQuery(e.target.value)} />
+              <input id="pick-search" className="input" type="search" style={{ marginTop: 8, width: "100%" }} placeholder="Title or author" value={query} onChange={(e) => setQuery(e.target.value)} />
+              {searching && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>Searching…</p>}
+              {!searching && query.trim().length >= 3 && results.length === 0 && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>No books found. Try the author&rsquo;s name too.</p>}
               <ul className="pick-list">
                 {results.map((b, i) => (
                   <li key={`${b.title}-${i}`}>

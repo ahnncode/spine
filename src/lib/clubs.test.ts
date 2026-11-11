@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlan, currentWeek, expectedChapter, weekOpen, weekRange } from "./clubs";
+import { buildPlan, currentWeek, expectedChapter, planProblem, weekOpen, weekRange } from "./clubs";
 
 describe("club plans", () => {
   it("splits chapters evenly over four weeks, ending on the finish date", () => {
@@ -32,5 +32,18 @@ describe("club plans", () => {
     expect(expectedChapter(plan, "2026-11-01", "2026-11-08")).toBe(3);
     expect(expectedChapter(plan, "2026-11-01", "2026-11-29")).toBe(12);
     expect(expectedChapter(plan, "2026-11-01", "2026-12-15")).toBe(12);
+  });
+});
+
+describe("planProblem", () => {
+  const wk = (through: number) => ({ through, due: "2026-12-01" });
+  it("accepts a rising plan that ends on the last chapter", () => {
+    expect(planProblem([wk(5), wk(10), wk(22)], 22)).toBeNull();
+  });
+  it("catches weeks that go backwards", () => {
+    expect(planProblem([wk(8), wk(6), wk(22)], 22)).toMatch(/Week 2/);
+  });
+  it("catches a last week that stops short", () => {
+    expect(planProblem([wk(5), wk(20)], 22)).toMatch(/chapter 22/);
   });
 });
