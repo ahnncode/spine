@@ -41,7 +41,8 @@ describe("Korean and other non-Latin books", () => {
     expect(nativeScript("ノルウェイの森")).toBe("ja");
     expect(nativeScript("三体")).toBe("zh");
     expect(nativeScript("Piranesi")).toBeNull();
-    expect(appleCountry("아몬드")).toBe("kr");
+    expect(appleCountry("아몬드")).toBe("us"); // no Apple Books in Korea
+    expect(appleCountry("ノルウェイの森")).toBe("jp");
     expect(appleCountry("Piranesi")).toBe("us");
     expect(openLibraryLanguage("아몬드")).toEqual({ lang: "ko", edition: "kor" });
     expect(isbnCountry("9788936434120")).toBe("kr");
@@ -73,5 +74,22 @@ describe("Korean store titles", () => {
     expect(cleanTitle("82년생 김지영 (개정판)")).toBe("82년생 김지영");
     expect(cleanTitle("작별하지 않는다")).toBe("작별하지 않는다");
     expect(cleanTitle("Mrs. Dalloway - A Novel")).toBe("Mrs. Dalloway - A Novel");
+  });
+});
+
+describe("Google Books results", () => {
+  it("reads a Korean volume", async () => {
+    const { fromVolume, googleCover } = await import("./googlebooks");
+    const b = fromVolume({ volumeInfo: {
+      title: "아몬드 (양장)", authors: ["손원평 (지은이)"], publishedDate: "2017-03-31", pageCount: 264,
+      industryIdentifiers: [{ type: "ISBN_10", identifier: "8936434128" }, { type: "ISBN_13", identifier: "9788936434120" }],
+      imageLinks: { thumbnail: "http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api" },
+    } });
+    expect(b).toEqual({
+      title: "아몬드", author: "손원평", isbn13: "9788936434120", year: 2017, pages: 264,
+      cover_url: "https://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&source=gbs_api&fife=w400-h600",
+    });
+    expect(fromVolume({ volumeInfo: { title: "No author" } })).toBeNull();
+    expect(googleCover("https://evil.example.com/x.jpg")).toBeNull();
   });
 });

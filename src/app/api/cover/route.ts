@@ -5,7 +5,7 @@ import type { NextRequest } from "next/server";
  * tint the book page. Open Library covers redirect to archive.org, which
  * doesn't allow cross-origin reads. Only known cover hosts are fetched.
  */
-const ALLOWED = [/^covers\.openlibrary\.org$/, /(^|\.)archive\.org$/, /^is\d-ssl\.mzstatic\.com$/];
+const ALLOWED = [/^covers\.openlibrary\.org$/, /(^|\.)archive\.org$/, /^is\d-ssl\.mzstatic\.com$/, /^books\.google\.com$/, /^books\.googleusercontent\.com$/];
 const MAX_BYTES = 3_000_000;
 
 function allowed(raw: string): URL | null {

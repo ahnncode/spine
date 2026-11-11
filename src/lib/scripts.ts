@@ -37,10 +37,13 @@ export function nativeScript(text: string | null | undefined): NativeScript | nu
   return null;
 }
 
-/** Apple's store with the most books in that script. */
+/**
+ * Apple's store with the most books in that script. Apple doesn't sell books
+ * in Korea, so Korean stays on the US store (Korean books come from Google).
+ */
 export function appleCountry(text: string | null | undefined): string {
   const s = nativeScript(text);
-  return s === "ko" ? "kr" : s === "ja" ? "jp" : s === "zh" ? "tw" : "us";
+  return s === "ja" ? "jp" : s === "zh" ? "tw" : "us";
 }
 
 /** Open Library's language codes, for the search's preferred edition and for edition languages. */
