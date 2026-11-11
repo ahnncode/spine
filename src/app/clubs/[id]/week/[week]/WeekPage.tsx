@@ -10,7 +10,7 @@ import { LockIcon } from "@/components/icons";
 import { RowsSkeleton } from "@/components/Skeleton";
 import { HeartButton } from "@/components/Social";
 import {
-  COMMENT_MAX, WHOLE_BOOK, deleteWeekComment, fetchPace, fetchRoomCounts, fetchWeekComments, postWeekComment, weekOpen, weekRange,
+  COMMENT_MAX, WHOLE_BOOK, atLabel, deleteWeekComment, fetchPace, fetchRoomCounts, fetchWeekComments, postWeekComment, weekOpen, weekRange,
   type ClubComment,
 } from "@/lib/clubs";
 import { fetchHearts, fetchProfiles, report, type HeartState, type Profile } from "@/lib/data";
@@ -75,7 +75,7 @@ function Inner() {
   }
 
   const label = week === WHOLE_BOOK ? "Whole book" : `Week ${week}`;
-  const titleRange = week === WHOLE_BOOK ? "" : ` · ${weekRange(read.plan, week).replace(/^Chapters?/, "ch.")}`;
+  const titleRange = week === WHOLE_BOOK ? "" : ` · ${weekRange(read.plan, week, read.unit).replace(/^Chapters?/, "ch.").replace(/^Up to /, "to ")}`;
   const questions = week === WHOLE_BOOK ? [] : (read.plan[week - 1]?.questions ?? []);
   const top = (state?.comments ?? []).filter((c) => !c.parent_id);
   const replies = (id: string) => (state?.comments ?? []).filter((c) => c.parent_id === id);
@@ -151,9 +151,9 @@ function Inner() {
       ) : !state.open ? (
         <div className="empty" style={{ marginTop: 24 }}>
           <LockIcon size={28} />
-          <p className="h2">{week === WHOLE_BOOK ? "Opens when you finish" : `Opens at chapter ${read.plan[week - 1]?.through ?? "?"}`}</p>
+          <p className="h2">{week === WHOLE_BOOK ? "Opens when you finish" : `Opens at ${atLabel(read.unit, read.plan[week - 1]?.through ?? 0)}`}</p>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.45 }}>
-            {state.reached ? `You’re at chapter ${state.reached}. ` : ""}Check in once you get there and the room opens.{state.counts.get(week) ? ` ${state.counts.get(week)} comments are waiting.` : ""}
+            {state.reached && state.reached < 999 ? `You’re at ${atLabel(read.unit, state.reached)}. ` : ""}Check in once you get there and the room opens.{state.counts.get(week) ? ` ${state.counts.get(week)} comments are waiting.` : ""}
           </p>
           <Link href={`/clubs/${clubId}`} className="btn" style={{ marginTop: 12 }}>Back to the club</Link>
         </div>

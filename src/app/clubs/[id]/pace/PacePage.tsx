@@ -8,7 +8,7 @@ import { displayName } from "@/components/Avatar";
 import { ClubScreen, NotAMember, today, useClub } from "@/components/ClubBits";
 import { PokeButton } from "@/components/PokeButton";
 import { RowsSkeleton } from "@/components/Skeleton";
-import { expectedChapter, fetchPace, type PaceRow } from "@/lib/clubs";
+import { atLabel, expectedChapter, fetchPace, type PaceRow } from "@/lib/clubs";
 
 export function PacePage() {
   return (
@@ -54,7 +54,11 @@ function Inner() {
   return (
     <ClubScreen eyebrow={`${data.card.name} · ${book.title}`} title="Where everyone is" back={`/clubs/${clubId}`}>
       <p className="muted" style={{ margin: "10px 0 0", fontSize: 14, lineHeight: 1.45 }}>
-        {expected > 0 ? <>The plan says chapter <strong style={{ color: "var(--ink)" }}>{expected}</strong> of {total} by today.</> : `Starts ${read.starts_on}.`}
+        {expected > 0 ? (
+          read.unit === "percent"
+            ? <>The plan says <strong style={{ color: "var(--ink)" }}>{expected}%</strong> of the way through by today.</>
+            : <>The plan says chapter <strong style={{ color: "var(--ink)" }}>{expected}</strong> of {total} by today.</>
+        ) : `Starts ${read.starts_on}.`}
         {behind.length > 0 && ` ${behind.length} ${behind.length === 1 ? "is" : "are"} behind.`}
       </p>
 
@@ -64,7 +68,7 @@ function Inner() {
         <>
           <section className="card" style={{ marginTop: 14, padding: "18px 14px" }} aria-label="Pace board">
             <div className="pace-board">
-              {expected > 0 && <span className="pace-board__line" aria-hidden="true" style={{ left: `calc(106px + (100% - 144px) * ${linePct})` }} />}
+              {expected > 0 && <span className="pace-board__line" aria-hidden="true" style={{ left: `calc(106px + (100% - 152px) * ${linePct})` }} />}
               {rows.length === 0 && <p className="muted" style={{ margin: 0, fontSize: 14 }}>Nobody has started yet.</p>}
               {rows.map((p) => {
                 const r = reachedOf(p);
@@ -72,10 +76,10 @@ function Inner() {
                 return (
                   <div key={p.user_id} className="pace-row">
                     <Link href={p.user_id === me?.id ? "/you" : `/u/${data.people.get(p.user_id)?.username ?? p.user_id}`} className="pace-row__name">{name(p.user_id)}</Link>
-                    <span className="pace-row__bar" role="img" aria-label={`${name(p.user_id)}: ${p.reached == null ? "not started" : `chapter ${r} of ${total}`}${isBehind ? ", behind" : ""}`}>
+                    <span className="pace-row__bar" role="img" aria-label={`${name(p.user_id)}: ${p.reached == null ? "not started" : read.unit === "percent" ? `${r}%` : `chapter ${r} of ${total}`}${isBehind ? ", behind" : ""}`}>
                       <span className={isBehind ? "behind" : undefined} style={{ width: `${(r / total) * 100}%` }} />
                     </span>
-                    <span className="pace-row__n muted">{p.reached == null ? "–" : r}</span>
+                    <span className="pace-row__n muted">{p.reached == null ? "–" : read.unit === "percent" ? `${r}%` : r}</span>
                   </div>
                 );
               })}
@@ -89,7 +93,7 @@ function Inner() {
                 {behind.filter((p) => p.user_id !== me?.id).map((p) => (
                   <div key={p.user_id} className="card" style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px" }}>
                     <span style={{ flex: 1, minWidth: 0, fontSize: 14 }}>
-                      <strong>{name(p.user_id)}</strong> <span className="muted">· {p.reached == null ? "not started" : `chapter ${reachedOf(p)}`}</span>
+                      <strong>{name(p.user_id)}</strong> <span className="muted">· {p.reached == null ? "not started" : atLabel(read.unit, reachedOf(p))}</span>
                     </span>
                     <PokeButton userId={p.user_id} name={name(p.user_id)} />
                   </div>

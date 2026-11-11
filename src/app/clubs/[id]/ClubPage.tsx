@@ -15,7 +15,7 @@ import { useShelf } from "@/components/useShelf";
 import {
   CLUB_COLORS, WHOLE_BOOK, clubVars, currentWeek, deleteClub, expectedChapter, fetchInviteCode, fetchPace, fetchRoomCounts, finishRead,
   inviteUrl, joinClub, joinClubByInvite, leaveClub, removeClubMember, resetInviteCode, setClubRole, setReadBefore, updateClub, weekOpen,
-  weekRange, type ClubColor, type PaceRow,
+  atLabel, behindLabel, weekRange, type ClubColor, type PaceRow,
 } from "@/lib/clubs";
 import { fetchFollowing, startReading } from "@/lib/data";
 
@@ -164,8 +164,8 @@ function Inner() {
   const status = readBefore ? "You’ve read it before, so every room is open"
     : (reached ?? 0) >= 999 ? "You’ve finished"
     : reached == null ? "Not started yet"
-    : reached >= expected ? `You’re at chapter ${reached} · on track`
-    : `You’re at chapter ${reached} · ${expected - reached} behind`;
+    : reached >= expected ? `You’re at ${atLabel(current?.unit, reached)} · on track`
+    : `You’re at ${atLabel(current?.unit, reached)} · ${behindLabel(current?.unit, expected - reached)}`;
   const statusClass = readBefore || (reached ?? 0) >= expected ? "club-ok" : "club-behind";
   const finished = (reached ?? 0) >= 999;
   const pastDue = Boolean(current && day > current.ends_on);
@@ -229,7 +229,7 @@ function Inner() {
             {current.plan.length > 0 && (
               <div className="stack" style={{ gap: 6 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, gap: 8 }}>
-                  <strong>Week {week}: {weekRange(current.plan, week).toLowerCase().replace(/^c/, "c")}</strong>
+                  <strong>Week {week}: {weekRange(current.plan, week, current.unit).replace(/^C/, "c").replace(/^Up/, "up")}</strong>
                   <span className="muted">by {shortDate(current.plan[week - 1].due)}</span>
                 </div>
                 <div className="club-weeks" aria-label={`Week ${week} of ${current.plan.length}`}>
@@ -280,7 +280,7 @@ function Inner() {
               <span style={{ flex: 1, minWidth: 0 }}>
                 <strong style={{ display: "block", fontSize: 15 }}>{pace ? `${onTrack} of ${pace.length} on track` : "Where everyone is"}</strong>
                 <span className="muted" style={{ fontSize: 13 }}>
-                  {[ahead && (ahead.reached ?? 0) > 0 ? `${ahead.user_id === me?.id ? "You’re" : `${displayName(people.get(ahead.user_id)).split(" ")[0]}’s`} ahead at chapter ${ahead.reached}` : null, before ? `${before} read it before` : null].filter(Boolean).join(" · ") || "See the pace board"}
+                  {[ahead && (ahead.reached ?? 0) > 0 ? `${ahead.user_id === me?.id ? "You’re" : `${displayName(people.get(ahead.user_id)).split(" ")[0]}’s`} ahead at ${atLabel(current.unit, ahead.reached ?? 0)}` : null, before ? `${before} read it before` : null].filter(Boolean).join(" · ") || "See the pace board"}
                 </span>
               </span>
               <span aria-hidden="true" className="muted">›</span>
@@ -298,13 +298,13 @@ function Inner() {
                       <li key={w}>
                         {open ? (
                           <Link href={`/clubs/${id}/week/${w}`} className="rooms__row">
-                            <span className="rooms__label"><strong>{label}</strong> <span className="muted">· {weekRange(current.plan, w)}</span></span>
+                            <span className="rooms__label"><strong>{label}</strong> <span className="muted">· {weekRange(current.plan, w, current.unit)}</span></span>
                             <span className="muted" style={{ fontSize: 13 }}>{n ? `${n} comment${n === 1 ? "" : "s"}` : "No comments yet"}</span>
                           </Link>
                         ) : (
                           <span className="rooms__row rooms__locked">
                             <LockIcon size={14} />
-                            <span className="rooms__label">{label} <span className="muted">· {w === WHOLE_BOOK ? "opens when you finish" : `opens at chapter ${current.plan[w - 1].through}`}</span></span>
+                            <span className="rooms__label">{label} <span className="muted">· {w === WHOLE_BOOK ? "opens when you finish" : `opens at ${atLabel(current.unit, current.plan[w - 1].through)}`}</span></span>
                             {n > 0 && <span className="muted" style={{ fontSize: 13 }}>{n} waiting</span>}
                           </span>
                         )}
