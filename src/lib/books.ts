@@ -40,6 +40,8 @@ function cleanKoreanTitle(title: string): string {
   if (!/\p{Script=Hangul}/u.test(title)) return title;
   return title
     .replace(KOREAN_EDITION, "")
+    // Series labels at the end, often repeated: "아몬드(창비청소년문학 78)(창비청소년문학 78)".
+    .replace(/(?:\s*[(\[][^()[\]]*(?:\d|문학|문고|총서|시리즈|전집|선집|클래식)[^()[\]]*[)\]])+\s*$/u, "")
     // " - prize winner / tagline" after the title (a spaced dash, so 1984-style titles survive).
     .replace(/\s+[-–—]\s+.*$/, "")
     .trim();

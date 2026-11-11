@@ -73,6 +73,9 @@ describe("Korean store titles", () => {
     expect(cleanTitle("소년이 온다 [큰글자책]")).toBe("소년이 온다");
     expect(cleanTitle("82년생 김지영 (개정판)")).toBe("82년생 김지영");
     expect(cleanTitle("작별하지 않는다")).toBe("작별하지 않는다");
+    expect(cleanTitle("아몬드(창비청소년문학 78)(창비청소년문학 78)")).toBe("아몬드");
+    expect(cleanTitle("데미안 (민음사 세계문학전집 44)")).toBe("데미안");
+    expect(cleanTitle("82년생 김지영")).toBe("82년생 김지영");
     expect(cleanTitle("Mrs. Dalloway - A Novel")).toBe("Mrs. Dalloway - A Novel");
   });
 });
