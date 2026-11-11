@@ -60,9 +60,17 @@ async function volumes(params: Record<string, string>, signal?: AbortSignal): Pr
   return (items ?? []).map(fromVolume).filter((b): b is BookInput => b !== null);
 }
 
-/** Books matching a search, in one language (Google's two-letter code). */
-export function googleSearch(q: string, lang: string, signal?: AbortSignal): Promise<BookInput[]> {
-  return volumes({ q, langRestrict: lang }, signal).catch(() => []);
+/**
+ * Books matching a search, in one language (Google's two-letter code). Two
+ * queries at once: by title (Google's plain search ranks loosely, so the book
+ * itself can miss the list) and the plain one, which also finds authors.
+ */
+export async function googleSearch(q: string, lang: string, signal?: AbortSignal): Promise<BookInput[]> {
+  const [byTitle, plain] = await Promise.all([
+    volumes({ q: `intitle:${q}`, langRestrict: lang }, signal).catch(() => [] as BookInput[]),
+    volumes({ q, langRestrict: lang }, signal).catch(() => [] as BookInput[]),
+  ]);
+  return [...byTitle, ...plain];
 }
 
 /** The book with this ISBN, if Google knows it. */

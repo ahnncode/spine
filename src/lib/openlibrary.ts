@@ -196,8 +196,20 @@ function withApple(ol: BookInput[], apple: BookInput[], query: string): BookInpu
   // Searching in Korean: Apple's Korean store usually knows these books best, so lead with it.
   if (nativeScript(query)) {
     // Searching in Korean: drop English books that only matched loosely (아몬드 → Amor Towles).
-    const olKept = ol.filter((b) => covers(b, q));
-    const all = [...fits, ...olKept, ...extra.filter((b) => !fits.includes(b) && nativeScript(b.title)).slice(0, 4)];
+    // Only books with the search in their title or author (Google also matches on descriptions).
+    // Open Library sometimes has only the romanized author ("Wŏn-p'yŏng Son"):
+    // when Google has the same title with the author in Korean, use Google's.
+    const used = new Set<BookInput>();
+    const olKept = ol.filter((b) => covers(b, q)).map((b) => {
+      if (nativeScript(b.author)) return b;
+      const twin = apple.find((g) => !used.has(g) && norm(g.title) === norm(b.title) && nativeScript(g.author));
+      if (!twin) return b;
+      used.add(twin);
+      return { ...b, author: twin.author, cover_url: b.cover_id ? b.cover_url : (twin.cover_url ?? b.cover_url) };
+    });
+    const kept = new Set(olKept.map((b) => dedupeKey(b.title, b.author)));
+    const fitsLeft = fits.filter((b) => !used.has(b) && !kept.has(dedupeKey(b.title, b.author)));
+    const all = [...fitsLeft, ...olKept];
     // The exact title first, then titles that start with the search, then the rest (sort is stable).
     const nq = norm(query);
     const closeness = (b: BookInput) => (norm(b.title) === nq ? 2 : norm(b.title).startsWith(nq) ? 1 : 0);
