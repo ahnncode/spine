@@ -1,0 +1,65 @@
+import { describe, expect, it } from "vitest";
+import { dedupeKey, sameBookKey } from "./books";
+import { genresFromApple } from "./genres";
+import { authorToCheck } from "./openlibrary";
+import { appleCountry, fold, isbnCountry, nativeScript, openLibraryLanguage } from "./scripts";
+
+describe("Korean and other non-Latin books", () => {
+  it("gives every Korean book its own catalogue key", () => {
+    const keys = [
+      dedupeKey("채식주의자", "한강"),
+      dedupeKey("소년이 온다", "한강"),
+      dedupeKey("아몬드", "손원평"),
+      dedupeKey("82년생 김지영", "조남주"),
+    ];
+    expect(new Set(keys).size).toBe(4);
+    for (const k of keys) expect(k.split("|")[0]).not.toBe("");
+    expect(dedupeKey("채식주의자", "한강")).toBe("채식주의자|한강");
+  });
+
+  it("keeps Korean syllables whole (no stray jamo)", () => {
+    expect(fold("채식주의자")).toBe("채식주의자");
+    expect(fold("Éclair")).toBe("eclair");
+  });
+
+  it("still matches the same Korean book with a subtitle", () => {
+    expect(dedupeKey("소년이 온다: 한강 장편소설", "한강")).toBe(dedupeKey("소년이 온다", "한강"));
+  });
+
+  it("keeps Japanese, Chinese and Russian titles apart too", () => {
+    expect(new Set([dedupeKey("ノルウェイの森", "村上春樹"), dedupeKey("三体", "刘慈欣"), dedupeKey("Мастер и Маргарита", "Булгаков")]).size).toBe(3);
+  });
+
+  it("leaves English keys exactly as they were", () => {
+    expect(dedupeKey("The Remains of the Day", "Kazuo Ishiguro")).toBe("remains of day|ishiguro");
+    expect(dedupeKey("Søren's Café: A Novel", "Anne Brontë")).toBe("s ren s cafe|bronte");
+    expect(sameBookKey("a confed of dunces|toole", "a confederacy of dunces|toole")).toBe(true);
+  });
+
+  it("knows which store and language to search", () => {
+    expect(nativeScript("채식주의자")).toBe("ko");
+    expect(nativeScript("ノルウェイの森")).toBe("ja");
+    expect(nativeScript("三体")).toBe("zh");
+    expect(nativeScript("Piranesi")).toBeNull();
+    expect(appleCountry("아몬드")).toBe("kr");
+    expect(appleCountry("Piranesi")).toBe("us");
+    expect(openLibraryLanguage("아몬드")).toEqual({ lang: "ko", edition: "kor" });
+    expect(isbnCountry("9788936434120")).toBe("kr");
+    expect(isbnCountry("9791190090018")).toBe("kr");
+    expect(isbnCountry("9780316069359")).toBe("us");
+  });
+
+  it("keeps a Korean book's author in Korean", () => {
+    expect(authorToCheck({ title: "채식주의자", author: "한강" })).toBeNull();
+    expect(authorToCheck({ title: "The Vegetarian", author: "한강" })).toEqual(["한강"]);
+  });
+
+  it("reads Apple's Korean genre names", () => {
+    expect(genresFromApple(["소설", "추리/미스터리"])).toEqual(["mystery"]);
+    expect(genresFromApple(["판타지"])).toEqual(["fantasy"]);
+    expect(genresFromApple(["에세이"])).toEqual(["essays"]);
+    expect(genresFromApple(["역사 소설"])).toEqual(["historical"]);
+    expect(genresFromApple(["한국 소설"])).toEqual(["literary"]);
+    expect(genresFromApple(["자기계발"])).toEqual(["business"]);
+  });
+});

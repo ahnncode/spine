@@ -9,6 +9,7 @@ import {
 } from "@/lib/clubs";
 import { ensureBook, fetchBooks, suggestChapters } from "@/lib/data";
 import { searchBooks } from "@/lib/openlibrary";
+import { nativeScript } from "@/lib/scripts";
 import { shortDate, today } from "./ClubBits";
 
 function addDays(day: string, n: number): string {
@@ -61,7 +62,8 @@ export function ClubPick({
   }, [listId, editing]);
 
   useEffect(() => {
-    if (step !== "book" || query.trim().length < 3) return;
+    // Korean titles can be two syllables (토지), so they search sooner.
+    if (step !== "book" || query.trim().length < (nativeScript(query) ? 2 : 3)) return;
     const ctl = new AbortController();
     const t = setTimeout(() => {
       setSearching(true);
@@ -186,7 +188,7 @@ export function ClubPick({
               <label htmlFor="pick-search" className="visually-hidden">Search for a book</label>
               <input id="pick-search" className="input" type="search" style={{ marginTop: 8, width: "100%" }} placeholder="Title or author" value={query} onChange={(e) => setQuery(e.target.value)} />
               {searching && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>Searching…</p>}
-              {!searching && query.trim().length >= 3 && results.length === 0 && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>No books found. Try the author&rsquo;s name too.</p>}
+              {!searching && query.trim().length >= (nativeScript(query) ? 2 : 3) && results.length === 0 && <p className="muted" style={{ margin: "10px 0 0", fontSize: 13 }}>No books found. Try the author&rsquo;s name too.</p>}
               <ul className="club-list">
                 {results.map((b, i) => (
                   <li key={`${b.title}-${i}`}>

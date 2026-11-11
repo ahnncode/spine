@@ -1,4 +1,5 @@
 import { isLatin, nameWords } from "./authors";
+import { NOT_A_KEY_CHAR, appleCountry, fold } from "./scripts";
 
 /**
  * Backup cover art from Apple's book catalogue, for books Open Library has
@@ -13,12 +14,9 @@ interface AppleResult {
 }
 
 function norm(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
+  return fold(s)
     .split(":")[0]
-    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(NOT_A_KEY_CHAR, " ")
     .replace(/^(the|a|an) /, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -42,7 +40,8 @@ export function bigArtwork(url: string): string {
 /** The same book in Apple's catalogue: its cover and its genre names. */
 export async function findAppleBook(title: string, author: string | null): Promise<{ cover: string | null; genres: string[] } | null> {
   const term = [title.split(":")[0].replace(/[()[\]]/g, " "), author ?? ""].join(" ").replace(/\s+/g, " ").trim();
-  const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: "us" });
+  // Korean books: Apple's Korean store.
+  const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: appleCountry(title) });
   const res = await fetch(`https://itunes.apple.com/search?${params}`);
   if (!res.ok) throw new Error(`Apple lookup failed (${res.status})`);
   const { results } = (await res.json()) as { results?: AppleResult[] };

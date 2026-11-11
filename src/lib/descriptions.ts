@@ -1,3 +1,4 @@
+import { NOT_A_KEY_CHAR, appleCountry, nativeScript } from "./scripts";
 import { isLatin } from "./authors";
 import { lookup } from "./openlibrary";
 
@@ -90,8 +91,9 @@ export function titleWords(title: string): string[] {
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
+    .normalize("NFC")
     .replace(/&/g, " and ")
-    .replace(/[^a-z0-9 ]/g, " ")
+    .replace(NOT_A_KEY_CHAR, " ")
     .split(/\s+/)
     .filter(Boolean)
     .filter((w, i) => !(i === 0 && ["the", "a", "an"].includes(w)))
@@ -114,14 +116,15 @@ async function fromApple(book: { title: string; author: string | null }): Promis
   // Search without series markers like "(Book I)", which Apple's titles rarely have.
   const plain = book.title.split(":")[0].replace(/\((?:book|vol\.?|volume)?\s*[\divx]+\)/gi, " ").replace(/[()[\]]/g, " ");
   const term = [plain, book.author ?? ""].join(" ").replace(/\s+/g, " ").trim();
-  const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: "us" });
+  const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: appleCountry(book.title) });
   const res = await fetch(`https://itunes.apple.com/search?${params}`);
   if (!res.ok) return null;
   const { results } = (await res.json()) as { results?: Array<{ trackName?: string; artistName?: string; description?: string }> };
   const hit = (results ?? []).find((r) => r.description && sameTitle(book, r));
   if (!hit?.description) return null;
   const text = cleanDescription(hit.description);
-  return text.length >= MIN && looksEnglish(text) ? text : null;
+  // A Korean book's description is in Korean, which is what its readers want.
+  return text.length >= MIN && (looksEnglish(text) || nativeScript(book.title) !== null) ? text : null;
 }
 
 export async function findDescription(book: {
