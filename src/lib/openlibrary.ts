@@ -2,6 +2,7 @@ import { englishAuthorName, isLatin } from "./authors";
 import { cleanTitle, dedupeKey, sameBookKey, type BookInput } from "./books";
 import { genresFromApple, genresFromSubjects } from "./genres";
 import { findAppleBook } from "./applecovers";
+import { googleIsbn, googleSearch } from "./googlebooks";
 import { NOT_A_KEY_CHAR, NOT_A_WORD_CHAR, appleCountry, fold, isbnCountry, nativeScript, openLibraryLanguage } from "./scripts";
 
 interface OLDoc {
@@ -66,8 +67,11 @@ export function authorToCheck(book: BookInput): string[] | null {
 function toBook(d: OLDoc, isbn13?: string, nativeLanguage?: string): BookInput {
   const en = englishEdition(d, nativeLanguage ?? "eng");
   const native = d.author_name?.[0] ?? null;
-  // Searched in Korean (or another script): keep the author as written.
-  const english = nativeLanguage ? { name: native, guessed: false } : englishAuthorName(native, d.author_alternative_name);
+  // Searched in Korean (or another script): use the author's name in that
+  // script when Open Library has it (it often lists "Wŏn-p'yŏng Son" first).
+  const script = nativeScript(en?.title ?? d.title);
+  const inScript = script ? [...(d.author_name ?? []), ...(d.author_alternative_name ?? [])].find((n) => nativeScript(n) === script && !n.includes(";")) : undefined;
+  const english = nativeLanguage ? { name: inScript ?? native, guessed: false } : englishAuthorName(native, d.author_alternative_name);
   const title = cleanTitle(en?.title ?? d.title);
   if (!nativeLanguage && (english.guessed || (english.name && !isLatin(english.name)))) {
     const alts = (d.author_alternative_name ?? []).filter((a) => isLatin(a) && !a.includes(";"));
@@ -220,7 +224,8 @@ export async function searchBooks(query: string, signal?: AbortSignal, onResults
       if (!finalDone) onResults?.(tidy(docs, q), false);
     })
     .catch(() => {});
-  const apple = appleSearch(q, signal).catch(() => [] as BookInput[]);
+  // Korean: Google Books (Apple doesn't sell books in Korea). Other scripts and English: Apple.
+  const apple = (nativeScript(q) === "ko" ? googleSearch(q, "ko", signal) : appleSearch(q, signal)).catch(() => [] as BookInput[]);
   const english = search({ q, limit: "25", lang }, signal, ENGLISH_FIELDS).then(async (docs) => {
     finalDone = true;
     const books = withApple(tidy(docs, q), await apple, q);
@@ -248,7 +253,8 @@ export async function findByIsbn(isbn: string): Promise<BookInput | null> {
     const native = nativeScript(docs[0].title) ? openLibraryLanguage(docs[0].title).edition : undefined;
     return toBook(docs[0], isbn.length === 13 ? isbn : undefined, native);
   }
-  return appleIsbn(isbn);
+  if (isbnCountry(isbn) === "kr") return (await googleIsbn(isbn).catch(() => null)) ?? appleIsbn(isbn);
+  return (await appleIsbn(isbn)) ?? (await googleIsbn(isbn).catch(() => null));
 }
 
 async function appleIsbn(isbn: string): Promise<BookInput | null> {

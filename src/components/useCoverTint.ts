@@ -7,7 +7,7 @@ import { coverCandidates, coverColors, dedupeKey, type BookInput } from "@/lib/b
 const cache = new Map<string, string>();
 
 const FALLBACK = "fallback";
-const PROXY_HOSTS = /^https:\/\/(covers\.openlibrary\.org|is\d-ssl\.mzstatic\.com)\//;
+const PROXY_HOSTS = /^https:\/\/(covers\.openlibrary\.org|is\d-ssl\.mzstatic\.com|books\.google\.com)\//;
 
 /** Average a cover down to one colour, nudged away from grey so it reads as a tint. */
 function sample(img: HTMLImageElement): string | null {
