@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Cover } from "@/components/Cover";
 import type { Book, BookInput } from "@/lib/books";
 import {
-  bookForListItem, buildPlan, fetchListItems, planProblem, startRead, updateRead,
-  type ClubRead, type ListItem, type PlanWeek,
+  bookChapterGuess, bookForListItem, buildPlan, fetchListItems, openLibraryChapters, planProblem, startRead, updateRead,
+  type ClubRead, type ListItem, type PlanUnit, type PlanWeek,
 } from "@/lib/clubs";
 import { ensureBook, fetchBooks, suggestChapters } from "@/lib/data";
 import { searchBooks } from "@/lib/openlibrary";
@@ -21,8 +21,9 @@ type Picked = { bookId: string; book: Book; listPosition: number | null };
 
 /**
  * The host picks the club's next book (from its list, or any book), sets the
- * dates, and gets a weekly plan split from the chapter count, which they can
- * adjust, with questions for each week. With `editing`, it edits the current
+ * dates, and gets a weekly plan, which they can adjust, with questions for
+ * each week. The plan splits the book by chapter when we can find the
+ * chapter count (readread readers, then Open Library), else by percent. With `editing`, it edits the current
  * read's finish date, plan and questions instead.
  */
 export function ClubPick({
@@ -46,7 +47,11 @@ export function ClubPick({
   const [picked, setPicked] = useState<Picked | null>(editing ? { bookId: editing.book.id, book: editing.book, listPosition: editing.read.list_position } : null);
   const [starts, setStarts] = useState(editing?.read.starts_on ?? today());
   const [ends, setEnds] = useState(editing?.read.ends_on ?? addDays(today(), 28));
-  const [chapters, setChapters] = useState<string>(editing ? String(editing.read.plan.at(-1)?.through ?? "") : "");
+  const [unit, setUnit] = useState<PlanUnit>(editing?.read.unit ?? "chapter");
+  const [chapters, setChapters] = useState<string>(editing && (editing.read.unit ?? "chapter") === "chapter" ? String(editing.read.plan.at(-1)?.through ?? "") : editing?.book.chapters ? String(editing.book.chapters) : "");
+  /** Where the chapter count came from, to show the host. */
+  const [source, setSource] = useState<string | null>(null);
+  const [looking, setLooking] = useState(false);
   const [plan, setPlan] = useState<PlanWeek[]>(editing?.read.plan ?? []);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +77,9 @@ export function ClubPick({
   }, [query, step]);
 
   const n = parseInt(chapters, 10);
-  // Rebuild the plan whenever the dates or chapter count change (not while editing an existing plan).
-  const autoPlan = useMemo(() => (n > 0 && ends > starts ? buildPlan(n, starts, ends) : []), [n, starts, ends]);
+  const total = unit === "percent" ? 100 : n;
+  // Rebuild the plan whenever the dates, unit or chapter count change (not while editing an existing plan).
+  const autoPlan = useMemo(() => (total > 0 && ends > starts ? buildPlan(total, starts, ends) : []), [total, starts, ends]);
   const [touched, setTouched] = useState(Boolean(editing));
   const weeks = touched ? plan : autoPlan;
 
@@ -84,8 +90,24 @@ export function ClubPick({
       const id = await load();
       const [book] = await fetchBooks([id]);
       setPicked({ bookId: id, book, listPosition });
-      setChapters(book?.chapters ? String(book.chapters) : "");
+      setTouched(false);
       setStep("plan");
+      // Find the chapter count so the host doesn't have to.
+      setLooking(true);
+      let count: number | null = book?.chapters ?? null;
+      let from: string | null = count ? "readread" : null;
+      if (!count) {
+        count = await bookChapterGuess(id);
+        if (count) from = "other readers";
+      }
+      if (!count) {
+        count = await openLibraryChapters(book?.ol_work_key);
+        if (count) from = "Open Library";
+      }
+      setLooking(false);
+      setChapters(count ? String(count) : "");
+      setSource(from);
+      setUnit(count ? "chapter" : "percent");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t find that book");
     } finally {
@@ -101,17 +123,17 @@ export function ClubPick({
 
   async function save() {
     if (!picked) return;
-    if (!(n > 0)) return setError("How many chapters does it have?");
+    if (unit === "chapter" && !(n > 0)) return setError("How many chapters does it have? Or split by percent instead.");
     if (!(ends > starts)) return setError("The finish date has to be after the start");
-    const problem = planProblem(touched ? plan : autoPlan, n);
+    const problem = planProblem(touched ? plan : autoPlan, total, unit);
     if (problem) return setError(problem);
     const final = (touched ? plan : autoPlan).map((w) => ({ ...w, questions: (w.questions ?? []).map((q) => q.trim()).filter(Boolean) }));
     setBusy("save");
     setError(null);
     try {
-      if (!picked.book.chapters) await suggestChapters(picked.bookId, n).catch(() => {});
-      if (editing) await updateRead(editing.read.id, ends, final);
-      else await startRead(clubId, picked.bookId, starts, ends, final, picked.listPosition);
+      if (unit === "chapter" && !picked.book.chapters) await suggestChapters(picked.bookId, n).catch(() => {});
+      if (editing) await updateRead(editing.read.id, ends, final, unit);
+      else await startRead(clubId, picked.bookId, starts, ends, final, picked.listPosition, unit);
       await onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn’t save that");
@@ -194,7 +216,7 @@ export function ClubPick({
                 <button type="button" className="link-btn" style={{ minHeight: 36 }} onClick={() => setStep("book")}>Change</button>
               </div>
             )}
-            <div style={{ display: "grid", gridTemplateColumns: editing ? "1fr 1fr" : "1fr 1fr 1fr", gap: 10, marginTop: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: editing ? "1fr" : "1fr 1fr", gap: 10, marginTop: 14 }}>
               {!editing && (
                 <label className="field-label" style={{ margin: 0 }}>Starts
                   <input className="input" type="date" value={starts} style={{ marginTop: 6 }} onChange={(e) => { setStarts(e.target.value); setTouched(false); }} />
@@ -203,15 +225,36 @@ export function ClubPick({
               <label className="field-label" style={{ margin: 0 }}>Finishes
                 <input className="input" type="date" value={ends} style={{ marginTop: 6 }} onChange={(e) => { setEnds(e.target.value); setTouched(false); }} />
               </label>
-              <label className="field-label" style={{ margin: 0 }}>Chapters
-                <input className="input" inputMode="numeric" value={chapters} placeholder="?" style={{ marginTop: 6 }} onChange={(e) => { setChapters(e.target.value.replace(/\D/g, "").slice(0, 3)); setTouched(false); }} />
-              </label>
             </div>
+
+            <fieldset className="plain-fieldset" style={{ marginTop: 14 }}>
+              <legend className="field-label">Split the book by</legend>
+              <div className="seg" role="radiogroup" aria-label="Split the book by">
+                <button type="button" role="radio" aria-checked={unit === "chapter"} onClick={() => { setUnit("chapter"); setTouched(false); }}>Chapters</button>
+                <button type="button" role="radio" aria-checked={unit === "percent"} onClick={() => { setUnit("percent"); setTouched(false); }}>Percent</button>
+              </div>
+              {looking ? (
+                <p className="muted" style={{ margin: "8px 0 0", fontSize: 13 }}>Looking up how many chapters it has…</p>
+              ) : unit === "chapter" ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
+                  <label htmlFor="pick-chapters" className="field-label" style={{ margin: 0, whiteSpace: "nowrap" }}>Chapters</label>
+                  <input id="pick-chapters" className="input" inputMode="numeric" value={chapters} placeholder="?" style={{ width: 84 }} onChange={(e) => { setChapters(e.target.value.replace(/\D/g, "").slice(0, 3)); setSource(null); setTouched(false); }} />
+                  <span className="muted" style={{ fontSize: 12, lineHeight: 1.35 }}>
+                    {source ? `Found via ${source}. Check it matches your edition.` : "Not sure? Split by percent instead."}
+                  </span>
+                </div>
+              ) : (
+                <p className="muted" style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.45 }}>
+                  {!editing && !chapters ? "We couldn’t find the chapter count, so each week covers a share of the book instead. " : "Each week covers a share of the book. "}
+                  Members can check in by chapter, page or percent.
+                </p>
+              )}
+            </fieldset>
             {weeks.length > 0 ? (
               <section aria-label="Weekly plan" className="card" style={{ marginTop: 14, padding: 0, overflow: "hidden" }}>
                 <div className="club-plan-row" style={{ background: "var(--ground)" }}>
                   <span className="eyebrow">Weekly plan</span>
-                  <span className="muted" style={{ fontSize: 12 }}>Read through chapter</span>
+                  <span className="muted" style={{ fontSize: 12 }}>{unit === "percent" ? "Read to %" : "Read through chapter"}</span>
                 </div>
                 {weeks.map((w, i) => (
                   <div key={i} className="club-plan-row" style={{ gridTemplateColumns: "1fr 84px" }}>
@@ -227,12 +270,12 @@ export function ClubPick({
                         onChange={(e) => editWeek(i, { questions: e.target.value.split("\n") })}
                       />
                     </span>
-                    <input className="input" inputMode="numeric" aria-label={`Week ${i + 1}: read through chapter`} value={w.through} onChange={(e) => editWeek(i, { through: Math.max(1, parseInt(e.target.value.replace(/\D/g, ""), 10) || 1) })} />
+                    <input className="input" inputMode="numeric" aria-label={unit === "percent" ? `Week ${i + 1}: read to percent` : `Week ${i + 1}: read through chapter`} value={w.through} onChange={(e) => editWeek(i, { through: Math.max(1, Math.min(unit === "percent" ? 100 : 999, parseInt(e.target.value.replace(/\D/g, ""), 10) || 1)) })} />
                   </div>
                 ))}
               </section>
             ) : (
-              <p className="muted" style={{ marginTop: 14, fontSize: 14 }}>Add the chapter count and the weekly plan fills itself in.</p>
+              <p className="muted" style={{ marginTop: 14, fontSize: 14 }}>{looking ? "" : unit === "chapter" ? "Add the chapter count and the weekly plan fills itself in." : "Pick a finish date after the start and the weekly plan fills itself in."}</p>
             )}
             {error && <p className="error" role="alert">{error}</p>}
             <div className="stack" style={{ marginTop: 18 }}>

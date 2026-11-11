@@ -47,3 +47,16 @@ describe("planProblem", () => {
     expect(planProblem([wk(5), wk(20)], 22)).toMatch(/chapter 22/);
   });
 });
+
+describe("percent plans", () => {
+  it("splits 100% into weekly shares", () => {
+    const plan = buildPlan(100, "2026-12-07", "2027-01-04");
+    expect(plan.map((w) => w.through)).toEqual([25, 50, 75, 100]);
+  });
+  it("labels weeks by percent", () => {
+    const plan = buildPlan(100, "2026-12-07", "2027-01-04");
+    expect(weekRange(plan, 1, "percent")).toBe("Up to 25%");
+    expect(weekRange(plan, 2, "percent")).toBe("25–50%");
+    expect(planProblem([{ through: 25, due: "x" }, { through: 90, due: "y" }], 100, "percent")).toMatch(/100%/);
+  });
+});

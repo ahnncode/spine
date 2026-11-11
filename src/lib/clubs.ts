@@ -49,8 +49,11 @@ export interface ClubCard {
   ends_on: string | null;
 }
 
+/** A read's plan is in chapters, or in percent when nobody knows the chapter count. */
+export type PlanUnit = "chapter" | "percent";
+
 export interface PlanWeek {
-  /** Last chapter to have read by the end of this week. */
+  /** Where to have read to by the end of this week: a chapter, or a percent. */
   through: number;
   /** YYYY-MM-DD. */
   due: string;
@@ -65,6 +68,8 @@ export interface ClubRead {
   starts_on: string;
   ends_on: string;
   plan: PlanWeek[];
+  /** Older rows predate the column; treat missing as chapter. */
+  unit?: PlanUnit;
   finished_at: string | null;
   created_at: string;
 }
@@ -205,13 +210,66 @@ export async function friendsInClubs(clubIds: string[], following: string[]): Pr
 }
 
 /** Problems with a weekly plan, or null if it's fine. */
-export function planProblem(plan: PlanWeek[], chapters: number): string | null {
+export function planProblem(plan: PlanWeek[], total: number, unit: PlanUnit = "chapter"): string | null {
   for (let i = 0; i < plan.length; i++) {
-    if (!(plan[i].through >= 1)) return `Week ${i + 1} needs a chapter`;
+    if (!(plan[i].through >= 1)) return unit === "percent" ? `Week ${i + 1} needs a percent` : `Week ${i + 1} needs a chapter`;
     if (i > 0 && plan[i].through <= plan[i - 1].through) return `Week ${i + 1} has to end after week ${i}`;
   }
-  if (plan.length && plan[plan.length - 1].through !== chapters) return `The last week should end at chapter ${chapters}`;
+  if (plan.length && plan[plan.length - 1].through !== total) {
+    return unit === "percent" ? "The last week should end at 100%" : `The last week should end at chapter ${total}`;
+  }
   return null;
+}
+
+/** "chapter 7" or "40%". */
+export function atLabel(unit: PlanUnit | undefined, n: number): string {
+  return unit === "percent" ? `${n}%` : `chapter ${n}`;
+}
+
+/** "3 chapters behind" or "12% behind". */
+export function behindLabel(unit: PlanUnit | undefined, n: number): string {
+  return unit === "percent" ? `${n}% behind` : `${n} chapter${n === 1 ? "" : "s"} behind`;
+}
+
+/** The chapter count other readers have entered for a book, or null. */
+export async function bookChapterGuess(bookId: string): Promise<number | null> {
+  const { data, error } = await supabase().rpc("book_chapter_guess", { p_book: bookId });
+  if (error) return null;
+  const n = Number(data);
+  return n >= 1 && n <= 999 ? n : null;
+}
+
+const NOT_A_CHAPTER = /contents|acknowledg|about the author|copyright|dedication|index|bibliograph|title page|also by|praise|epigraph|author'?s note|notes|glossary|reading group|cover/i;
+const CHAPTER_LIKE = /^(chapter|ch\.?)\s+\w+|^\d{1,3}\.?$|^[ivxlc]{1,7}\.?$/i;
+
+/**
+ * Count chapters from an Open Library edition's table of contents, if any
+ * edition has one. Best effort: modern novels often have none.
+ */
+export async function openLibraryChapters(workKey: string | null | undefined, signal?: AbortSignal): Promise<number | null> {
+  if (!workKey) return null;
+  const key = workKey.startsWith("/works/") ? workKey : `/works/${workKey.replace(/^\/+/, "")}`;
+  try {
+    const res = await fetch(`https://openlibrary.org${key}/editions.json?limit=50`, { signal });
+    if (!res.ok) return null;
+    const { entries } = (await res.json()) as { entries?: Array<{ table_of_contents?: Array<{ level?: number; title?: string; label?: string }> }> };
+    const counts: number[] = [];
+    for (const e of entries ?? []) {
+      const toc = (e.table_of_contents ?? []).filter((t) => (t.level ?? 0) === 0 && (t.title || t.label));
+      if (toc.length < 3) continue;
+      const names = toc.map((t) => `${t.label ?? ""} ${t.title ?? ""}`.trim());
+      const chapterLike = toc.filter((t) => CHAPTER_LIKE.test((t.title ?? "").trim()) || CHAPTER_LIKE.test((t.label ?? "").trim())).length;
+      const n = chapterLike >= 3 ? chapterLike : names.filter((x) => !NOT_A_CHAPTER.test(x)).length;
+      if (n >= 3 && n <= 150) counts.push(n);
+    }
+    if (!counts.length) return null;
+    // The most common count across editions.
+    const tally = new Map<number, number>();
+    for (const n of counts) tally.set(n, (tally.get(n) ?? 0) + 1);
+    return [...tally.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0][0];
+  } catch {
+    return null;
+  }
 }
 
 export async function leaveClub(clubId: string): Promise<void> {
@@ -275,16 +333,16 @@ export async function fetchRead(readId: string): Promise<ClubRead | null> {
   return (data as ClubRead | null) ?? null;
 }
 
-export async function startRead(clubId: string, bookId: string, starts: string, ends: string, plan: PlanWeek[], listPosition?: number | null): Promise<string> {
+export async function startRead(clubId: string, bookId: string, starts: string, ends: string, plan: PlanWeek[], listPosition?: number | null, unit: PlanUnit = "chapter"): Promise<string> {
   const { data, error } = await supabase().rpc("start_club_read", {
-    p_club: clubId, p_book: bookId, p_starts: starts, p_ends: ends, p_plan: plan, p_list_position: listPosition ?? null,
+    p_club: clubId, p_book: bookId, p_starts: starts, p_ends: ends, p_plan: plan, p_list_position: listPosition ?? null, p_unit: unit,
   });
   if (error) throw new Error(error.message);
   return data as string;
 }
 
-export async function updateRead(readId: string, ends: string, plan: PlanWeek[]): Promise<void> {
-  const { error } = await supabase().rpc("update_club_read", { p_read: readId, p_ends: ends, p_plan: plan });
+export async function updateRead(readId: string, ends: string, plan: PlanWeek[], unit?: PlanUnit): Promise<void> {
+  const { error } = await supabase().rpc("update_club_read", { p_read: readId, p_ends: ends, p_plan: plan, p_unit: unit ?? null });
   if (error) throw new Error(error.message);
 }
 
@@ -372,9 +430,14 @@ export function currentWeek(plan: PlanWeek[], today: string): number {
   return i === -1 ? plan.length : i + 1;
 }
 
-/** "Chapters 4–6" for week N of a plan. */
-export function weekRange(plan: PlanWeek[], week: number): string {
+/** "Chapters 4–6" (or "25–50%") for week N of a plan. */
+export function weekRange(plan: PlanWeek[], week: number, unit: PlanUnit = "chapter"): string {
   if (week === WHOLE_BOOK) return "The whole book";
+  if (unit === "percent") {
+    const from = week === 1 ? 0 : (plan[week - 2]?.through ?? 0);
+    const to = plan[week - 1]?.through ?? 100;
+    return from === 0 ? `Up to ${to}%` : `${from}–${to}%`;
+  }
   const from = week === 1 ? 1 : (plan[week - 2]?.through ?? 0) + 1;
   const to = plan[week - 1]?.through ?? from;
   return from >= to ? `Chapter ${to}` : `Chapters ${from}–${to}`;

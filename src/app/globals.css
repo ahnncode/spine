@@ -1157,7 +1157,7 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .pace-row__bar > span { display: block; height: 100%; background: var(--ink); border-radius: 5px; }
 .pace-row__bar > span.behind { background: #C2410C; }
 .club-notice { padding: 12px 14px; border-radius: var(--radius-m); background: var(--amber-soft); color: var(--amber-ink); font-size: 14px; line-height: 1.45; }
-.pace-row__n { width: 28px; text-align: right; font-size: 12px; }
+.pace-row__n { width: 36px; text-align: right; font-size: 12px; }
 .pace-board { position: relative; display: flex; flex-direction: column; gap: 14px; }
 .pace-board__line { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #9A3412; opacity: 0.6; pointer-events: none; }
 .club-questions { margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-l); background: var(--amber-soft); color: var(--amber-ink); }
