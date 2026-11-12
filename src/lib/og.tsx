@@ -11,6 +11,8 @@ import type { PublicBookCard } from "@/lib/public";
 
 export const INK = "#111111";
 export const GROUND = "#F7F7F5";
+import { MarkSvg } from "./logoMark";
+
 export const ACCENT = "#FF5A1F";
 export const MUTED = "#5E5E5A";
 
@@ -36,14 +38,7 @@ export function ogFonts() {
 }
 
 export function Mark({ s }: { s: number }) {
-  const bar = (w: string, color: string) => <div style={{ display: "flex", height: s * 0.15, width: w, borderRadius: s * 0.04, background: color }} />;
-  return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: s * 0.07, width: s, height: s, borderRadius: s * 0.23, background: INK, padding: `0 ${s * 0.2}px` }}>
-      {bar("100%", ACCENT)}
-      {bar("80%", "#FFFFFF")}
-      {bar("60%", "rgba(255,255,255,0.55)")}
-    </div>
-  );
+  return <MarkSvg size={s} />;
 }
 
 export function Wordmark({ s = 40 }: { s?: number }) {
