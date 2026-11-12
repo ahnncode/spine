@@ -199,12 +199,12 @@ function ReaderTypePage() {
         <details className="card rt-how" style={{ marginTop: 36 }}>
           <summary style={{ fontWeight: 600, cursor: "pointer" }}>How your type is worked out</summary>
           <ul>
-            <li><b>From what you do, not what you say.</b> Your genres, your rankings, your tags, your dates and how many books you keep going at once. There&rsquo;s no quiz to game.</li>
-            <li><b>Spectrums, not boxes.</b> Each letter is a lean, with a percentage. When you&rsquo;re near even we say so, because that letter could flip.</li>
-            <li><b>Careful with small shelves.</b> With only a few books, every spectrum is pulled toward the middle until there&rsquo;s enough to go on.</li>
+            <li><b>It comes from your shelf.</b> Your genres, your rankings, your tags, your dates and how many books you keep going at once. There&rsquo;s no quiz to game.</li>
+            <li><b>Each letter is a lean.</b> It comes with a percentage. When you&rsquo;re near even we say so, because that letter could flip.</li>
+            <li><b>Small shelves read as middling.</b> With only a few books, every letter sits near the middle until there&rsquo;s enough to go on.</li>
             <li><b>It moves with you.</b> Your type is recalculated as you rank. Readers change, and so can this.</li>
-            <li><b>Every claim has receipts.</b> If one sounds wrong, check the books behind it. Sometimes a book&rsquo;s genre needs fixing.</li>
-            <li>It&rsquo;s a mirror for your reading, not a clinical personality test.</li>
+            <li><b>You can check it.</b> If a line sounds wrong, look at the books behind it. Sometimes a book&rsquo;s genre needs fixing.</li>
+            <li>It&rsquo;s a fun read on your reading habits. It isn&rsquo;t a personality test.</li>
           </ul>
           <p className="muted" style={{ fontSize: 13, margin: "8px 0 0" }}>
             The 16 types: {Object.entries(TYPES).map(([c, t]) => `${c} ${t.name.replace("The ", "")}`).join(" · ")}.

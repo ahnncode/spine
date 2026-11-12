@@ -15,7 +15,7 @@ const SAMPLE = [
 ];
 
 const FEATURES = [
-  { h: "A Goodreads alternative built on rankings", p: "Stars drift. readread asks one easy question instead: which did you like more? Every book you finish lands in the right spot on your shelf, with a score from 0 to 10 that stays honest." },
+  { h: "A Goodreads alternative built on rankings", p: "Star ratings blur together. readread asks one question instead: which did you like more? Every book you finish lands in the right spot on your shelf, with a score from 0 to 10 that stays honest." },
   { h: "See what your friends are reading", p: "Follow friends, see their rankings and check-ins, and find out your taste match, plus the books you fight about most." },
   { h: "Read together, spoiler-free", p: "Start a read-along for any book: everyone's progress in one place, a discussion that hides anything past where you are, and a score reveal when you've all finished." },
   { h: "Bring your Goodreads or StoryGraph library", p: "Upload your export and your ratings become a starting ranking in seconds. Then sharpen it with quick head-to-heads." },
@@ -146,7 +146,7 @@ export default function Landing() {
               <p className="showcase__year">2026</p>
               <p className="showcase__stats">34 books · 4 genres · a 12-week streak</p>
             </div>
-            <figcaption><strong>Your year, wrapped.</strong> Streaks, a genre passport, badges and a recap to share.</figcaption>
+            <figcaption><strong>A recap of your year.</strong> Streaks, a genre passport, badges and a recap to share.</figcaption>
           </figure>
         </section>
 

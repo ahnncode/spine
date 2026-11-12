@@ -91,7 +91,7 @@ export function PublicProfileView({ username, profile }: { username: string; pro
           {profile.top.map((b) => (
             <li key={b.book_id}>
               <Link href={`/book/${b.book_id}`} className="book-row">
-                <span className={`book-row__rank ${b.rank <= 3 ? "book-row__rank--top" : ""}`}>{b.rank}</span>
+                <span className={`book-row__rank ${b.rank <= 3 ? "book-row__rank--top" : ""}${b.rank === 1 ? " book-row__rank--first" : ""}`}>{b.rank}</span>
                 <Cover book={b} width={44} />
                 <span className="book-row__body">
                   <span className="book-row__title" style={{ display: "block" }}>{b.title}</span>

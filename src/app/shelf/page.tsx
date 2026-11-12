@@ -186,7 +186,7 @@ function Shelf() {
                 {shown.map((e, i) => (
                   <li key={e.id} id={i === 0 || shown[i - 1].bucket !== e.bucket ? `tier-${e.bucket}` : undefined} style={{ scrollMarginTop: 16 }}>
                     <button className="book-row" style={rowButton} onClick={() => setSheet(e)}>
-                      <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}`}>{e.rank}</span>
+                      <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}${e.rank === 1 ? " book-row__rank--first" : ""}`}>{e.rank}</span>
                       <Cover book={e.book} width={44} listened={isListened(e.format)} />
                       <span className="book-row__body">
                         <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>

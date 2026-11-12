@@ -104,17 +104,16 @@ export function ReactionsCard({ entries }: { entries: Entry[] | null }) {
   // Only votes so far: say so, and open the poll.
   if (!groups.length) {
     return (
-      <section className="reactions-card" aria-label="Since you were last here">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <span className="eyebrow" style={{ color: "var(--on-panel-muted)" }}>Since you were last here</span>
-          <button className="icon-btn reactions-card__close" aria-label="Dismiss" onClick={dismissAll}><CloseIcon size={16} /></button>
-        </div>
-        <Link href={pollId ? `/picks/${pollId}` : "/activity"} className="reactions-card__body" onClick={() => markNotificationsRead(voteItems.map((n) => n.id)).then(refreshUnread).catch(() => {})}>
+      <section className="reactions-card" aria-label="New on your posts">
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <Link href={pollId ? `/picks/${pollId}` : "/activity"} className="reactions-card__body" style={{ flex: 1, marginTop: 0 }} onClick={() => markNotificationsRead(voteItems.map((n) => n.id)).then(refreshUnread).catch(() => {})}>
           <span className="reactions-card__faces" aria-hidden="true">
             {voters.slice(0, 3).map((id) => <Avatar key={id} profile={people.get(id) ?? { id, display_name: null, username: null }} size={34} ring={false} />)}
           </span>
           <span style={{ fontSize: 15, lineHeight: 1.4 }}><strong>{namesLine(voters, people)}</strong> voted on what you should read next.</span>
         </Link>
+        <button className="icon-btn reactions-card__close" aria-label="Dismiss" onClick={dismissAll}><CloseIcon size={16} /></button>
+        </div>
       </section>
     );
   }
@@ -123,27 +122,30 @@ export function ReactionsCard({ entries }: { entries: Entry[] | null }) {
   const actors = [...new Set(groups.flatMap((g) => [...g.hearts, ...g.comments]))];
   const hearts = items.filter((n) => n.kind === "reaction" && (n.target_type === "entry" || n.target_type === "checkin")).length;
   const comments = items.filter((n) => n.kind === "comment" && (n.target_type === "entry" || n.target_type === "checkin")).length;
-  const what = top.title ? `your ${top.title} ${top.type === "checkin" ? "check-in" : "ranking"}` : `your ${top.type === "checkin" ? "check-in" : "ranking"}`;
+  const kind = top.type === "checkin" ? "check-in" : "ranking";
   const reactors = [...new Set([...top.hearts, ...top.comments])];
   const commenter = top.comments[0];
   const others = groups.length - 1;
+  const extra = [
+    commenter && top.hearts.length ? `${displayName(people.get(commenter)).split(" ")[0]} left a comment` : "",
+    others > 0 ? `${others} more of your post${others === 1 ? "" : "s"} got love too` : "",
+  ].filter(Boolean);
 
   return (
-    <section className="reactions-card" aria-label="Since you were last here">
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <span className="eyebrow" style={{ color: "var(--on-panel-muted)" }}>Since you were last here</span>
+    <section className="reactions-card" aria-label="New on your posts">
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <Link href="/activity" className="reactions-card__body" style={{ flex: 1, marginTop: 0 }}>
+          <span className="reactions-card__faces" aria-hidden="true">
+            {actors.slice(0, 3).map((id) => <Avatar key={id} profile={people.get(id) ?? { id, display_name: null, username: null }} size={34} ring={false} />)}
+          </span>
+          <span style={{ fontSize: 15, lineHeight: 1.4 }}>
+            <strong>{namesLine(reactors, people)}</strong> {top.hearts.length ? "liked" : "commented on"} your {kind}
+            {top.title ? <> of <span className="d" style={{ fontWeight: 700 }}>{top.title}</span></> : null}.
+            {extra.length > 0 && <span style={{ display: "block", marginTop: 2, fontSize: 13, color: "var(--on-panel-muted)" }}>{extra.join(", and ")}.</span>}
+          </span>
+        </Link>
         <button className="icon-btn reactions-card__close" aria-label="Dismiss" onClick={dismissAll}><CloseIcon size={16} /></button>
       </div>
-      <Link href="/activity" className="reactions-card__body">
-        <span className="reactions-card__faces" aria-hidden="true">
-          {actors.slice(0, 3).map((id) => <Avatar key={id} profile={people.get(id) ?? { id, display_name: null, username: null }} size={34} ring={false} />)}
-        </span>
-        <span style={{ fontSize: 15, lineHeight: 1.4 }}>
-          <strong>{namesLine(reactors, people)}</strong> {top.hearts.length ? "reacted to" : "commented on"} {what}.
-          {commenter && top.hearts.length ? ` ${displayName(people.get(commenter)).split(" ")[0]} commented.` : ""}
-          {others > 0 ? ` And ${others} more post${others === 1 ? "" : "s"}.` : ""}
-        </span>
-      </Link>
       <div className="reactions-card__chips">
         {hearts > 0 && <span>♥ {hearts} heart{hearts === 1 ? "" : "s"}</span>}
         {comments > 0 && <span>{comments} comment{comments === 1 ? "" : "s"}</span>}

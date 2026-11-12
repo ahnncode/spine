@@ -236,7 +236,7 @@ function Inner() {
                       return (
                         <li key={e.id} style={{ display: "flex", alignItems: "center", gap: 8, borderBottom: "1px solid var(--line)" }}>
                           <Link href={`/book/${e.book_id}`} className="book-row" style={{ flex: 1, minWidth: 0, borderBottom: 0 }}>
-                            {r && <span className={`book-row__rank ${r.rank <= 3 ? "book-row__rank--top" : ""}`}>{r.rank}</span>}
+                            {r && <span className={`book-row__rank ${r.rank <= 3 ? "book-row__rank--top" : ""}${r.rank === 1 ? " book-row__rank--first" : ""}`}>{r.rank}</span>}
                             <Cover book={e.book} width={44} listened={isListened(e.format)} />
                             <span className="book-row__body">
                               <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>

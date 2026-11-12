@@ -108,6 +108,8 @@ function Flow() {
   const tint = useCoverTint(book);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [bucket, setBucket] = useState<Bucket | null>(null);
+  // The card you just tapped, for a quick win/lose beat before the next matchup.
+  const [chosen, setChosen] = useState<"new" | "old" | null>(null);
   const [list, setList] = useState<RankedEntry[]>([]);
   const [placement, setPlacement] = useState<Placement | null>(null);
   const [queueLeft, setQueueLeft] = useState<string[]>([]);
@@ -218,10 +220,17 @@ function Flow() {
   }
 
   function pick(newIsBetter: boolean) {
-    if (!placement || !bucket) return;
+    if (!placement || !bucket || chosen) return;
     const other = placement.pivot != null ? list[placement.pivot] : null;
     if (other) logMatchup(newIsBetter ? id : other.book_id, newIsBetter ? other.book_id : id);
-    step(answerPlacement(placement, candidates, newIsBetter, genres), bucket, list);
+    const next = () => {
+      setChosen(null);
+      step(answerPlacement(placement, candidates, newIsBetter, genres), bucket, list);
+    };
+    const still = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (still) return next();
+    setChosen(newIsBetter ? "new" : "old");
+    window.setTimeout(next, 280);
   }
   function tie() {
     if (!placement || !bucket) return;
@@ -334,7 +343,7 @@ function Flow() {
               </p>
             )}
             <div className="versus">
-              <button key={`new-${steps}`} className="versus__card" onClick={() => pick(true)}>
+              <button key={`new-${steps}`} className="versus__card" data-chosen={chosen === "new" ? "won" : chosen ? "lost" : undefined} onClick={() => pick(true)}>
                 <Cover book={book} width={128} />
                 <div style={{ minWidth: 0 }}>
                   <div className="versus__title">{book.title}</div>
@@ -342,7 +351,7 @@ function Flow() {
                 </div>
                 <span className="pill pill--accent">{label}</span>
               </button>
-              <button key={`${opp.id}-${steps}`} className="versus__card" onClick={() => pick(false)}>
+              <button key={`${opp.id}-${steps}`} className="versus__card" data-chosen={chosen === "old" ? "won" : chosen ? "lost" : undefined} onClick={() => pick(false)}>
                 <Cover book={opp.book} width={128} />
                 <div style={{ minWidth: 0 }}>
                   <div className="versus__title">{opp.book.title}</div>

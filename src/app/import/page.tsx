@@ -131,7 +131,7 @@ function Importer() {
           </>
         ) : (
           <>
-            <h1 className="h1 h1--xl" style={{ marginTop: 30 }}>Bring your whole shelf.</h1>
+            <h1 className="h1 h1--xl" style={{ marginTop: 30 }}>Bring over your Goodreads shelf</h1>
             <p className="lede">
               We&rsquo;ll turn your Goodreads or StoryGraph stars into a starting ranking, then sharpen it with quick head-to-heads.
             </p>

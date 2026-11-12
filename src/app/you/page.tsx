@@ -429,7 +429,7 @@ function You() {
                       </div>
                     ) : (
                     <Link href={`/book/${e.book_id}`} className="book-row">
-                      <span className={`book-row__rank ${i < 3 ? "book-row__rank--top" : ""}`}>{i + 1}</span>
+                      <span className={`book-row__rank ${i < 3 ? "book-row__rank--top" : ""}${i === 0 ? " book-row__rank--first" : ""}`}>{i + 1}</span>
                       <Cover book={e.book} width={40} />
                       <span className="book-row__body">
                         <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>

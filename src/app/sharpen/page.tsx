@@ -140,7 +140,7 @@ function Sharpen() {
         {finished && (
           <>
             <p className="eyebrow" style={{ marginTop: 8 }}>{round} matchups done</p>
-            <h1 className="h1 h1--xl" style={{ marginTop: 8 }}>Your top ten, sharper.</h1>
+            <h1 className="h1 h1--xl" style={{ marginTop: 8 }}>Here&rsquo;s your new top ten</h1>
             <ol className="mini-list" style={{ listStyle: "none", margin: "20px 0 0" }}>
               {ranked.slice(0, 10).map((e) => (
                 <li key={e.id} className="mini-row" style={{ padding: "6px 12px" }}>
