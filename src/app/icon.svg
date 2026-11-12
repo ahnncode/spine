@@ -1,7 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <title>readread</title>
-  <rect width="512" height="512" rx="118" fill="#111111"/>
-  <rect x="102" y="105" width="308" height="77" rx="20" fill="#FF5A1F"/>
-  <rect x="102" y="218" width="246" height="77" rx="20" fill="#FFFFFF"/>
-  <rect x="102" y="331" width="185" height="77" rx="20" fill="#FFFFFF" fill-opacity="0.55"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><title>readread</title><rect width="100" height="100" rx="23" fill="#FF5A1F"/><path transform="translate(19 68) scale(0.066 -0.066)" d="M6 0V10H7Q43 10 65.0 32.0Q87 54 87 90V418Q87 456 71.5 477.0Q56 498 6 498V508H105Q158 508 185.0 518.5Q212 529 223 546H228L229 382Q242 412 262.5 445.0Q283 478 314.5 500.5Q346 523 390 523Q405 523 422.0 520.0Q439 517 458 509L419 392Q383 412 356.5 420.0Q330 428 310 428Q276 428 259.5 407.0Q243 386 231 357V90Q231 54 253.0 32.0Q275 10 311 10H312V0Z" fill="#FFFFFF"/><path transform="translate(50 68) scale(0.066 -0.066)" d="M6 0V10H7Q43 10 65.0 32.0Q87 54 87 90V418Q87 456 71.5 477.0Q56 498 6 498V508H105Q158 508 185.0 518.5Q212 529 223 546H228L229 382Q242 412 262.5 445.0Q283 478 314.5 500.5Q346 523 390 523Q405 523 422.0 520.0Q439 517 458 509L419 392Q383 412 356.5 420.0Q330 428 310 428Q276 428 259.5 407.0Q243 386 231 357V90Q231 54 253.0 32.0Q275 10 311 10H312V0Z" fill="#111111"/></svg>
