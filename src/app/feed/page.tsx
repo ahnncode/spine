@@ -157,6 +157,7 @@ function Feed() {
   return (
     <div className="app">
       <main className="screen">
+        <h1 className="visually-hidden">Feed</h1>
         <div className="topbar">
           <Logo size={30} />
           <div style={{ display: "flex", gap: 8 }}>
@@ -169,14 +170,15 @@ function Feed() {
 
         <InstallHint />
 
+        {/* One line, not a banner: the feed is the point of this screen. */}
         {streak.weeks > 0 && !streak.activeThisWeek && (
           reading[0] ? (
-            <button className="notice" style={{ display: "block", width: "100%", textAlign: "left", border: 0, marginTop: 16 }} onClick={() => setChecking(reading[0])}>
-              <strong>Keep your {streak.weeks}-week streak.</strong> Check in on {reading[0].book.title} before Sunday.
+            <button type="button" className="streak-chip" onClick={() => setChecking(reading[0])}>
+              <strong>{streak.weeks}-week streak</strong> · check in on {reading[0].book.title} by Sunday
             </button>
           ) : (
-            <Link href="/add" className="notice" style={{ display: "block", marginTop: 16, textDecoration: "none" }}>
-              <strong>Keep your {streak.weeks}-week streak.</strong> Start or rank a book before Sunday.
+            <Link href="/add" className="streak-chip">
+              <strong>{streak.weeks}-week streak</strong> · start or rank a book by Sunday
             </Link>
           )
         )}
@@ -189,17 +191,16 @@ function Feed() {
           <button role="tab" aria-selected={scope === "everyone"} onClick={() => { setPicked(true); setScope("everyone"); }}>Everyone</button>
         </div>
 
-        {scope === "everyone" && followingIds !== null && followingIds.length < 3 && !newReader && (
-          <div className="card" style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 12 }}>
-            <p style={{ margin: 0, flex: 1, fontSize: 14, lineHeight: 1.4 }}>
-              {followingIds.length ? "Follow a few more readers to fill your own feed." : "This is everyone on readread. Follow readers you like and they’ll show up under Following."}
-            </p>
-            <Link href="/people" className="btn" style={{ flexShrink: 0, minHeight: 40 }}>Find people</Link>
-          </div>
+        {/* Only until you follow someone; after that it's clutter. */}
+        {scope === "everyone" && followingIds !== null && followingIds.length === 0 && !newReader && (
+          <p className="muted" style={{ margin: "12px 2px 0", fontSize: 14, lineHeight: 1.4 }}>
+            This is everyone on readread. <Link href="/people" style={{ color: "var(--cobalt-ink)", fontWeight: 600 }}>Find people to follow</Link> and they&rsquo;ll show up under Following.
+          </p>
         )}
 
         <ReactionsCard entries={entries} />
-        <FriendPolls mine={mine} />
+        {/* Polls sit after the first couple of posts (below); with no posts, here. */}
+        {!(data && (data.items.length > 0 || data.together.length > 0)) && <FriendPolls mine={mine} />}
 
         {scope === "following" && data && <WeekCard finished={weekRanked.length} finishers={weekFinishers} streakWeeks={streak.weeks} />}
 
@@ -238,9 +239,12 @@ function Feed() {
               ...data.together.map((t) => ({ at: t.revealed_at ?? t.created_at, item: null as FeedItem | null, together: t })),
             ].sort((a, b) => b.at.localeCompare(a.at)).flatMap(({ item: row, together: t }, idx, all) => {
               // A disagreement after the third post, the month's board after the eighth (or at the end).
-              const extras = scope !== "following" ? [] : [
-                idx === Math.min(2, all.length - 1) && <SplitCard key="split" friends={followingIds ?? []} mine={mine} me={profile?.id} />,
-                idx === Math.min(7, all.length - 1) && <FriendsMonth key="month" friends={followingIds ?? []} me={profile?.id} />,
+              const extras = [
+                idx === Math.min(1, all.length - 1) && <FriendPolls key="polls" mine={mine} />,
+                ...(scope !== "following" ? [] : [
+                  idx === Math.min(2, all.length - 1) && <SplitCard key="split" friends={followingIds ?? []} mine={mine} me={profile?.id} />,
+                  idx === Math.min(7, all.length - 1) && <FriendsMonth key="month" friends={followingIds ?? []} me={profile?.id} />,
+                ]),
               ].filter(Boolean);
               const post = (() => {
               if (t) return <TogetherCard key={`t-${t.id}`} t={t} book={data.books.get(t.book_id)} people={data.profiles} me={profile?.id} />;

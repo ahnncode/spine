@@ -148,7 +148,7 @@ export function ReactionsCard({ entries }: { entries: Entry[] | null }) {
         {hearts > 0 && <span>♥ {hearts} heart{hearts === 1 ? "" : "s"}</span>}
         {comments > 0 && <span>{comments} comment{comments === 1 ? "" : "s"}</span>}
         {voters.length > 0 && pollId && <Link href={`/picks/${pollId}`} className="reactions-card__chip">{voters.length} vote{voters.length === 1 ? "" : "s"} on your pick</Link>}
-        <Link href="/activity" style={{ marginLeft: "auto", color: "#fff", fontWeight: 600, fontSize: 13 }}>See all</Link>
+        <Link href="/activity" style={{ marginLeft: "auto", color: "#fff", fontWeight: 600, fontSize: 13, padding: "6px 0" }}>See all</Link>
       </div>
     </section>
   );

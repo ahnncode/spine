@@ -214,7 +214,7 @@ function Inner() {
                             ) : (
                               <>
                                 {e.progress_pct != null && (
-                                  <span className="reading-card__bar" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
+                                  <span className="reading-card__bar" role="img" aria-label={`${e.progress_pct}% read`}><span style={{ width: `${e.progress_pct}%` }} /></span>
                                 )}
                                 <span className="m muted" style={{ fontSize: 12 }}>
                                   {readingStatus(e.progress_pct, e.last_checkin_on ?? e.started_on)}

@@ -92,7 +92,7 @@ function Sharpen() {
           <Link href="/shelf" className="icon-btn" aria-label="Close">
             <CloseIcon size={18} />
           </Link>
-          <div className="dots" aria-label={`Matchup ${Math.min(round + 1, ROUNDS)} of ${ROUNDS}`}>
+          <div className="dots" role="img" aria-label={`Matchup ${Math.min(round + 1, ROUNDS)} of ${ROUNDS}`}>
             {Array.from({ length: ROUNDS }, (_, i) => (
               <span key={i} style={{ width: i === round && !finished ? 20 : 10 }} data-state={i < round ? "done" : i === round && !finished ? "current" : undefined} />
             ))}
@@ -104,7 +104,7 @@ function Sharpen() {
 
         {entries && !finished && !candidatesLeft && round === 0 && (
           <div className="empty">
-            <p className="h2">Nothing to sort</p>
+            <h1 className="h2">Nothing to sort</h1>
             <p style={{ margin: "0 0 16px", fontSize: 14 }}>Every book on your shelf has been placed by you.</p>
             <Link href="/shelf" className="btn">Back to your shelf</Link>
           </div>

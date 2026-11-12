@@ -95,7 +95,7 @@ function Inner() {
             <span className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>{first}&rsquo;s reader type</span>
             <span className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>{fam.label}</span>
           </div>
-          <div className="rt-code" aria-label={theirs.code.split("").join(" ")}>
+          <div className="rt-code" role="img" aria-label={theirs.code.split("").join(" ")}>
             {theirs.code.split("").map((l, i) => <span key={i} aria-hidden="true">{l}</span>)}
           </div>
           <h1 id="rt-name" className="g" style={{ margin: 0, fontSize: 40, lineHeight: 1, letterSpacing: "-0.015em" }}>{copy.name}</h1>
@@ -153,11 +153,11 @@ function Inner() {
           <>
             <h2 className="section-title" style={{ marginTop: 32 }}>Why {first} reads</h2>
             <section className="card" style={{ marginTop: 12, background: drive.bg, borderColor: drive.bg, color: drive.fg }}>
-              <div className="eyebrow" style={{ color: "inherit", opacity: 0.75 }}>Core drive</div>
+              <div className="eyebrow" style={{ color: "inherit", opacity: 0.95 }}>Core drive</div>
               <div className="g" style={{ fontSize: 40, lineHeight: 1, marginTop: 8 }}>{drive.label}</div>
               {wing && <div className="g" style={{ fontSize: 20, marginTop: 6, opacity: 0.8 }}>with {withArticle(wing.label.toLowerCase())} wing</div>}
               <p className="d" style={{ margin: "14px 0 0", fontSize: 18, lineHeight: 1.3, fontWeight: 500 }}>{toThey(drive.desire)}</p>
-              <div className="eyebrow" style={{ color: "inherit", opacity: 0.75, marginTop: 16 }}>What loses them</div>
+              <div className="eyebrow" style={{ color: "inherit", opacity: 0.95, marginTop: 16 }}>What loses them</div>
               <p style={{ margin: "4px 0 0", fontSize: 15 }}>{toThey(drive.shadow)}</p>
             </section>
           </>

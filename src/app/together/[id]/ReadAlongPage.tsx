@@ -146,7 +146,7 @@ function Inner() {
       <div className="app">
         <main className="screen">
           <div className="empty">
-            <p className="h2">This read-along isn&rsquo;t available</p>
+            <h1 className="h2">This read-along isn&rsquo;t available</h1>
             <p style={{ margin: "0 0 16px", fontSize: 14 }}>It may have been for a different group.</p>
             <Link href="/feed" className="btn">Back to your feed</Link>
           </div>

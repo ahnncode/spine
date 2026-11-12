@@ -92,7 +92,8 @@ export function BookActions({
         </button>
       )}
       {status === "reading" && entry && (
-        <button className="btn btn--quiet btn--block" disabled={busy} onClick={() => run(() => moveToWant(entry.id))}>
+        // A step back, so a quiet link rather than a full button.
+        <button className="link-btn" style={{ minHeight: 44, alignSelf: "center", fontSize: 14 }} disabled={busy} onClick={() => run(() => moveToWant(entry.id))}>
           Not reading it after all
         </button>
       )}
