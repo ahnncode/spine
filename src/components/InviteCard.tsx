@@ -43,7 +43,7 @@ export function InviteCard({ username, joined, qualified, earned }: { username: 
         </div>
         {!earned && (
           <>
-            <div className="dots" style={{ marginTop: 8 }} aria-label={`${n} of 3 friends`}>
+            <div className="dots" role="img" style={{ marginTop: 8 }} aria-label={`${n} of 3 friends`}>
               {[0, 1, 2].map((i) => <span key={i} data-on={i < n} data-joined={i >= n && i < n + waiting} />)}
             </div>
             {joined > 0 && (

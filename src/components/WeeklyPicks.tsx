@@ -118,7 +118,7 @@ function WildcardCard({ pick, onChange }: { pick: WeeklyPick; onChange: (p: Part
   if (!pick.book) return null;
   return (
     <div className="card pick-card">
-      <div className="eyebrow" style={{ color: "var(--cobalt, #2D3FE0)" }}>Wildcard · something different</div>
+      <div className="eyebrow" style={{ color: "var(--cobalt-ink)" }}>Wildcard · something different</div>
       <PickBody pick={pick} />
       <PickActions pick={pick} onChange={onChange} />
     </div>

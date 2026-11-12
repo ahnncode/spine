@@ -247,7 +247,7 @@ function Flow() {
             <CloseIcon size={18} />
           </Link>
           {phase === "compare" || phase === "done" ? (
-            <div className="dots" aria-label={phase === "done" ? "Placed" : `Head-to-head ${steps + 1} of about ${total}`}>
+            <div className="dots" role="img" aria-label={phase === "done" ? "Placed" : `Head-to-head ${steps + 1} of about ${total}`}>
               {Array.from({ length: Math.max(total, 1) }, (_, i) => (
                 <span
                   key={i}

@@ -232,7 +232,7 @@ function Inner() {
                   <strong>Week {week}: {weekRange(current.plan, week, current.unit).replace(/^C/, "c").replace(/^Up/, "up")}</strong>
                   <span className="muted">by {shortDate(current.plan[week - 1].due)}</span>
                 </div>
-                <div className="club-weeks" aria-label={`Week ${week} of ${current.plan.length}`}>
+                <div className="club-weeks" role="img" aria-label={`Week ${week} of ${current.plan.length}`}>
                   {current.plan.map((_, i) => <span key={i} className={i + 1 < week ? "done" : i + 1 === week ? "now" : undefined} />)}
                 </div>
                 <span className={statusClass} style={{ fontSize: 13, fontWeight: 600 }}>{status}</span>

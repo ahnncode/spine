@@ -155,15 +155,17 @@ function Importer() {
                   </span>
                   <strong style={{ fontSize: 15 }}>Upload your Goodreads or StoryGraph export</strong>
                   <span className="muted" style={{ fontSize: 13 }}>The .csv file · tap or drop it here</span>
-                  <input
-                    ref={inputRef}
-                    type="file"
-                    accept=".csv,text/csv"
-                    className="visually-hidden"
-                    aria-label="Goodreads or StoryGraph export file"
-                    onChange={(e) => e.target.files?.[0] && readFile(e.target.files[0])}
-                  />
                 </div>
+                {/* Outside the drop zone: a focusable control can't sit inside another one. */}
+                <input
+                  ref={inputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="visually-hidden"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  onChange={(e) => e.target.files?.[0] && readFile(e.target.files[0])}
+                />
                 <details style={{ marginTop: 16, fontSize: 14, color: "var(--ink-2)" }}>
                   <summary style={{ cursor: "pointer", fontWeight: 600, color: "var(--ink)", minHeight: 44, display: "flex", alignItems: "center" }}>
                     Where&rsquo;s my Goodreads export?

@@ -254,7 +254,7 @@ function Inner() {
       </main>
 
       {data && open && (
-        <form className="room-composer" onSubmit={post}>
+        <form className="room-composer" aria-label="Write a comment" onSubmit={post}>
           {replyTo && (
             <p className="room-composer__reply">
               Replying to {replyTo.user_id === profile?.id ? "yourself" : displayName(data.people.get(replyTo.user_id)).split(" ")[0]}

@@ -130,7 +130,7 @@ function Scanner() {
       <main className="screen screen--flow" style={{ paddingTop: 16 }}>
         <div className="topbar">
           <Link href="/add" className="icon-btn" aria-label="Close scanner"><CloseIcon size={18} /></Link>
-          <span className="eyebrow">Scan a barcode</span>
+          <h1 className="eyebrow" style={{ margin: 0 }}>Scan a barcode</h1>
           <span style={{ width: 44 }} />
         </div>
 

@@ -15,23 +15,31 @@ function monthDay(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+const NUDGED_EVENT = "readread:nudged";
+
 /**
- * Shelf's "Put aside" row: books paused, oldest nudge first. One gentle nudge
- * per book after six weeks ("Still saving it?"), dismissed for good with
- * "Not yet" (kept in this browser).
+ * Shelf's "Put aside" books, in two parts so the ranked list stays near the
+ * top: `nudge` is one gentle "Still saving it?" card (a book paused six weeks
+ * or more, dismissed for good with "Not yet", kept in this browser) for the
+ * top of the shelf; `list` is the rest of the paused books, for the bottom.
  */
-export function PutAsideSection({ items, onChange }: { items: Entry[]; onChange: () => void | Promise<void> }) {
+export function PutAsideSection({ items, onChange, part }: { items: Entry[]; onChange: () => void | Promise<void>; part: "nudge" | "list" }) {
   const [sheet, setSheet] = useState<{ entry: Entry; kind: "resume" | "drop" } | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [now] = useState(() => Date.now());
 
   useEffect(() => {
-    try {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- per-browser memory of nudges already answered
-      setDismissed(new Set(items.filter((e) => localStorage.getItem(nudgeKey(e.id))).map((e) => e.id)));
-    } catch {
-      /* storage blocked: nudge shows each visit */
-    }
+    const read = () => {
+      try {
+        setDismissed(new Set(items.filter((e) => localStorage.getItem(nudgeKey(e.id))).map((e) => e.id)));
+      } catch {
+        /* storage blocked: nudge shows each visit */
+      }
+    };
+    read();
+    // The other part answered a nudge: re-read, so the book moves back to the list.
+    window.addEventListener(NUDGED_EVENT, read);
+    return () => window.removeEventListener(NUDGED_EVENT, read);
   }, [items]);
 
   if (!items.length) return null;
@@ -50,12 +58,17 @@ export function PutAsideSection({ items, onChange }: { items: Entry[]; onChange:
       /* fine */
     }
     setDismissed((d) => new Set(d).add(id));
+    window.dispatchEvent(new Event(NUDGED_EVENT));
   }
 
+  // The nudged book is in the card at the top, so it isn't listed again.
+  const rest = items.filter((e) => e.id !== nudge?.id);
+  if (part === "nudge" ? !nudge : !rest.length) return null;
+
   return (
-    <section aria-label="Put aside" style={{ marginTop: 20 }}>
-      <h2 className="eyebrow" style={{ color: "var(--amber-ink)" }}>Put aside · {items.length}</h2>
-      {nudge && (
+    <section aria-label={part === "nudge" ? "A book you put aside" : "Put aside"} style={{ marginTop: 20 }}>
+      {part === "list" && <h2 className="eyebrow" style={{ color: "var(--amber-ink)" }}>Put aside · {rest.length}</h2>}
+      {part === "nudge" && nudge && (
         <div className="state-banner state-banner--paused" style={{ marginTop: 10 }}>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.4 }}>
             <strong>Still saving {nudge.book.title}?</strong> You put it aside {weeks} weeks ago{progressLabel(nudge) ? ` at ${progressLabel(nudge)!.replace(/^Chapter/, "chapter")}` : ""}.
@@ -67,8 +80,8 @@ export function PutAsideSection({ items, onChange }: { items: Entry[]; onChange:
           </div>
         </div>
       )}
-      <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
-        {items.map((e) => (
+      {part === "list" && <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
+        {rest.map((e) => (
           <li key={e.id} className="book-row" style={{ borderBottom: "1px solid var(--line)" }}>
             <Link href={`/book/${e.book_id}`} aria-label={`${e.book.title}: book page`} style={{ flexShrink: 0, opacity: 0.75 }}>
               <Cover book={e.book} width={40} />
@@ -82,7 +95,7 @@ export function PutAsideSection({ items, onChange }: { items: Entry[]; onChange:
             <button className="small-btn small-btn--outline" onClick={() => setSheet({ entry: e, kind: "resume" })}>Pick back up</button>
           </li>
         ))}
-      </ul>
+      </ul>}
       {sheet?.kind === "resume" && <ResumeSheet entry={sheet.entry} onClose={() => setSheet(null)} onDone={done} />}
       {sheet?.kind === "drop" && <StopSheet entry={sheet.entry} mode="drop" onClose={() => setSheet(null)} onDone={done} />}
     </section>

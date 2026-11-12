@@ -50,6 +50,8 @@ function Inner() {
   const all = useMemo(() => rankEntries(entries || []), [entries]);
   const books = useMemo(() => readInYear(all, year), [all, year]);
   const pages = books.reduce((s, e) => s + (e.book.pages ?? 0), 0);
+  const pagesCounted = books.filter((e) => e.book.pages).length;
+  const authors = new Set(books.map((e) => e.book.author).filter(Boolean)).size;
   // Read vs listened. Hours are a rough guess: about 1.8 minutes of audio per printed page.
   const heard = books.filter((e) => isListened(e.format));
   const seen = books.filter((e) => e.format !== "listen");
@@ -116,9 +118,20 @@ function Inner() {
                 <div className="stat-big">{books.length}</div>
                 <div style={{ fontWeight: 600, marginTop: 8 }}>books</div>
               </div>
-              <div className="card moment" style={{ background: "var(--accent)", borderColor: "var(--accent)", animationDelay: "0.2s" }}>
-                <div className="stat-big">{pages ? pages.toLocaleString() : "—"}</div>
-                <div style={{ fontWeight: 600, marginTop: 8 }}>pages</div>
+              <div className="card moment" style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "#111111", animationDelay: "0.2s" }}>
+                {/* Page counts can be missing: then count authors instead of showing a dash. */}
+                {pages ? (
+                  <>
+                    <div className="stat-big">{pages.toLocaleString()}</div>
+                    <div style={{ fontWeight: 600, marginTop: 8 }}>pages</div>
+                    {pagesCounted < books.length && <div style={{ fontSize: 12, marginTop: 2, opacity: 0.8 }}>from {pagesCounted} of {books.length} books</div>}
+                  </>
+                ) : (
+                  <>
+                    <div className="stat-big">{authors}</div>
+                    <div style={{ fontWeight: 600, marginTop: 8 }}>{authors === 1 ? "author" : "authors"}</div>
+                  </>
+                )}
               </div>
             </div>
 

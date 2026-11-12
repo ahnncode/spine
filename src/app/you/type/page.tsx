@@ -94,7 +94,7 @@ function ReaderTypePage() {
             <span className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>{first}&rsquo;s reader type</span>
             <span className="eyebrow" style={{ color: "inherit", opacity: 0.8 }}>{f.label}</span>
           </div>
-          <div className="rt-code" aria-label={type.code.split("").join(" ")}>
+          <div className="rt-code" role="img" aria-label={type.code.split("").join(" ")}>
             {type.code.split("").map((l, i) => (
               <span key={i} style={{ animationDelay: `${0.12 + i * 0.14}s` }} aria-hidden="true">{l}</span>
             ))}
@@ -131,11 +131,11 @@ function ReaderTypePage() {
 
         <h2 className="section-title" style={{ marginTop: 36 }}>Why you read</h2>
         <section className="card" style={{ marginTop: 12, background: type.drive.bg, borderColor: type.drive.bg, color: type.drive.fg }}>
-          <div className="eyebrow" style={{ color: "inherit", opacity: 0.75 }}>Your core drive</div>
+          <div className="eyebrow" style={{ color: "inherit", opacity: 0.95 }}>Your core drive</div>
           <div className="g" style={{ fontSize: 44, lineHeight: 1, marginTop: 8 }}>{type.drive.label}</div>
           {type.wing && <div className="g" style={{ fontSize: 20, marginTop: 6, opacity: 0.8 }}>with {withArticle(type.wing.label.toLowerCase())} wing</div>}
           <p className="d" style={{ margin: "14px 0 0", fontSize: 18, lineHeight: 1.3, fontWeight: 500 }}>{type.drive.desire}</p>
-          <div className="eyebrow" style={{ color: "inherit", opacity: 0.75, marginTop: 16 }}>What loses you</div>
+          <div className="eyebrow" style={{ color: "inherit", opacity: 0.95, marginTop: 16 }}>What loses you</div>
           <p style={{ margin: "4px 0 0", fontSize: 15 }}>{type.drive.shadow}</p>
           <div className="stack" style={{ marginTop: 18, gap: 8 }}>
             {shares.map(([k, s]) => (

@@ -123,6 +123,7 @@ function Inner() {
     <div className="app">
       <main className="screen screen--flow" style={{ paddingTop: 16 }}>
         {back}
+        {!own && <h1 className="visually-hidden">Help pick a book</h1>}
         {own && (
           <>
             <p className="eyebrow" style={{ color: "var(--amber-ink)", marginTop: 8 }}>

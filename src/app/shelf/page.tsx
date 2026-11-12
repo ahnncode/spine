@@ -116,7 +116,7 @@ function Shelf() {
           </section>
         )}
 
-        <PutAsideSection items={paused} onChange={reload} />
+        <PutAsideSection items={paused} onChange={reload} part="nudge" />
 
         <div className="segmented" role="tablist" aria-label="Shelf" style={{ marginTop: 16 }}>
           {tabs.map((t) => (
@@ -218,6 +218,9 @@ function Shelf() {
             onOpen={setSheet}
           />
         )}
+
+        {/* Paused books go below the list, so your ranking comes first. */}
+        <PutAsideSection items={paused} onChange={reload} part="list" />
       </main>
 
       {sheet && (
