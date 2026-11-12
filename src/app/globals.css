@@ -894,7 +894,7 @@ button.stamp--locked { border: 1.5px dashed var(--dash); }
 div.stats-panel__half { cursor: default; }
 .stats-panel__rule { width: 1px; background: var(--on-panel-line); margin: 0 16px; flex-shrink: 0; }
 
-.unlock-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 4px 2px; color: inherit; text-decoration: none; }
+.unlock-row { display: flex; align-items: center; gap: 14px; margin-top: 12px; padding: 12px 0; min-height: 44px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
 
 /* Several links as one grouped list, not a stack of cards. */
 .link-group { margin-top: 32px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; }

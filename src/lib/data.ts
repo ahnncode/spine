@@ -858,14 +858,24 @@ export async function topThreeFor(userIds: string[]): Promise<Map<string, Book[]
   return out;
 }
 
-export async function recommendations(limit = 20): Promise<Array<{ book: Book; predicted: number; basis: number }>> {
+export type RecSource = "match" | "genre" | "loved";
+export type Rec = { book: Book; predicted: number; basis: number; source: RecSource; genre: string | null };
+
+/**
+ * Discover picks. Readers who rank like you come first ("match": predicted is
+ * your likely score). Until there are enough of those, the list is topped up
+ * with books readers loved in your favorite genres ("genre") and the
+ * best-loved books on readread ("loved"); for those, predicted is the
+ * readers' average.
+ */
+export async function recommendations(limit = 20): Promise<Rec[]> {
   const { data, error } = await supabase().rpc("recommendations", { p_limit: limit });
   if (error) throw error;
-  const rows = (data as Array<{ book_id: string; predicted: string; basis: number }>) || [];
+  const rows = (data as Array<{ book_id: string; predicted: string; basis: number; source?: RecSource; genre?: string | null }>) || [];
   const books = new Map((await fetchBooks(rows.map((r) => r.book_id))).map((b) => [b.id, b]));
   return rows
     .filter((r) => books.has(r.book_id))
-    .map((r) => ({ book: books.get(r.book_id)!, predicted: Number(r.predicted), basis: r.basis }));
+    .map((r) => ({ book: books.get(r.book_id)!, predicted: Number(r.predicted), basis: r.basis, source: r.source ?? "match", genre: r.genre ?? null }));
 }
 
 /** A friend's ranked entry as the database scores it. */

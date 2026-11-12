@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { dedupeKey, type Book, type BookInput } from "@/lib/books";
-import { addToWant, ensureBook, fetchShelf, rankEntries, recommendations, startReading, STATUS_LABEL, type Entry } from "@/lib/data";
+import { addToWant, ensureBook, fetchShelf, rankEntries, recommendations, startReading, STATUS_LABEL, type Entry, type Rec } from "@/lib/data";
+import { GENRES } from "@/lib/genres";
 import { WeeklyPicks } from "@/components/WeeklyPicks";
 import { YourClubs } from "@/components/YourClubs";
 import { CheckInSheet } from "@/components/CheckInSheet";
@@ -36,7 +37,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   const [picked, setPicked] = useState<BookInput | null>(null);
   const [checking, setChecking] = useState<Entry | null>(null);
   const [busy, setBusy] = useState(false);
-  const [recs, setRecs] = useState<Array<{ book: Book; predicted: number; basis: number }> | null>(null);
+  const [recs, setRecs] = useState<Rec[] | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const byKey = useMemo(() => {
@@ -373,49 +374,79 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
   );
 }
 
-function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; predicted: number; basis: number }> | null; rankedCount: number }) {
-  if (rankedCount < TASTE_UNLOCK) {
-    const left = TASTE_UNLOCK - rankedCount;
-    return (
-      <div className="card" style={{ marginTop: 20 }}>
-        <div className="eyebrow">For you</div>
-        <p className="g" style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em", margin: "6px 0 0", lineHeight: 1.05 }}>
-          Rank {left} more book{left === 1 ? "" : "s"} to unlock picks made for your taste.
-        </p>
-        <div className="bar" style={{ marginTop: 16 }}>
-          <span style={{ width: `${(rankedCount / TASTE_UNLOCK) * 100}%`, background: "var(--accent)" }} />
-        </div>
-        <Link href="/add" className="btn btn--block" style={{ marginTop: 16 }}>Rank a book</Link>
-      </div>
-    );
-  }
-  if (!recs) return <RowsSkeleton count={3} label="Loading picks for you" />;
-  if (!recs.length) {
-    return (
-      <div className="empty">
-        <p className="h2">Picks are warming up</p>
-        <p style={{ margin: 0, fontSize: 14 }}>Once more people rank books you&rsquo;ve read, we&rsquo;ll find the ones they loved that you haven&rsquo;t got to.</p>
-      </div>
-    );
-  }
+const GENRE_LABEL = new Map(GENRES.map((g) => [g.key, g.label]));
+
+function RecRow({ r }: { r: Rec }) {
+  const why =
+    r.source === "match"
+      ? r.basis === 1 ? "A reader who ranks like you loved it" : `${r.basis} readers who rank like you loved it`
+      : r.source === "genre" && r.genre
+        ? `Loved in ${GENRE_LABEL.get(r.genre) ?? r.genre}, a genre you rank high`
+        : r.basis === 1 ? "A reader on readread loved it" : `${r.basis} readers on readread loved it`;
+  return (
+    <li>
+      <Link href={`/book/${r.book.id}`} className="book-row">
+        <Cover book={r.book} width={44} />
+        <span className="book-row__body">
+          <span className="book-row__title" style={{ display: "block" }}>{r.book.title}</span>
+          <span className="book-row__sub" style={{ display: "block" }}>{r.book.author}</span>
+          <span className="book-row__sub" style={{ display: "block", fontSize: 12 }}>{why}</span>
+        </span>
+        {r.source === "match" ? (
+          <span className="pill pill--cobalt m" style={{ fontWeight: 700 }} aria-label={`You'd likely give it ${formatScore(r.predicted)}`}>~{formatScore(r.predicted)}</span>
+        ) : (
+          <span className="pill m" style={{ fontWeight: 700 }} aria-label={`Readers average ${formatScore(r.predicted)}`}>{formatScore(r.predicted)}</span>
+        )}
+      </Link>
+    </li>
+  );
+}
+
+function Recommendations({ recs, rankedCount }: { recs: Rec[] | null; rankedCount: number }) {
+  const locked = rankedCount < TASTE_UNLOCK;
+  const left = TASTE_UNLOCK - rankedCount;
+  const matched = (recs ?? []).filter((r) => r.source === "match");
+  const others = (recs ?? []).filter((r) => r.source !== "match");
+
   return (
     <>
-      <h2 className="h2" style={{ marginTop: 24 }}>For you</h2>
-      <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>Loved by readers who rank like you</p>
-      <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
-        {recs.map((r) => (
-          <li key={r.book.id}>
-            <Link href={`/book/${r.book.id}`} className="book-row">
-              <Cover book={r.book} width={44} />
-              <span className="book-row__body">
-                <span className="book-row__title" style={{ display: "block" }}>{r.book.title}</span>
-                <span className="book-row__sub" style={{ display: "block" }}>{r.book.author}</span>
-              </span>
-              <span className="pill pill--cobalt m" style={{ fontWeight: 700 }}>~{formatScore(r.predicted)}</span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <h2 className="h2" style={{ marginTop: 28 }}>For you</h2>
+      {locked && (
+        <Link href="/add" className="unlock-row" style={{ color: "inherit" }}>
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ display: "block", fontSize: 14 }}>
+              Rank {left} more book{left === 1 ? "" : "s"} and picks start coming from readers who rank like you.
+            </span>
+            <span className="bar" style={{ display: "block", marginTop: 8 }}>
+              <span style={{ width: `${(rankedCount / TASTE_UNLOCK) * 100}%`, background: "var(--accent)" }} />
+            </span>
+          </span>
+          <ArrowIcon size={18} />
+        </Link>
+      )}
+      {!recs ? (
+        <RowsSkeleton count={3} label="Loading picks for you" />
+      ) : recs.length === 0 ? (
+        <p className="muted" style={{ margin: "8px 0 0", fontSize: 14 }}>
+          Nothing to suggest yet. As more people rank books, the ones they love will show up here.
+        </p>
+      ) : (
+        <>
+          {matched.length > 0 && (
+            <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
+              {matched.map((r) => <RecRow key={r.book.id} r={r} />)}
+            </ul>
+          )}
+          {others.length > 0 && (
+            <>
+              {matched.length > 0 && <p className="muted" style={{ margin: "20px 0 0", fontSize: 13, fontWeight: 600 }}>More to try</p>}
+              <ul style={{ listStyle: "none", margin: "6px 0 0", padding: 0 }}>
+                {others.map((r) => <RecRow key={r.book.id} r={r} />)}
+              </ul>
+            </>
+          )}
+        </>
+      )}
     </>
   );
 }
