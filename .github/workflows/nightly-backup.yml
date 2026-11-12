@@ -1,0 +1,84 @@
+# Nightly database backup (the Supabase Free plan has no backups of its own).
+#
+# Dumps roles, schema and data with the Supabase CLI, encrypts the bundle with
+# BACKUP_PASSPHRASE (the repo is public, and anyone signed in to GitHub can
+# download artifacts from a public repo), and keeps it as an artifact for 14
+# days. Run it by hand from the Actions tab any time.
+#
+# Secrets (repo Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL     Supabase → Connect → Session pooler connection string,
+#                       with the database password filled in. (The direct
+#                       connection is IPv6-only and GitHub runners can't reach it.)
+#   BACKUP_PASSPHRASE   A long random passphrase. Keep a copy in your password
+#                       manager: without it the backups can't be opened.
+#
+# To restore: download the artifact, then
+#   gpg --decrypt readread-backup-*.tar.gz.gpg | tar xz
+#   and load roles.sql, schema.sql, data.sql in that order with psql.
+name: Nightly backup
+
+on:
+  schedule:
+    - cron: "17 10 * * *" # 10:17 UTC, after the daily deploy
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secrets
+        id: check
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "SUPABASE_DB_URL or BACKUP_PASSPHRASE isn't set, so there's nothing to back up yet."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: supabase/setup-cli@v1
+        if: steps.check.outputs.ready == 'true'
+        with:
+          version: latest
+
+      - name: Dump the database
+        if: steps.check.outputs.ready == 'true'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir backup
+          supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$DB_URL" -f backup/data.sql --use-copy --data-only
+          ls -l backup
+
+      - name: Encrypt
+        if: steps.check.outputs.ready == 'true'
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          name="readread-backup-$(date -u +%Y-%m-%d)"
+          tar czf "$name.tar.gz" backup
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            --symmetric --cipher-algo AES256 -o "$name.tar.gz.gpg" "$name.tar.gz"
+          rm -rf backup "$name.tar.gz"
+          echo "NAME=$name" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        if: steps.check.outputs.ready == 'true'
+        with:
+          name: ${{ env.NAME }}
+          path: ${{ env.NAME }}.tar.gz.gpg
+          retention-days: 14
+          if-no-files-found: error
