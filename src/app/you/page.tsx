@@ -182,11 +182,14 @@ function You() {
             <ArrowIcon size={18} />
           </Link>
         ) : (
-          <Link href="/you/type" className="rt-teaser rt-teaser--top card" style={{ color: "inherit" }}>
+          <Link href="/you/type" className="rt-teaser rt-teaser--top rt-teaser--pending" style={{ color: "inherit" }}>
             <span style={{ flex: 1, minWidth: 0 }}>
-              <span className="eyebrow" style={{ display: "block" }}>Your reader type <span className="new-pill">New</span></span>
-              <span style={{ display: "block", fontWeight: 600, fontSize: 15, marginTop: 4 }}>
-                What kind of reader are you? Rank {Math.max(1, MIN_BOOKS - ranked.length)} more book{MIN_BOOKS - ranked.length === 1 ? "" : "s"} to find out.
+              <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>
+                {MIN_BOOKS - ranked.length <= 1 ? "One more ranking and you get your reader type" : `Rank ${MIN_BOOKS - ranked.length} more books to get your reader type`}
+                <span className="new-pill">New</span>
+              </span>
+              <span className="rt-progress" aria-hidden="true">
+                {Array.from({ length: MIN_BOOKS }, (_, i) => <span key={i} data-on={i < ranked.length ? "" : undefined} />)}
               </span>
             </span>
             <ArrowIcon size={18} />
@@ -198,7 +201,7 @@ function You() {
         ) : (
           <button className="blurb blurb--empty" onClick={() => setEditing(true)}>
             + Add a line about you as a reader
-            <span className="blurb__example">Like &ldquo;Sci-fi lifer, will read anything with a map in the front.&rdquo;</span>
+            <span className="blurb__example" style={{ fontWeight: 400 }}>Like &ldquo;Sci-fi lifer, will read anything with a map in the front.&rdquo;</span>
           </button>
         )}
 
@@ -232,7 +235,7 @@ function You() {
         <RecentlyFinished ranked={ranked} mine />
 
         <div className="stats-pair">
-          <button className="card stats-goal" onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
+          <button className="stats-goal" onClick={() => setEditing(true)} aria-label={goal ? `${thisYear} of ${goal} books this year. Edit goal` : "Set a yearly goal"}>
             <svg width="64" height="64" viewBox="0 0 80 80" aria-hidden="true">
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--line-2)" strokeWidth="8" />
               <circle cx="40" cy="40" r="34" fill="none" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round"

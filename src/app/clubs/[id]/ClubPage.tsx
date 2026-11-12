@@ -264,7 +264,7 @@ function Inner() {
             {error && <p className="error" role="alert" style={{ margin: 0 }}>{error}</p>}
           </section>
         ) : (
-          <section className="card" style={{ marginTop: 16 }}>
+          <section style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--line)" }}>
             <p className="h2" style={{ margin: 0 }}>{isHost ? "Pick the club’s first book" : "Between books"}</p>
             <p className="muted" style={{ margin: "6px 0 0", fontSize: 14 }}>{isHost ? "Choose from the list or any book, set the dates, and the weekly plan fills itself in." : "The host is picking what’s next."}</p>
             {isHost && <button className="btn btn--block" style={{ marginTop: 12 }} onClick={() => setSheet("pick")}>Pick a book</button>}
@@ -288,7 +288,7 @@ function Inner() {
 
             {current.plan.length > 0 && (
               <section aria-label="Week rooms" style={{ marginTop: 20 }}>
-                <h2 className="eyebrow">Week rooms</h2>
+                <h2 className="section-title" style={{ fontSize: 20 }}>Week rooms</h2>
                 <ul className="rooms__list">
                   {[...current.plan.map((_, i) => i + 1), WHOLE_BOOK].map((w) => {
                     const open = weekOpen(current.plan, w, reached, readBefore);

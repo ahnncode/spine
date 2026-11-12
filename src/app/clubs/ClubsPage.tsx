@@ -117,15 +117,15 @@ function Inner() {
           <>
             {mine.length > 0 && !searching && (
               <section aria-label="Your clubs" style={{ marginTop: 20 }}>
-                <h2 className="eyebrow">Your clubs</h2>
-                <div className="stack" style={{ marginTop: 10, gap: 10 }}>{mine.map((c) => renderRow(c, true))}</div>
+                <h2 className="visually-hidden">Your clubs</h2>
+                <div className="stack" style={{ marginTop: 4, gap: 10 }}>{mine.map((c) => renderRow(c, true))}</div>
               </section>
             )}
 
-            <section aria-label="Clubs to join" style={{ marginTop: 24 }}>
-              <h2 className="eyebrow">{mine.length ? "Clubs to join" : "Find a club"}</h2>
+            <section aria-label="Clubs to join" style={{ marginTop: 32 }}>
+              <h2 className="section-title">{mine.length ? "Clubs to join" : "Find a club"}</h2>
               <label htmlFor="club-search" className="visually-hidden">Search clubs</label>
-              <input id="club-search" className="input" type="search" style={{ marginTop: 10, borderRadius: 22 }} placeholder="Search clubs by name" value={query} onChange={(e) => setQuery(e.target.value)} />
+              <input id="club-search" className="input" type="search" style={{ marginTop: 12 }} placeholder="Search clubs by name" value={query} onChange={(e) => setQuery(e.target.value)} />
               {others === null ? (
                 <RowsSkeleton count={3} />
               ) : others.length === 0 ? (

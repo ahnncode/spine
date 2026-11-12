@@ -607,8 +607,8 @@ html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: n
 .cover-strip__item { width: 84px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px; text-decoration: none; color: inherit; }
 .cover-strip__title { font-family: var(--font-book); font-weight: 700; font-size: 13px; line-height: 1.15; min-height: 2.3em; /* two-line slot so buttons line up */ overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .blurb--empty {
-  display: block; width: 100%; padding: 10px 14px; text-align: left; font: inherit; font-size: 14px; color: var(--muted);
-  cursor: pointer; background: transparent; border: 1.5px dashed var(--line-2); border-radius: var(--radius-m);
+  display: block; width: 100%; min-height: 44px; padding: 10px 0; text-align: left; font: inherit; font-size: 14px; font-weight: 600; color: var(--cobalt-ink);
+  cursor: pointer; background: transparent; border: 0;
 }
 .filter-row { display: flex; gap: 8px; margin-top: 12px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
 .filter-row::-webkit-scrollbar { display: none; }
@@ -934,7 +934,7 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 
 /* You: the yearly goal and the streak as two cards (only the streak is black). */
 .stats-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
-.stats-goal { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.stats-goal { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 10px; padding: 4px 0; text-align: left; font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
 .stats-streak { display: flex; flex-direction: column; gap: 8px; }
 .stats-streak .streak-grid { margin-top: 2px; }
 .blurb__example { display: block; margin-top: 4px; font-size: 13px; font-weight: 400; color: var(--muted); font-style: italic; }
@@ -1071,6 +1071,11 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .profile-actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
 .profile-actions .follow-btn { min-width: 116px; justify-content: center; }
 .rt-teaser--top { margin-top: 16px; }
+/* Before a type exists: a plain row with progress, not another box. */
+.rt-teaser--pending { padding: 14px 0; border-radius: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.rt-progress { display: flex; gap: 4px; margin-top: 10px; }
+.rt-progress > span { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--well); }
+.rt-progress > span[data-on] { background: var(--ink); }
 
 /* A friend's type, summed up in the compare sheet. */
 .rt-about { margin-top: 16px; border-radius: var(--radius-l); padding: 16px 16px 12px; }
@@ -1144,9 +1149,9 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 
 /* Chapter rooms: the list on the book page, the room, the prompt after a check-in. */
 .rooms { margin-top: 24px; }
-.rooms__list { list-style: none; margin: 12px 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; background: var(--surface); }
+.rooms__list { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .rooms__list > li + li { border-top: 1px solid var(--line); }
-.rooms__row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px; color: inherit; text-decoration: none; font: inherit; font-size: 14px; width: 100%; background: transparent; border: 0; text-align: left; cursor: pointer; }
+.rooms__row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0; color: inherit; text-decoration: none; font: inherit; font-size: 14px; width: 100%; background: transparent; border: 0; text-align: left; cursor: pointer; }
 .rooms__num { width: 34px; flex-shrink: 0; font-family: var(--font-book); font-weight: 700; font-size: 17px; }
 .rooms__num--word { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; }
 .rooms__label { flex: 1; min-width: 0; }
@@ -1169,12 +1174,15 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 
 /* Book clubs */
 .club-tile { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: var(--font-display, Gloock, Georgia, serif); line-height: 1; }
-.club-row { display: flex; gap: 14px; align-items: center; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); color: inherit; text-decoration: none; }
+.club-row { display: flex; gap: 14px; align-items: center; min-height: 64px; padding: 12px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
+.club-row + .club-row { border-top: 0; }
+.stack:has(> .club-row) { gap: 0 !important; }
 .club-row__name { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 600; }
 .club-row__sub { display: block; font-size: 13px; margin-top: 2px; }
 .club-row__friends { display: block; font-size: 12px; font-weight: 600; color: var(--cobalt-ink); margin-top: 3px; }
-.club-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
-.club-tiles > a { display: flex; flex-direction: column; gap: 4px; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-l); color: inherit; text-decoration: none; }
+.club-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.club-tiles > a { display: flex; flex-direction: column; gap: 4px; padding: 16px 0; color: inherit; text-decoration: none; }
+.club-tiles > a + a { padding-left: 16px; border-left: 1px solid var(--line); }
 .club-weeks { display: flex; gap: 4px; }
 .club-weeks > span { flex: 1; height: 6px; border-radius: var(--radius-pill); background: var(--line); }
 .club-weeks > span.done { background: var(--club-text, #9A3412); }
@@ -1210,8 +1218,8 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .seg > button { min-height: 48px; border-radius: var(--radius-m); border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
 .seg > button[aria-checked="true"], .seg > button[aria-pressed="true"] { border: 2px solid var(--ink); font-weight: 600; }
-.club-list { list-style: none; margin: 8px 0 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-l); overflow: hidden; background: var(--surface); }
+.club-list { list-style: none; margin: 8px 0 0; padding: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .club-list:empty { display: none; }
 .club-list > li + li { border-top: 1px solid var(--line); }
-.club-list__row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 14px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.club-list__row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 10px 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .club-list__year { width: 38px; flex-shrink: 0; font-family: var(--font-book); font-weight: 700; font-size: 14px; color: var(--muted); }
