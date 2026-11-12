@@ -28,7 +28,7 @@ import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
 import type { Entry } from "@/lib/data";
-import { deleteMyAccount, fetchAbandonedCount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, today, updateMyProfile, isListened } from "@/lib/data";
+import { deleteMyAccount, fetchAbandonedCount, followCounts, rankEntries, myInvites, refreshBadges, setBookGenre, today, updateMyProfile, isListened, adminReportCount, isAdmin } from "@/lib/data";
 import { buildReaderType, MIN_BOOKS, readerInputFromShelf } from "@/lib/readerType";
 import { useSyncMyReaderType } from "@/components/useReaderTypes";
 import { GENRES } from "@/lib/genres";
@@ -134,6 +134,16 @@ function You() {
   useEffect(() => {
     if (profile) myInvites().then(setInvites).catch(() => {});
   }, [profile]);
+
+  // Moderators get a Reports row with the number waiting.
+  const [mod, setMod] = useState<{ count: number } | null>(null);
+  useEffect(() => {
+    let live = true;
+    isAdmin().then(async (yes) => {
+      if (yes && live) setMod({ count: await adminReportCount() });
+    });
+    return () => { live = false; };
+  }, []);
 
   async function signOut() {
     await supabase().auth.signOut();
@@ -375,6 +385,12 @@ function You() {
               <ArrowIcon size={18} />
             </Link>
           ))}
+          {mod && (
+            <Link href="/you/reports" className="link-group__row">
+              <span>Reports{mod.count > 0 && <span className="pill pill--accent" style={{ marginLeft: 8 }}>{mod.count} waiting</span>}</span>
+              <ArrowIcon size={18} />
+            </Link>
+          )}
         </nav>
 
         <button className="btn btn--ghost btn--block" style={{ marginTop: 20 }} onClick={signOut}>

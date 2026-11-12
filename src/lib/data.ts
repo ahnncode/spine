@@ -1342,6 +1342,51 @@ export async function report(targetType: "comment" | "entry" | "checkin" | "prof
   if (error) throw error;
 }
 
+/* ------------------------------ Moderation ------------------------------- */
+
+export type ReportTarget = "comment" | "entry" | "checkin" | "profile" | "chapter_comment" | "club_comment";
+
+export type OpenReport = {
+  target_type: ReportTarget;
+  target_id: string;
+  reports: number;
+  reasons: string[];
+  first_at: string;
+  last_at: string;
+  author_id: string | null;
+  author_name: string | null;
+  author_username: string | null;
+  body: string | null;
+  link: string | null;
+  author_reports: number;
+};
+
+/** Whether you can moderate. */
+export async function isAdmin(): Promise<boolean> {
+  const { data, error } = await supabase().rpc("is_admin");
+  return !error && data === true;
+}
+
+/** Number of reported things waiting. Always 0 for anyone who isn't an admin. */
+export async function adminReportCount(): Promise<number> {
+  const { data, error } = await supabase().rpc("admin_open_report_count");
+  if (error) return 0;
+  return (data as number) ?? 0;
+}
+
+/** Open reports grouped by what was reported. Throws for non-admins. */
+export async function adminReports(): Promise<OpenReport[]> {
+  const { data, error } = await supabase().rpc("admin_reports");
+  if (error) throw error;
+  return (data ?? []) as OpenReport[];
+}
+
+/** Keep it (dismiss) or take it down (remove). */
+export async function resolveReport(type: ReportTarget, targetId: string, action: "dismiss" | "remove"): Promise<void> {
+  const { error } = await supabase().rpc("admin_resolve_report", { p_type: type, p_target: targetId, p_action: action });
+  if (error) throw error;
+}
+
 /* -------------------------------- Pokes ---------------------------------- */
 
 /** Nudge someone you follow about their reading (once a day each). */
