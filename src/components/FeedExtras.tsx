@@ -45,7 +45,7 @@ export function SplitCard({ friends, mine, me }: { friends: string[]; mine: Map<
       <Cover book={split.theirs.book} width={56} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <p className="eyebrow" style={{ margin: 0 }}>You two disagree</p>
-        <p className="d" style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 700, lineHeight: 1.15 }}>
+        <p className="d" style={{ margin: "4px 0 0", fontSize: 17, fontWeight: 700, lineHeight: 1.15 }}>
           You and {name} split on {split.theirs.book.title}
         </p>
         <p className="m" style={{ margin: "6px 0 0", fontSize: 14 }}>

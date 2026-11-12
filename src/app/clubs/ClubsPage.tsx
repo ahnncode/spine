@@ -107,7 +107,7 @@ function Inner() {
     <div className="app">
       <main className="screen screen--flow" style={{ paddingTop: 20 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-          <h1 className="g" style={{ margin: 0, fontSize: 32, fontWeight: 400 }}>Book clubs</h1>
+          <h1 className="g" style={{ margin: 0, fontSize: 28, fontWeight: 400 }}>Book clubs</h1>
           <Link href="/clubs/new" className="small-btn" style={{ background: "var(--ink)", color: "var(--on-ink)" }}>Start a club</Link>
         </div>
 

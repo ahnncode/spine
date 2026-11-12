@@ -23,7 +23,7 @@ export function ElsewhereRatings({ book }: { book: Pick<Book, "id" | "title" | "
       <span>Elsewhere</span>
       {ratings.map((r) => (
         <span key={r.source}>
-          <span aria-hidden="true" style={{ color: "#b5452b" }}>★</span>{" "}
+          <span aria-hidden="true" style={{ color: "var(--accent-ink)" }}>★</span>{" "}
           <b>{r.average.toFixed(1)}</b> {r.label} ({r.count.toLocaleString()})
         </span>
       ))}

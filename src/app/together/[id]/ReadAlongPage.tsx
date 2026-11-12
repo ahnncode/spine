@@ -196,19 +196,19 @@ function Inner() {
                 <p style={{ margin: 0, fontWeight: 600 }}>
                   {displayName(data.ra.created_by ? data.people.get(data.ra.created_by) : undefined)} invited you to read this together.
                 </p>
-                <p style={{ margin: "6px 0 0", fontSize: 13, color: "#c9c8c2" }}>
+                <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--on-panel-muted)" }}>
                   Joining puts it in your Reading now. Check in as you go; the discussion hides anything past where you are.
                 </p>
                 <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <button className="btn" style={{ flex: 1, background: "#fff", color: "var(--black)" }} onClick={() => respond(true)}>Join</button>
-                  <button className="btn btn--ghost" style={{ flex: 1, color: "#fff" }} onClick={() => respond(false)}>Not now</button>
+                  <button className="btn" style={{ flex: 1, background: "var(--on-panel)", color: "var(--black)" }} onClick={() => respond(true)}>Join</button>
+                  <button className="btn btn--ghost" style={{ flex: 1, color: "var(--on-panel)" }} onClick={() => respond(false)}>Not now</button>
                 </div>
               </div>
             )}
 
             {verdict.length >= 2 && (
               <section className="card verdict" style={{ marginTop: 20 }}>
-                <p className="eyebrow" style={{ color: "#c9c8c2" }}>The verdict</p>
+                <p className="eyebrow" style={{ color: "var(--on-panel-muted)" }}>The verdict</p>
                 {verdict.map((p, i) => (
                   <div key={p.user_id} className="verdict__row">
                     <span className="verdict__rank">{i + 1}</span>
@@ -217,7 +217,7 @@ function Inner() {
                     <span className="verdict__chip"><ScoreChip score={p.score!} bucket={bucketFor(p.score!)} size={44} /></span>
                   </div>
                 ))}
-                <p style={{ margin: "10px 0 0", fontSize: 14, color: "#dddcd6", lineHeight: 1.45 }}>
+                <p style={{ margin: "10px 0 0", fontSize: 14, color: "var(--on-panel-2)", lineHeight: 1.45 }}>
                   {displayName(data.people.get(verdict[0].user_id)).split(" ")[0]} loved it most
                   {verdict[0].score! - verdict[verdict.length - 1].score! >= 2
                     ? `, ${displayName(data.people.get(verdict[verdict.length - 1].user_id)).split(" ")[0]} not so much`
@@ -234,7 +234,7 @@ function Inner() {
                 <Link
                   href="/search"
                   className="btn btn--block"
-                  style={{ marginTop: 8, background: "#fff", color: "var(--black)" }}
+                  style={{ marginTop: 8, background: "var(--on-panel)", color: "var(--black)" }}
                   onClick={() => rememberNextGroup(data.ra.id, joined.map((p) => p.user_id).filter((u) => u !== me?.id))}
                 >
                   Pick the next book together

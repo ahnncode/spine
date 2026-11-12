@@ -307,14 +307,14 @@ function lensAxis(books: RTBook[]): AxisResult {
         ? `${pctOf(heartLoved.length, loved.length)}% of loved books are ${lovedGenres(heartLoved)}`
         : "",
       tagLine(heartTags),
-      mindLoved.length === 0 && loved.length >= 4 ? "Not one idea-first book among the favourites" : "",
+      mindLoved.length === 0 && loved.length >= 4 ? "Not one idea-first book among the favorites" : "",
     ],
     second: [
       loved.length >= 3 && mindLoved.length / loved.length >= 0.4
         ? `${pctOf(mindLoved.length, loved.length)}% of loved books are ${lovedGenres(mindLoved)}`
         : "",
       tagLine(mindTags),
-      heartLoved.length === 0 && loved.length >= 4 ? "No love stories or literary fiction among the favourites" : "",
+      heartLoved.length === 0 && loved.length >= 4 ? "No love stories or literary fiction among the favorites" : "",
     ],
   });
 }

@@ -75,7 +75,7 @@ export default function Landing() {
           </p>
         )}
 
-        <h1 className="h1" style={{ fontSize: 58, lineHeight: 0.92, marginTop: 40 }}>
+        <h1 className="h1" style={{ fontSize: 52, lineHeight: 0.92, marginTop: 40 }}>
           Rank books,
           <br />
           not stars.

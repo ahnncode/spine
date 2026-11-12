@@ -120,8 +120,8 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
       <div className="sheet-backdrop" onClick={() => onDone()}>
         <div className="sheet" role="dialog" aria-modal="true" aria-label="Checked in" onClick={(e) => e.stopPropagation()}>
           <div className="sheet__grab" />
-          <p className="eyebrow" style={{ color: "#2D6A3E" }}>Checked in</p>
-          <h2 className="g" style={{ margin: "4px 0 0", fontSize: 26, lineHeight: 1.1, fontWeight: 400 }}>
+          <p className="eyebrow" style={{ color: "var(--success)" }}>Checked in</p>
+          <h2 className="g" style={{ margin: "4px 0 0", fontSize: 24, lineHeight: 1.1, fontWeight: 400 }}>
             Chapter {opened}{totalN ? ` of ${totalN}` : ""}
           </h2>
           <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{entry.book.title}</p>
@@ -142,7 +142,7 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
           </Link>
           <div style={{ minWidth: 0 }}>
             <p className="eyebrow">{doneToday ? "Checked in today" : "Reading check-in"}</p>
-            <h2 className="d" style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
+            <h2 className="d" style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
               <Link href={`/book/${entry.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{entry.book.title}</Link>
             </h2>
             <Link href={`/book/${entry.book_id}`} style={{ display: "inline-block", marginTop: 8, fontSize: 13, fontWeight: 600, color: "var(--cobalt-ink)", textDecoration: "none" }}>
@@ -203,14 +203,14 @@ export function CheckInSheet({ entry, onClose, onDone }: { entry: Entry; onClose
               <label htmlFor="page" className="muted">Page</label>
               <input id="page" className="input" inputMode="numeric" style={{ width: 96, height: 48 }} value={page} onChange={(e) => fromPage(e.target.value)} />
               <span className="muted">of {pages}</span>
-              <span className="d" style={{ marginLeft: "auto", fontSize: 28, fontWeight: 800 }}>{pct}%</span>
+              <span className="d" style={{ marginLeft: "auto", fontSize: 28, fontWeight: 700 }}>{pct}%</span>
             </div>
           )}
 
           {unit === "percent" && (
             <>
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 6 }}>
-                <span className="d" style={{ fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{pct}%</span>
+                <span className="d" style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.01em" }}>{pct}%</span>
               </div>
               <label htmlFor="progress" className="visually-hidden">Percent through</label>
               <input

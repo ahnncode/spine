@@ -67,7 +67,7 @@ export function StopSheet({
           <Cover book={entry.book} width={48} />
           <div style={{ minWidth: 0 }}>
             <p className="eyebrow" style={{ color: mode === "pause" ? "var(--amber-ink)" : undefined }}>{mode === "pause" ? "Put aside" : "Didn’t finish"}</p>
-            <h2 className="g" style={{ margin: "4px 0 0", fontSize: 26, lineHeight: 1.1, fontWeight: 400 }}>
+            <h2 className="g" style={{ margin: "4px 0 0", fontSize: 24, lineHeight: 1.1, fontWeight: 400 }}>
               {mode === "pause" ? `Taking a break from ${entry.book.title}` : `Done with ${entry.book.title}?`}
             </h2>
           </div>
@@ -180,7 +180,7 @@ export function ResumeSheet({ entry, onClose, onDone }: { entry: Entry; onClose:
         <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
           <Cover book={entry.book} width={52} />
           <div style={{ minWidth: 0 }}>
-            <h2 className="g" style={{ margin: 0, fontSize: 26, lineHeight: 1.1, fontWeight: 400 }}>
+            <h2 className="g" style={{ margin: 0, fontSize: 24, lineHeight: 1.1, fontWeight: 400 }}>
               {fromDrop ? "Give it another go" : `Back to ${entry.book.title}`}
             </h2>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>

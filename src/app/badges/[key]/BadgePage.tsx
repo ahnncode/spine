@@ -83,7 +83,7 @@ function Inner() {
             <Medallion badge={def.key} earned={earned} progress={status ? fraction(status) : 0} size={128} />
           </div>
           <p className="eyebrow" style={{ marginTop: 16 }}>{hidden ? "Secret" : `${RARITY_LABEL[def.rarity]} · ${CATEGORY_LABEL[def.category]}`}</p>
-          <h1 className="g" style={{ margin: "4px 0 0", fontSize: 34, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>{hidden ? "???" : def.name}</h1>
+          <h1 className="g" style={{ margin: "4px 0 0", fontSize: 36, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.05 }}>{hidden ? "???" : def.name}</h1>
           <p style={{ margin: "8px 0 0", fontSize: 15, color: "var(--ink-2)" }}>{hidden ? "A secret badge. You’ll know it when you earn it." : def.how}</p>
           {earned ? (
             <p className="m muted" style={{ fontSize: 13, marginTop: 12 }}>You earned this {earnedOn(status!.earned!)}</p>

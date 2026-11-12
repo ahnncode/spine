@@ -107,7 +107,7 @@ export function ThoughtsEditor({
         <>
           <p className="eyebrow" style={{ margin: compact ? "0 0 8px" : "12px 0 8px" }}>For {GENRE_BY_KEY[genre]?.label.toLowerCase() ?? genre}</p>
           <div className="tag-list" role="group" aria-label={`Tags for ${GENRE_BY_KEY[genre]?.label ?? genre}`}
-            style={{ ["--g" as string]: GENRE_BY_KEY[genre]?.bg ?? "var(--cobalt)", ["--g-fg" as string]: GENRE_BY_KEY[genre]?.fg ?? "#fff" }}>
+            style={{ ["--g" as string]: GENRE_BY_KEY[genre]?.bg ?? "var(--cobalt)", ["--g-fg" as string]: GENRE_BY_KEY[genre]?.fg ?? "var(--on-panel)" }}>
             {genreTags.map(chip("tag-chip tag-chip--genre"))}
           </div>
         </>

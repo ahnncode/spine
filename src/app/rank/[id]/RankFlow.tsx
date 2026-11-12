@@ -281,7 +281,7 @@ function Flow() {
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", flex: 1, paddingTop: 10 }}>
             <p className="eyebrow" style={{ marginBottom: 18 }}>{label}</p>
             <Cover book={book} width={168} />
-            <h1 className="h1" style={{ fontSize: 32, marginTop: 24, textAlign: "center", letterSpacing: "-0.03em" }}>{book.title}</h1>
+            <h1 className="h1" style={{ fontSize: 28, marginTop: 24, textAlign: "center", letterSpacing: "-0.03em" }}>{book.title}</h1>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 15 }}>{book.author}</p>
             {current && (
               <span className="pill" style={{ marginTop: 12 }}>
@@ -325,7 +325,7 @@ function Flow() {
         {phase === "compare" && book && opp && (
           <>
             <p className="eyebrow" style={{ marginTop: 12 }}>{confirming ? "One last check" : `Head-to-head ${steps + 1}`}</p>
-            <h1 className="h1" style={{ fontSize: 34, marginTop: 8, lineHeight: 1.02, letterSpacing: "-0.03em" }}>
+            <h1 className="h1" style={{ fontSize: 36, marginTop: 8, lineHeight: 1.02, letterSpacing: "-0.03em" }}>
               Which one stuck with you more?
             </h1>
             {confirming && (

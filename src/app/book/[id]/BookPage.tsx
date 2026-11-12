@@ -158,7 +158,7 @@ function Inner() {
         {!book && <BookSkeleton />}
         {book && (
           <div className="book-hero__fade" style={{ ["--tint" as string]: tint ?? "transparent" }}>
-            <h1 className="h1" style={{ fontSize: 32 }}>{book.title}</h1>
+            <h1 className="h1" style={{ fontSize: 28 }}>{book.title}</h1>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
               {[book.author, book.year, book.pages ? `${book.pages} pages` : null].filter(Boolean).join(" · ")}
             </p>
@@ -233,13 +233,13 @@ function Inner() {
             ) : social?.predicted.score == null ? (
               social && <p className="muted" style={{ margin: "16px 0 0", fontSize: 14 }}>Rank more books and you&rsquo;ll see a predicted score here.</p>
             ) : (
-              <div className="card" style={{ marginTop: 16, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
-                <div className="m score" style={{ width: 60, height: 60, background: "#fff", color: "#1d2ba8", fontSize: 20 }}>
+              <div className="card" style={{ marginTop: 16, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "var(--on-panel)", display: "flex", alignItems: "center", gap: 14 }}>
+                <div className="m score" style={{ width: 60, height: 60, background: "var(--on-panel)", color: "var(--cobalt-deep)", fontSize: 20 }}>
                   {social?.predicted.score != null ? formatScore(social.predicted.score) : "?"}
                 </div>
                 <div>
                   <div style={{ fontWeight: 600 }}>Your predicted score</div>
-                  <div style={{ fontSize: 13, color: "#dde1ff", marginTop: 2, lineHeight: 1.35 }}>
+                  <div style={{ fontSize: 13, color: "var(--on-cobalt-muted)", marginTop: 2, lineHeight: 1.35 }}>
                     {social?.predicted.score != null
                       ? `From ${social.predicted.basis} reader${social.predicted.basis === 1 ? "" : "s"} whose taste matches yours`
                       : "Rank more books and we’ll learn your taste"}
@@ -403,7 +403,7 @@ function FixDetails({ book, onClose, onSaved }: { book: Book; onClose: () => voi
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Fix book details" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Fix book details</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>Fix book details</h2>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>Book info comes from Open Library, which sometimes has typos.</p>
         <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="fix-title">Title</label>

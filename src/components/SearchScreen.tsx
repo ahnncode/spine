@@ -336,7 +336,7 @@ function Inner({ mode }: { mode: "discover" | "add" }) {
                 <Cover book={picked} width={96} />
               </button>
               <div style={{ minWidth: 0 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
+                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
                   <button type="button" className="link-plain" onClick={() => act(picked, "page")} disabled={busy}>{picked.title}</button>
                 </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>
@@ -379,7 +379,7 @@ function Recommendations({ recs, rankedCount }: { recs: Array<{ book: Book; pred
     return (
       <div className="card" style={{ marginTop: 20 }}>
         <div className="eyebrow">For you</div>
-        <p className="g" style={{ fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", margin: "6px 0 0", lineHeight: 1.05 }}>
+        <p className="g" style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em", margin: "6px 0 0", lineHeight: 1.05 }}>
           Rank {left} more book{left === 1 ? "" : "s"} to unlock picks made for your taste.
         </p>
         <div className="bar" style={{ marginTop: 16 }}>

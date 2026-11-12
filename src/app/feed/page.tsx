@@ -217,7 +217,7 @@ function Feed() {
 
         {data && !newReader && data.items.length === 0 && data.together.length === 0 && scope === "following" && (
           <div className="card" style={{ marginTop: 16 }}>
-            <p className="g" style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05, margin: 0 }}>
+            <p className="g" style={{ fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.05, margin: 0 }}>
               {data.following ? "Quiet in here." : "Your feed needs friends."}
             </p>
             <p className="muted" style={{ fontSize: 14, lineHeight: 1.45, margin: "10px 0 0" }}>

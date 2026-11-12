@@ -111,12 +111,12 @@ function Importer() {
               starred books are roughly in order. A few quick matchups will make the ranking yours.
             </p>
             <div className="card card--ink" style={{ marginTop: 24, display: "flex", gap: 14 }}>
-              <div className="d score score--top" style={{ width: 44, height: 44, fontSize: 18, fontWeight: 800, fontFamily: "var(--font-book)" }}>
+              <div className="d score score--top" style={{ width: 44, height: 44, fontSize: 17, fontWeight: 700, fontFamily: "var(--font-book)" }}>
                 {summary.loved}
               </div>
               <div>
                 <div style={{ fontWeight: 600 }}>books you loved</div>
-                <div style={{ fontSize: 14, color: "#c9c8c2", marginTop: 4, lineHeight: 1.4 }}>
+                <div style={{ fontSize: 14, color: "var(--on-panel-muted)", marginTop: 4, lineHeight: 1.4 }}>
                   Stars can&rsquo;t tell them apart. Head-to-heads can.
                 </div>
               </div>

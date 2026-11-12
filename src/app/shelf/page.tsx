@@ -156,12 +156,12 @@ function Shelf() {
             )}
             {roughCount > 1 && (
               <Link href="/sharpen" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 16, textDecoration: "none" }}>
-                <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-book)", fontWeight: 800 }}>
+                <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-book)", fontWeight: 700 }}>
                   {roughCount > 99 ? "99+" : roughCount}
                 </span>
                 <span style={{ flex: 1 }}>
                   <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>imported books are only roughly sorted</span>
-                  <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>Sharpen them with quick matchups</span>
+                  <span style={{ display: "block", fontSize: 13, color: "var(--on-panel-muted)", marginTop: 2 }}>Sharpen them with quick matchups</span>
                 </span>
                 <ArrowIcon size={18} />
               </Link>
@@ -232,7 +232,7 @@ function Shelf() {
                 <Cover book={sheet.book} width={84} />
               </Link>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
+                <h2 className="d" style={{ margin: 0, fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.05 }}>
                   <Link href={`/book/${sheet.book_id}`} style={{ color: "inherit", textDecoration: "none" }}>{sheet.book.title}</Link>
                 </h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{sheet.book.author}</p>
@@ -293,7 +293,7 @@ function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; chi
       onClick={onClick}
       aria-pressed={on}
       style={{
-        flexShrink: 0, minHeight: 36, padding: "0 14px", borderRadius: 18, fontSize: 13, fontWeight: 600,
+        flexShrink: 0, minHeight: 36, padding: "0 14px", borderRadius: 999, fontSize: 13, fontWeight: 600,
         border: on ? 0 : "1px solid var(--line-2)", background: on ? "var(--ink)" : "transparent", color: on ? "var(--on-ink)" : "var(--ink)",
       }}
     >

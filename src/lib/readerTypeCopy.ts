@@ -48,7 +48,7 @@ export const TYPES: Record<string, TypeCopy> = {
     tagline: "Writes back to every kind of book.",
     about: "You’ll follow a good character into any genre, and once you’ve started a book you see it through. You go in hoping to love it, and you usually do.",
     superpower: "You find the warm heart in books other people wrote off as ‘not my thing’.",
-    watchOut: "Loving widely can blur your favourites together. Your top ten should feel like a fight.",
+    watchOut: "Loving widely can blur your favorites together. Your top ten should feel like a fight.",
   },
   WHFC: {
     name: "The Witness",
@@ -67,7 +67,7 @@ export const TYPES: Record<string, TypeCopy> = {
   WHGC: {
     name: "The Sommelier",
     tagline: "Tastes everything. Keeps very little.",
-    about: "You sample widely and juggle several books, but very few earn a place among your favourites. You read for feeling, and you can tell real feeling from the manufactured kind.",
+    about: "You sample widely and juggle several books, but very few earn a place among your favorites. You read for feeling, and you can tell real feeling from the manufactured kind.",
     superpower: "Your ‘loved’ shelf is short, strange and completely trustworthy.",
     watchOut: "A first chapter isn’t the whole bottle. Some books only open up halfway.",
   },
@@ -122,7 +122,7 @@ export const TYPES: Record<string, TypeCopy> = {
     tagline: "Several love affairs, one corner of the library.",
     about: "You keep a few books going at once, mostly the same kind, chosen by how you feel that day. You fall hard and often.",
     superpower: "You know exactly which book fits which mood.",
-    watchOut: "When everything is a favourite, nothing is. Make your books fight for the top spot.",
+    watchOut: "When everything is a favorite, nothing is. Make your books fight for the top spot.",
   },
   DHGC: {
     name: "The Connoisseur",
@@ -256,6 +256,6 @@ export const BLIND_SPOTS: Record<string, string> = {
   M: "You can undersell books that are ‘only’ about people. Some of the sharpest ideas are hiding inside them.",
   F: "You’ll finish a book you stopped enjoying a hundred pages ago. That’s hours you could give to the next great one.",
   G: "Long, slow-building books need a run-up you rarely give them. Some of the best books ever written start slow.",
-  E: "When you love almost everything, your favourites get hard to tell apart. Sharpen your ranking to find your real number one.",
+  E: "When you love almost everything, your favorites get hard to tell apart. Sharpen your ranking to find your real number one.",
   C: "A high bar keeps out the duds, and sometimes the books that only work in their second half.",
 };

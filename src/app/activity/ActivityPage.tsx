@@ -71,7 +71,7 @@ function Inner() {
       <main className="screen screen--flow" style={{ paddingTop: 16 }}>
         <div className="topbar" style={{ gap: 12, justifyContent: "flex-start" }}>
           <button className="icon-btn" aria-label="Back" onClick={() => (window.history.length > 1 ? router.back() : router.push("/feed"))}><BackIcon size={20} /></button>
-          <h1 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 400 }}>{data && !data.fresh.length ? "Recent reactions" : "Since you were last here"}</h1>
+          <h1 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 400 }}>{data && !data.fresh.length ? "Recent reactions" : "Since you were last here"}</h1>
         </div>
 
         {!data || !entries ? (

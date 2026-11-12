@@ -134,13 +134,13 @@ function Scanner() {
           <span style={{ width: 44 }} />
         </div>
 
-        <div style={{ position: "relative", marginTop: 16, borderRadius: 24, overflow: "hidden", background: "#111", aspectRatio: "3 / 4" }}>
+        <div style={{ position: "relative", marginTop: 16, borderRadius: 22, overflow: "hidden", background: "var(--black)", aspectRatio: "3 / 4" }}>
           <video ref={videoRef} muted playsInline style={{ width: "100%", height: "100%", objectFit: "cover", display: camError ? "none" : "block" }} />
           {!camError && (
             <div aria-hidden="true" style={{ position: "absolute", left: "12%", right: "12%", top: "38%", height: "24%", border: "3px solid var(--accent)", borderRadius: 16, boxShadow: "0 0 0 2000px rgba(0,0,0,0.35)" }} />
           )}
-          {camError && <p style={{ color: "#fff", padding: 24, margin: 0, lineHeight: 1.45 }}>{camError}</p>}
-          <p aria-live="polite" style={{ position: "absolute", bottom: 14, left: 0, right: 0, textAlign: "center", color: "#fff", fontSize: 14, margin: 0 }}>
+          {camError && <p style={{ color: "var(--on-panel)", padding: 24, margin: 0, lineHeight: 1.45 }}>{camError}</p>}
+          <p aria-live="polite" style={{ position: "absolute", bottom: 14, left: 0, right: 0, textAlign: "center", color: "var(--on-panel)", fontSize: 14, margin: 0 }}>
             {lookingUp ? "Looking it up…" : miss ? `Couldn’t find ${miss}. Try again or type it` : camError ? "" : "Point at the barcode on the back"}
           </p>
         </div>
@@ -159,7 +159,7 @@ function Scanner() {
             <div style={{ display: "flex", gap: 16, alignItems: "flex-end" }}>
               <Cover book={found} width={96} />
               <div style={{ minWidth: 0 }}>
-                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em", lineHeight: 1.05 }}>{found.title}</h2>
+                <h2 className="d" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em", lineHeight: 1.05 }}>{found.title}</h2>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>{[found.author, found.year].filter(Boolean).join(" · ")}</p>
               </div>
             </div>

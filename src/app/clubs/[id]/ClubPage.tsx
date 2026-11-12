@@ -222,7 +222,7 @@ function Inner() {
               <Cover book={book} width={64} />
               <span style={{ minWidth: 0 }}>
                 <span className="eyebrow club-accent">Reading now</span>
-                <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.15, marginTop: 2 }}>{book.title}</span>
+                <span className="g" style={{ display: "block", fontSize: 20, lineHeight: 1.15, marginTop: 2 }}>{book.title}</span>
                 <span className="muted" style={{ display: "block", fontSize: 13, marginTop: 2 }}>{book.author} · finishes {shortDate(current.ends_on)}</span>
               </span>
             </Link>
@@ -320,12 +320,12 @@ function Inner() {
         <div className="club-tiles">
           <Link href={`/clubs/${id}/list`}>
             <span className="eyebrow">{card.list_id ? "The list" : "Read together"}</span>
-            <span className="d" style={{ fontWeight: 700, fontSize: 22 }}>{data.reads.filter((r) => r.finished_at).length} read</span>
+            <span className="d" style={{ fontWeight: 700, fontSize: 20 }}>{data.reads.filter((r) => r.finished_at).length} read</span>
             <span className="muted" style={{ fontSize: 12 }}>{card.list_id ? "See the whole list" : "Every book so far"}</span>
           </Link>
           <Link href={`/clubs/${id}/shelf`}>
             <span className="eyebrow">Club shelf</span>
-            <span className="d" style={{ fontWeight: 700, fontSize: 22 }}>Verdicts</span>
+            <span className="d" style={{ fontWeight: 700, fontSize: 20 }}>Verdicts</span>
             <span className="muted" style={{ fontSize: 12 }}>The club&rsquo;s ranking</span>
           </Link>
         </div>
@@ -414,7 +414,7 @@ function MembersSheet({ clubId, data, meId, onClose, onChange, onEdit, onGone }:
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Members" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 400 }}>Members · {data.members.length}</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 400 }}>Members · {data.members.length}</h2>
         <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0 }}>
           {data.members.map((m) => (
             <li key={m.user_id} className="book-row" style={{ borderBottom: "1px solid var(--line)" }}>
@@ -430,7 +430,7 @@ function MembersSheet({ clubId, data, meId, onClose, onChange, onEdit, onGone }:
               )}
               {(role === "host" || (role === "cohost" && m.role === "member")) && m.user_id !== meId && m.role !== "host" && (
                 confirm === `x${m.user_id}` ? (
-                  <button className="small-btn" style={{ background: "var(--error)", color: "#fff" }} disabled={busy !== null} onClick={() => act(`x${m.user_id}`, () => removeClubMember(clubId, m.user_id))}>Remove?</button>
+                  <button className="small-btn" style={{ background: "var(--error)", color: "var(--on-ink)" }} disabled={busy !== null} onClick={() => act(`x${m.user_id}`, () => removeClubMember(clubId, m.user_id))}>Remove?</button>
                 ) : (
                   <button className="link-btn" style={{ minHeight: 36, fontSize: 13 }} disabled={busy !== null} onClick={() => setConfirm(`x${m.user_id}`)}>Remove</button>
                 )
@@ -449,7 +449,7 @@ function MembersSheet({ clubId, data, meId, onClose, onChange, onEdit, onGone }:
             <button className="link-btn" style={{ minHeight: 44 }} onClick={() => setConfirm("leave")}>Leave the club</button>
           )}
           {role === "host" && (confirm === "delete" ? (
-            <button className="btn btn--block" style={{ background: "var(--error)", color: "#fff" }} disabled={busy !== null} onClick={() => leaveOrDelete("delete")}>Delete the club for everyone</button>
+            <button className="btn btn--block" style={{ background: "var(--error)", color: "var(--on-ink)" }} disabled={busy !== null} onClick={() => leaveOrDelete("delete")}>Delete the club for everyone</button>
           ) : (
             <button className="link-btn" style={{ minHeight: 44, color: "var(--error)" }} onClick={() => setConfirm("delete")}>Delete the club</button>
           ))}
@@ -485,7 +485,7 @@ function EditClubSheet({ clubId, data, onClose, onDone }: { clubId: string; data
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Edit the club" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 400 }}>Edit the club</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 400 }}>Edit the club</h2>
         <div className="stack" style={{ marginTop: 14, gap: 14 }}>
           <div><label htmlFor="e-name" className="field-label">Name</label><input id="e-name" className="input" maxLength={60} value={name} onChange={(e) => setName(e.target.value)} /></div>
           <div><label htmlFor="e-about" className="field-label">What it&rsquo;s about</label><textarea id="e-about" className="textarea" maxLength={500} value={about} onChange={(e) => setAbout(e.target.value)} /></div>
@@ -553,7 +553,7 @@ function InviteSheet({ clubId, name, hasPassword, canReset, onClose }: { clubId:
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Invite people" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 400 }}>Invite people</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 400 }}>Invite people</h2>
         <p className="muted" style={{ margin: "6px 0 0", fontSize: 14, lineHeight: 1.45 }}>
           Anyone with this link can join{hasPassword ? " without the password" : ""}. They&rsquo;ll need a readread account; the link brings them straight back here after they sign up.
         </p>
@@ -591,7 +591,7 @@ function WrapSheet({ title, onClose, onWrap }: { title: string; onClose: () => v
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={`Wrap up ${title}`} onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 400 }}>Wrap up {title}?</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 400 }}>Wrap up {title}?</h2>
         <p style={{ margin: "8px 0 0", fontSize: 15, lineHeight: 1.45 }}>
           Everyone gets a nudge to rank it, and the club&rsquo;s verdict goes up on the club shelf. The week rooms stay open there, so the conversation can carry on.
         </p>

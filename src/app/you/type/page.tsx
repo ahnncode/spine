@@ -99,8 +99,8 @@ function ReaderTypePage() {
               <span key={i} style={{ animationDelay: `${0.12 + i * 0.14}s` }} aria-hidden="true">{l}</span>
             ))}
           </div>
-          <h1 id="rt-name" className="g moment" style={{ margin: 0, fontSize: 40, lineHeight: 1, letterSpacing: "-0.015em", animationDelay: "0.75s" }}>{type.copy.name}</h1>
-          <p className="d moment" style={{ margin: "10px 0 0", fontSize: 19, lineHeight: 1.3, fontWeight: 500, animationDelay: "0.85s" }}>{type.copy.tagline}</p>
+          <h1 id="rt-name" className="g moment" style={{ margin: 0, fontSize: 36, lineHeight: 1, letterSpacing: "-0.015em", animationDelay: "0.75s" }}>{type.copy.name}</h1>
+          <p className="d moment" style={{ margin: "10px 0 0", fontSize: 17, lineHeight: 1.3, fontWeight: 500, animationDelay: "0.85s" }}>{type.copy.tagline}</p>
           <p className="moment" style={{ margin: "16px 0 0", fontSize: 13, opacity: 0.85, animationDelay: "0.95s" }}>
             {f.label}: {f.gist.toLowerCase()}.
           </p>
@@ -134,7 +134,7 @@ function ReaderTypePage() {
           <div className="eyebrow" style={{ color: "inherit", opacity: 0.95 }}>Your core drive</div>
           <div className="g" style={{ fontSize: 44, lineHeight: 1, marginTop: 8 }}>{type.drive.label}</div>
           {type.wing && <div className="g" style={{ fontSize: 20, marginTop: 6, opacity: 0.8 }}>with {withArticle(type.wing.label.toLowerCase())} wing</div>}
-          <p className="d" style={{ margin: "14px 0 0", fontSize: 18, lineHeight: 1.3, fontWeight: 500 }}>{type.drive.desire}</p>
+          <p className="d" style={{ margin: "14px 0 0", fontSize: 17, lineHeight: 1.3, fontWeight: 500 }}>{type.drive.desire}</p>
           <div className="eyebrow" style={{ color: "inherit", opacity: 0.95, marginTop: 16 }}>What loses you</div>
           <p style={{ margin: "4px 0 0", fontSize: 15 }}>{type.drive.shadow}</p>
           <div className="stack" style={{ marginTop: 18, gap: 8 }}>
@@ -179,7 +179,7 @@ function ReaderTypePage() {
         {type.stretch && (
           <section className="card" style={{ marginTop: 10 }}>
             <div className="eyebrow">Your stretch read</div>
-            <div className="g" style={{ fontSize: 26, lineHeight: 1.05, marginTop: 6 }}>{type.stretch.label}</div>
+            <div className="g" style={{ fontSize: 24, lineHeight: 1.05, marginTop: 6 }}>{type.stretch.label}</div>
             <p style={{ margin: "6px 0 0", fontSize: 15, lineHeight: 1.45 }}>{type.stretch.why}</p>
             <Link href="/search" className="link-btn" style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10, fontWeight: 600, fontSize: 14 }}>
               Find one <ArrowIcon size={14} />

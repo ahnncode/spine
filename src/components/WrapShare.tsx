@@ -68,7 +68,7 @@ export function SlidesSheet({ title, blurb, slides: specs, onClose }: {
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 26 }}>{title}</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24 }}>{title}</h2>
         <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>{blurb}</p>
         <div className="wrap-slides">
           {slides

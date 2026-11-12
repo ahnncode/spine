@@ -71,7 +71,7 @@ export function ClubScreen({ eyebrow, title, back, children, action }: { eyebrow
           <button className="icon-btn" aria-label="Back" onClick={() => (window.history.length > 1 ? router.back() : router.push(back))}><BackIcon size={20} /></button>
           <div style={{ minWidth: 0, flex: 1 }}>
             {eyebrow && <span className="muted" style={{ display: "block", fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{eyebrow}</span>}
-            <h1 className="g" style={{ margin: 0, fontSize: 26, lineHeight: 1.15, fontWeight: 400 }}>{title}</h1>
+            <h1 className="g" style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 400 }}>{title}</h1>
           </div>
           {action}
         </div>

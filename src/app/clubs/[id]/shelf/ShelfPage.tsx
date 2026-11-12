@@ -76,20 +76,20 @@ function Inner() {
       ) : (
         <>
           {latest && latestBook && (
-            <section aria-label="The club's verdict" style={{ marginTop: 16, background: "var(--panel)", color: "#fff", borderRadius: 20, padding: 20, display: "flex", gap: 16, alignItems: "center" }}>
+            <section aria-label="The club's verdict" style={{ marginTop: 16, background: "var(--panel)", color: "var(--on-panel)", borderRadius: 22, padding: 20, display: "flex", gap: 16, alignItems: "center" }}>
               <Link href={`/book/${latestBook.id}`} aria-label={`${latestBook.title}: book page`} style={{ flexShrink: 0 }}><Cover book={latestBook} width={64} /></Link>
               <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 0 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#c9c8c2" }}>The club&rsquo;s verdict · {shortDate(latest.finished.slice(0, 10))}</span>
+                <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--on-panel-muted)" }}>The club&rsquo;s verdict · {shortDate(latest.finished.slice(0, 10))}</span>
                 <span className="g" style={{ fontSize: 24, lineHeight: 1.15 }}>{latestBook.title}</span>
                 {latest.avg != null ? (
                   <>
-                    <span style={{ fontFamily: "var(--font-book)", fontWeight: 700, fontSize: 40, lineHeight: 1 }}>{formatScore(latest.avg)}</span>
-                    <span style={{ fontSize: 13, color: "#c9c8c2" }}>
+                    <span style={{ fontFamily: "var(--font-book)", fontWeight: 700, fontSize: 36, lineHeight: 1 }}>{formatScore(latest.avg)}</span>
+                    <span style={{ fontSize: 13, color: "var(--on-panel-muted)" }}>
                       {latest.scores.length} of {data.members.length} ranked it{mine ? ` · yours ${formatScore(mine.score)}` : ""}
                     </span>
                   </>
                 ) : (
-                  <span style={{ fontSize: 14, color: "#c9c8c2" }}>No one has ranked it yet. Rank it on your shelf to start the verdict.</span>
+                  <span style={{ fontSize: 14, color: "var(--on-panel-muted)" }}>No one has ranked it yet. Rank it on your shelf to start the verdict.</span>
                 )}
               </div>
             </section>
@@ -117,7 +117,7 @@ function Inner() {
 
           <section aria-label="Club shelf" style={{ marginTop: 20 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-              <h2 className="g" style={{ margin: 0, fontWeight: 400, fontSize: 22 }}>Ranked by the club</h2>
+              <h2 className="g" style={{ margin: 0, fontWeight: 400, fontSize: 20 }}>Ranked by the club</h2>
               <span className="muted" style={{ fontSize: 13 }}>{verdicts.length} read together</span>
             </div>
             <ol className="card" style={{ listStyle: "none", margin: "8px 0 0", padding: 0, overflow: "hidden" }}>

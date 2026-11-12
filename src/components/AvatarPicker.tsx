@@ -69,7 +69,7 @@ export function AvatarPicker({
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Avatar profile={preview} size={84} />
           <div>
-            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Profile picture</h2>
+            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>Profile picture</h2>
             <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>Pick an icon and a color. Earn badges to unlock more.</p>
           </div>
         </div>

@@ -112,7 +112,7 @@ export function TypeIconReward({ code }: { code: string }) {
               <AvatarIconArt icon={typeIconKey(code)} color="ink" size={132} />
             </div>
             <p className="eyebrow" style={{ textAlign: "center", marginTop: 18 }}>New icon earned</p>
-            <h2 className="g" style={{ margin: "6px 0 0", textAlign: "center", fontSize: 30, lineHeight: 1.05, fontWeight: 400 }}>{TYPES[code].name}</h2>
+            <h2 className="g" style={{ margin: "6px 0 0", textAlign: "center", fontSize: 28, lineHeight: 1.05, fontWeight: 400 }}>{TYPES[code].name}</h2>
             <p className="muted" style={{ margin: "10px auto 0", textAlign: "center", fontSize: 15, lineHeight: 1.45, maxWidth: 300 }}>
               Your reader type comes with its own profile picture. It&rsquo;s yours to keep, even if your type changes.
             </p>

@@ -79,7 +79,7 @@ export function Cover({ book, width, className, listened, priority, state }: Pro
         // Too small for a readable title: a monogram, like a spine stamp.
         <div className="cover__gen" aria-hidden="true" style={{ alignItems: "center", justifyContent: "center", padding: 0 }}>
           <div className="cover__spine" />
-          <span className="d" style={{ fontWeight: 800, fontSize: Math.round(width * 0.5), lineHeight: 1 }}>
+          <span className="d" style={{ fontWeight: 700, fontSize: Math.round(width * 0.5), lineHeight: 1 }}>
             {book.title.replace(/^(the|a|an)\s+/i, "").charAt(0).toUpperCase()}
           </span>
         </div>

@@ -32,7 +32,7 @@ export function ReaderTypePill({ person }: { person: Person }) {
       <span className="rt-teaser__code">{theirs.code}</span>
       <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
         <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>{self ? "Your reader type" : "Reader type"}</span>
-        <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{TYPES[theirs.code].name}</span>
+        <span className="g" style={{ display: "block", fontSize: 20, lineHeight: 1.1, marginTop: 4 }}>{TYPES[theirs.code].name}</span>
         {match && <span style={{ display: "block", fontSize: 13, marginTop: 4, opacity: 0.85 }}>{match} · Compare</span>}
       </span>
     </>
@@ -74,7 +74,7 @@ function note(axis: number, mine: string, theirs: string, them: string): string 
     case 1:
       return same
         ? mine === "H" ? "You both read for people and feeling." : "Ideas first, for both of you."
-        : `${mine === "H" ? "You read" : `${them} reads`} for feeling, ${mine === "H" ? `${them} for` : "you for"} ideas. Swap a favourite.`;
+        : `${mine === "H" ? "You read" : `${them} reads`} for feeling, ${mine === "H" ? `${them} for` : "you for"} ideas. Swap a favorite.`;
     case 2:
       return same
         ? mine === "F" ? "Two one-at-a-time finishers: an easy read-along pace." : "Two jugglers. Give read-alongs a loose deadline."
@@ -120,11 +120,11 @@ function CompareSheet({ me, mine, person, theirs, onClose }: {
           </div>
           <Avatar profile={person} size={64} />
         </div>
-        <h2 className="g" style={{ margin: "14px 0 0", textAlign: "center", fontSize: 26, lineHeight: 1.05 }}>{heading}</h2>
+        <h2 className="g" style={{ margin: "14px 0 0", textAlign: "center", fontSize: 24, lineHeight: 1.05 }}>{heading}</h2>
 
         <section className="rt-about" aria-label={`${them}’s reader type`} style={{ background: tc.bg, color: tc.fg }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <span className="g" style={{ fontSize: 22, lineHeight: 1.1 }}>{TYPES[theirs.code].name}</span>
+            <span className="g" style={{ fontSize: 20, lineHeight: 1.1 }}>{TYPES[theirs.code].name}</span>
             <span style={{ marginLeft: "auto", fontFamily: "var(--font-book)", fontWeight: 700, fontSize: 15, letterSpacing: "0.08em", opacity: 0.85 }}>{theirs.code}</span>
           </div>
           <p style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.35, opacity: 0.9 }}>
@@ -151,14 +151,14 @@ function CompareSheet({ me, mine, person, theirs, onClose }: {
 
         {mine && mc && (
           <>
-            <div className="type-compare" style={{ borderTop: 0, paddingBottom: 0, fontSize: 11, fontWeight: 600, letterSpacing: "0.06em", color: "var(--muted)" }}>
+            <div className="type-compare" style={{ borderTop: 0, paddingBottom: 0, fontSize: 12, fontWeight: 600, letterSpacing: "0.06em", color: "var(--muted)" }}>
               <span /><span /><span style={{ textAlign: "center" }}>YOU</span><span style={{ textAlign: "center" }}>{them.toUpperCase().slice(0, 6)}</span>
             </div>
             {AXES.map((a, i) => (
               <div key={a.key} className="type-compare">
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <span style={{ fontSize: 13, fontWeight: 600 }}>{a.label}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: mine.code[i] === theirs.code[i] ? "#2D6A3E" : "var(--accent-ink)" }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: mine.code[i] === theirs.code[i] ? "var(--success)" : "var(--accent-ink)" }}>
                     {mine.code[i] === theirs.code[i] ? "Same" : "Different"}
                   </span>
                 </div>

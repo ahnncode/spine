@@ -177,7 +177,7 @@ function You() {
             <span className="rt-teaser__code">{readerType.code}</span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span className="eyebrow" style={{ display: "block", color: "inherit", opacity: 0.8 }}>Your reader type <span className="new-pill">New</span></span>
-              <span className="g" style={{ display: "block", fontSize: 22, lineHeight: 1.1, marginTop: 4 }}>{readerType.copy.name}</span>
+              <span className="g" style={{ display: "block", fontSize: 20, lineHeight: 1.1, marginTop: 4 }}>{readerType.copy.name}</span>
             </span>
             <ArrowIcon size={18} />
           </Link>
@@ -248,13 +248,13 @@ function You() {
           </button>
           <div className="card card--ink stats-streak">
             <span style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-              <span className="d" style={{ fontSize: 30, fontWeight: 800, lineHeight: 1 }}>{streak.weeks}</span>
+              <span className="d" style={{ fontSize: 28, fontWeight: 700, lineHeight: 1 }}>{streak.weeks}</span>
               <span style={{ fontSize: 13, fontWeight: 600 }}>week streak</span>
             </span>
             <span className="streak-grid" aria-hidden="true">
               {streak.recent.map((on, i) => <span key={i} data-on={on} data-now={i === 11} />)}
             </span>
-            <span style={{ fontSize: 12, color: "#c9c8c2" }}>
+            <span style={{ fontSize: 12, color: "var(--on-panel-muted)" }}>
               {streak.activeThisWeek ? "Safe this week" : streak.weeks ? "Check in this week to keep it" : "Check in to start one"}
             </span>
           </div>
@@ -388,10 +388,10 @@ function You() {
             <div className="sheet__grab" />
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span className="stamp" style={{ background: openStamp.count ? openStamp.bg : "var(--well)", color: openStamp.count ? openStamp.fg : "var(--muted)", width: 64, minHeight: 64, flexShrink: 0 }}>
-                <span className="m" style={{ fontWeight: 700, fontSize: 18 }}>{openStamp.count}</span>
+                <span className="m" style={{ fontWeight: 700, fontSize: 17 }}>{openStamp.count}</span>
               </span>
               <div style={{ minWidth: 0, flex: 1 }}>
-                <h2 className="g" style={{ margin: 0, fontSize: 26, fontWeight: 800, letterSpacing: "-0.01em" }}>{openStamp.label}</h2>
+                <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>{openStamp.label}</h2>
                 <p className="muted" style={{ margin: "2px 0 0", fontSize: 13 }}>
                   {openStamp.count ? `${openStamp.count} ranked · best first` : "No stamp yet"}
                 </p>
@@ -450,7 +450,7 @@ function You() {
         <div className="sheet-backdrop" onClick={() => { setSorting(false); if (Object.keys(picked).length) reload(); }}>
           <div className="sheet" role="dialog" aria-modal="true" aria-label="Pick genres" onClick={(e) => e.stopPropagation()}>
             <div className="sheet__grab" />
-            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Pick a genre</h2>
+            <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>Pick a genre</h2>
             <p className="muted" style={{ margin: "4px 0 0", fontSize: 13 }}>We couldn&rsquo;t find these in the catalogue. Your pick counts toward your passport, and you can change it anytime.</p>
             <ul style={{ listStyle: "none", margin: "12px 0 0", padding: 0, maxHeight: "60vh", overflowY: "auto" }}>
               {sortList.map((e) => (
@@ -561,7 +561,7 @@ function EditProfile({
     <div className="sheet-backdrop" onClick={() => !busy && onClose()}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label="Edit profile" onClick={(e) => e.stopPropagation()}>
         <div className="sheet__grab" />
-        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 800, letterSpacing: "-0.01em" }}>Edit profile</h2>
+        <h2 className="g" style={{ margin: 0, fontSize: 24, fontWeight: 700, letterSpacing: "-0.01em" }}>Edit profile</h2>
         <div className="field" style={{ marginTop: 16 }}>
           <label htmlFor="pname">Name</label>
           <input id="pname" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
@@ -598,17 +598,17 @@ function EditProfile({
         {error && <p className="error" role="alert">{error}</p>}
         <button className="btn btn--block" style={{ marginTop: 20 }} disabled={busy} onClick={save}>{busy ? "Saving…" : "Save"}</button>
         {!confirmDelete ? (
-          <button className="btn btn--ghost btn--block" style={{ marginTop: 8, color: "#b42318" }} disabled={busy} onClick={() => setConfirmDelete(true)}>
+          <button className="btn btn--ghost btn--block" style={{ marginTop: 8, color: "var(--error)" }} disabled={busy} onClick={() => setConfirmDelete(true)}>
             Delete account
           </button>
         ) : (
-          <div style={{ marginTop: 16, padding: 14, borderRadius: 16, background: "#fdecea" }}>
-            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.45, color: "#7a1a12" }}>
+          <div style={{ marginTop: 16, padding: 14, borderRadius: 16, background: "var(--error-soft)" }}>
+            <p style={{ margin: 0, fontSize: 14, lineHeight: 1.45, color: "var(--error-ink)" }}>
               This permanently deletes your account, shelf, rankings and follows. It can&rsquo;t be undone. Type <strong>{username}</strong> to confirm.
             </p>
             <label htmlFor="confirm-del" className="visually-hidden">Type your username to confirm</label>
             <input id="confirm-del" className="input" style={{ width: "100%", marginTop: 12 }} value={typed} onChange={(e) => setTyped(e.target.value)} autoCapitalize="none" autoComplete="off" />
-            <button className="btn btn--block" style={{ marginTop: 12, background: "#b42318" }} disabled={busy || typed !== username} onClick={remove}>
+            <button className="btn btn--block" style={{ marginTop: 12, background: "var(--error)" }} disabled={busy || typed !== username} onClick={remove}>
               Delete forever
             </button>
           </div>

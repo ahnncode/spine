@@ -196,7 +196,7 @@ function Inner() {
             <Link href={`/book/${bookId}`} className="muted" style={{ display: "block", fontSize: 13, textDecoration: "none", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
               {data?.book ? `${data.book.title}${data.book.author ? ` · ${data.book.author}` : ""}` : " "}
             </Link>
-            <h1 className="g" style={{ margin: 0, fontSize: 26, lineHeight: 1.15, fontWeight: 400 }}>{roomLabel(chapter)}</h1>
+            <h1 className="g" style={{ margin: 0, fontSize: 24, lineHeight: 1.15, fontWeight: 400 }}>{roomLabel(chapter)}</h1>
           </div>
         </div>
 

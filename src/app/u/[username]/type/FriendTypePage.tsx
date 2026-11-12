@@ -98,8 +98,8 @@ function Inner() {
           <div className="rt-code" role="img" aria-label={theirs.code.split("").join(" ")}>
             {theirs.code.split("").map((l, i) => <span key={i} aria-hidden="true">{l}</span>)}
           </div>
-          <h1 id="rt-name" className="g" style={{ margin: 0, fontSize: 40, lineHeight: 1, letterSpacing: "-0.015em" }}>{copy.name}</h1>
-          <p className="d" style={{ margin: "10px 0 0", fontSize: 19, lineHeight: 1.3, fontWeight: 500 }}>{copy.tagline}</p>
+          <h1 id="rt-name" className="g" style={{ margin: 0, fontSize: 36, lineHeight: 1, letterSpacing: "-0.015em" }}>{copy.name}</h1>
+          <p className="d" style={{ margin: "10px 0 0", fontSize: 17, lineHeight: 1.3, fontWeight: 500 }}>{copy.tagline}</p>
           <p style={{ margin: "16px 0 0", fontSize: 13, opacity: 0.85 }}>{fam.label}: {fam.gist.toLowerCase()}.</p>
         </section>
         <p className="muted" style={{ fontSize: 13, margin: "10px 0 0" }}>
@@ -135,12 +135,12 @@ function Inner() {
                   <span className="rt-track__fill" style={{ left: `${Math.min(50, 100 - pct)}%`, width: `${Math.abs(pct - 50)}%`, background: color.bg }} />
                   <span className="rt-track__dot" style={{ left: `${100 - pct}%`, background: color.bg }} />
                 </div>
-                <div className="d" style={{ fontWeight: 700, fontSize: 18, marginTop: 12 }}>
+                <div className="d" style={{ fontWeight: 700, fontSize: 17, marginTop: 12 }}>
                   {balanced ? `Balanced, just ${pole.name.toLowerCase()}` : `${lean}% ${pole.name.toLowerCase()}`}
                 </div>
                 <p className="muted" style={{ margin: "4px 0 0", fontSize: 14, lineHeight: 1.4 }}>{POLE_THEY[pole.letter]}</p>
                 {mine && (
-                  <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 600, color: mine.code[i] === theirs.code[i] ? "#2D6A3E" : "var(--accent-ink)" }}>
+                  <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 600, color: mine.code[i] === theirs.code[i] ? "var(--success)" : "var(--accent-ink)" }}>
                     {mine.code[i] === theirs.code[i] ? "Same as you" : `You lean ${(def.poles.find((p) => p.letter === mine.code[i])?.name ?? "").toLowerCase()}`}
                   </p>
                 )}
@@ -154,9 +154,9 @@ function Inner() {
             <h2 className="section-title" style={{ marginTop: 32 }}>Why {first} reads</h2>
             <section className="card" style={{ marginTop: 12, background: drive.bg, borderColor: drive.bg, color: drive.fg }}>
               <div className="eyebrow" style={{ color: "inherit", opacity: 0.95 }}>Core drive</div>
-              <div className="g" style={{ fontSize: 40, lineHeight: 1, marginTop: 8 }}>{drive.label}</div>
+              <div className="g" style={{ fontSize: 36, lineHeight: 1, marginTop: 8 }}>{drive.label}</div>
               {wing && <div className="g" style={{ fontSize: 20, marginTop: 6, opacity: 0.8 }}>with {withArticle(wing.label.toLowerCase())} wing</div>}
-              <p className="d" style={{ margin: "14px 0 0", fontSize: 18, lineHeight: 1.3, fontWeight: 500 }}>{toThey(drive.desire)}</p>
+              <p className="d" style={{ margin: "14px 0 0", fontSize: 17, lineHeight: 1.3, fontWeight: 500 }}>{toThey(drive.desire)}</p>
               <div className="eyebrow" style={{ color: "inherit", opacity: 0.95, marginTop: 16 }}>What loses them</div>
               <p style={{ margin: "4px 0 0", fontSize: 15 }}>{toThey(drive.shadow)}</p>
             </section>

@@ -42,7 +42,7 @@ export function JoinPage() {
             <div style={{ marginTop: 44 }}>
               {inviter && <Avatar profile={{ id: inviter.username, username: inviter.username, display_name: inviter.display_name, avatar_icon: inviter.avatar_icon, avatar_color: inviter.avatar_color }} size={72} />}
             </div>
-            <h1 className="h1" style={{ fontSize: 46, lineHeight: 0.95, marginTop: 20 }}>
+            <h1 className="h1" style={{ fontSize: 44, lineHeight: 0.95, marginTop: 20 }}>
               {first ? <>{first} wants to compare shelves.</> : <>Rank books, not stars.</>}
             </h1>
             <p className="lede" style={{ fontSize: 17 }}>

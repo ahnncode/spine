@@ -129,7 +129,7 @@ function Inner() {
             <p className="eyebrow" style={{ color: "var(--amber-ink)", marginTop: 8 }}>
               {votes.length ? `${votes.length} friend${votes.length === 1 ? "" : "s"} voted` : open ? "Waiting for votes" : "Closed"}
             </p>
-            <h1 className="g" style={{ margin: "4px 0 0", fontSize: 32, lineHeight: 1.1, fontWeight: 400 }}>
+            <h1 className="g" style={{ margin: "4px 0 0", fontSize: 28, lineHeight: 1.1, fontWeight: 400 }}>
               {chosen ? `You went with ${chosen.title}` : !votes.length ? "Your friends are picking" : tie ? "It’s a tie so far" : `Your friends picked ${books.get(leader!)?.title ?? "one"}`}
             </h1>
             {leader && !tie && !chosen && (

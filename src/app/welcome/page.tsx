@@ -101,7 +101,7 @@ function Welcome() {
               aria-describedby="username-hint"
             />
           </div>
-          <span id="username-hint" aria-live="polite" style={{ fontSize: 13, color: taken ? "#b42318" : availability?.name === username ? "#1f7a43" : "var(--muted)" }}>
+          <span id="username-hint" aria-live="polite" style={{ fontSize: 13, color: taken ? "var(--error)" : availability?.name === username ? "var(--success)" : "var(--muted)" }}>
             {!valid
               ? "3–20 lowercase letters, numbers or underscores"
               : taken

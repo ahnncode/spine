@@ -113,7 +113,7 @@ function Sharpen() {
         {entries && !finished && pair && (
           <>
             <p className="eyebrow" style={{ marginTop: 12 }}>Quick matchup · {rough} still rough</p>
-            <h1 className="h1" style={{ fontSize: 34, marginTop: 8, lineHeight: 1.02, letterSpacing: "-0.03em" }}>
+            <h1 className="h1" style={{ fontSize: 36, marginTop: 8, lineHeight: 1.02, letterSpacing: "-0.03em" }}>
               Which did you like more?
             </h1>
             <div className="versus">

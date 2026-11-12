@@ -101,7 +101,7 @@ function Inner() {
         <p className="eyebrow" style={{ marginTop: 20 }}>
           {displayName(profile)}&rsquo;s year in books{year === new Date().getFullYear() && new Date().getMonth() < 11 ? " so far" : ""}
         </p>
-        <h1 className="g moment" style={{ fontSize: 120, fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 0.85, margin: "8px 0 0" }}>{year}</h1>
+        <h1 className="g moment" style={{ fontSize: 120, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 0.85, margin: "8px 0 0" }}>{year}</h1>
 
         {entries && <MissingDates entries={entries} onChanged={reload} />}
 
@@ -118,7 +118,7 @@ function Inner() {
                 <div className="stat-big">{books.length}</div>
                 <div style={{ fontWeight: 600, marginTop: 8 }}>books</div>
               </div>
-              <div className="card moment" style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "#111111", animationDelay: "0.2s" }}>
+              <div className="card moment" style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "var(--black)", animationDelay: "0.2s" }}>
                 {/* Page counts can be missing: then count authors instead of showing a dash. */}
                 {pages ? (
                   <>
@@ -153,7 +153,7 @@ function Inner() {
                 {top.map((e, i) => (
                   <li key={e.id}>
                     <Link href={`/book/${e.book_id}`} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", color: "inherit", textDecoration: "none" }}>
-                      <span className="d" style={{ width: 26, fontWeight: 800, fontSize: i < 3 ? 22 : 17, color: i < 3 ? "var(--ink)" : "var(--faint)" }}>{i + 1}</span>
+                      <span className="d" style={{ width: 26, fontWeight: 700, fontSize: i < 3 ? 22 : 17, color: i < 3 ? "var(--ink)" : "var(--faint)" }}>{i + 1}</span>
                       <Cover book={e.book} width={34} />
                       <span style={{ flex: 1, minWidth: 0 }} className="book-row__title">{e.book.title}</span>
                       <ScoreChip score={e.score} bucket={e.bucket} size={36} />
@@ -224,21 +224,21 @@ function Inner() {
             )}
 
             {friends?.closest && (
-              <section className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff" }}>
-                <div className="eyebrow" style={{ color: "#dde1ff" }}>Reading twin</div>
+              <section className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "var(--on-panel)" }}>
+                <div className="eyebrow" style={{ color: "var(--on-cobalt-muted)" }}>Reading twin</div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12 }}>
                   <Avatar profile={friends.closest[0]} size={40} />
                   <div style={{ flex: 1, fontWeight: 600 }}>{displayName(friends.closest[0])}</div>
-                  <span className="d" style={{ fontSize: 28, fontWeight: 800 }}>{friends.closest[1]}%</span>
+                  <span className="d" style={{ fontSize: 28, fontWeight: 700 }}>{friends.closest[1]}%</span>
                 </div>
                 {friends.furthest && (
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.2)" }}>
                     <Avatar profile={friends.furthest[0]} size={40} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600 }}>{displayName(friends.furthest[0])}</div>
-                      <div style={{ fontSize: 12, color: "#dde1ff" }}>Most likely to start an argument</div>
+                      <div style={{ fontSize: 12, color: "var(--on-cobalt-muted)" }}>Most likely to start an argument</div>
                     </div>
-                    <span className="d" style={{ fontSize: 28, fontWeight: 800 }}>{friends.furthest[1]}%</span>
+                    <span className="d" style={{ fontSize: 28, fontWeight: 700 }}>{friends.furthest[1]}%</span>
                   </div>
                 )}
               </section>

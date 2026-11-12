@@ -106,7 +106,7 @@ export function ReactionsCard({ entries }: { entries: Entry[] | null }) {
     return (
       <section className="reactions-card" aria-label="Since you were last here">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <span className="eyebrow" style={{ color: "#c9c8c2" }}>Since you were last here</span>
+          <span className="eyebrow" style={{ color: "var(--on-panel-muted)" }}>Since you were last here</span>
           <button className="icon-btn reactions-card__close" aria-label="Dismiss" onClick={dismissAll}><CloseIcon size={16} /></button>
         </div>
         <Link href={pollId ? `/picks/${pollId}` : "/activity"} className="reactions-card__body" onClick={() => markNotificationsRead(voteItems.map((n) => n.id)).then(refreshUnread).catch(() => {})}>
@@ -131,7 +131,7 @@ export function ReactionsCard({ entries }: { entries: Entry[] | null }) {
   return (
     <section className="reactions-card" aria-label="Since you were last here">
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-        <span className="eyebrow" style={{ color: "#c9c8c2" }}>Since you were last here</span>
+        <span className="eyebrow" style={{ color: "var(--on-panel-muted)" }}>Since you were last here</span>
         <button className="icon-btn reactions-card__close" aria-label="Dismiss" onClick={dismissAll}><CloseIcon size={16} /></button>
       </div>
       <Link href="/activity" className="reactions-card__body">
@@ -148,7 +148,7 @@ export function ReactionsCard({ entries }: { entries: Entry[] | null }) {
         {hearts > 0 && <span>♥ {hearts} heart{hearts === 1 ? "" : "s"}</span>}
         {comments > 0 && <span>{comments} comment{comments === 1 ? "" : "s"}</span>}
         {voters.length > 0 && pollId && <Link href={`/picks/${pollId}`} className="reactions-card__chip">{voters.length} vote{voters.length === 1 ? "" : "s"} on your pick</Link>}
-        <Link href="/activity" style={{ marginLeft: "auto", color: "#fff", fontWeight: 600, fontSize: 13, padding: "6px 0" }}>See all</Link>
+        <Link href="/activity" style={{ marginLeft: "auto", color: "var(--on-panel)", fontWeight: 600, fontSize: 13, padding: "6px 0" }}>See all</Link>
       </div>
     </section>
   );

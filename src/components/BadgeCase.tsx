@@ -26,7 +26,7 @@ export function BadgeSheet({ status, onClose, theirs = false }: { status: BadgeS
           <Medallion badge={def.key} earned={earned} progress={fraction(status)} size={112} />
         </div>
         <p className="eyebrow" style={{ marginTop: 16 }}>{hidden ? "Secret" : `${RARITY_LABEL[def.rarity]} · ${CATEGORY_LABEL[def.category]}`}</p>
-        <h2 className="g" style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 800, letterSpacing: "-0.01em" }}>{hidden ? "???" : def.name}</h2>
+        <h2 className="g" style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 700, letterSpacing: "-0.01em" }}>{hidden ? "???" : def.name}</h2>
         <p style={{ margin: "8px 0 0", fontSize: 15, color: "var(--ink-2)" }}>{hidden ? "A secret badge. You’ll know it when you earn it." : def.how}</p>
         {earned ? (
           <p className="m muted" style={{ fontSize: 13, marginTop: 16 }}>{theirs ? "Earned" : "You earned this"} {earnedOn(status.earned!)}</p>

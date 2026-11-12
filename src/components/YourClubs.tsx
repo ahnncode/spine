@@ -40,7 +40,7 @@ export function YourClubs({ where }: { where: "you" | "discover" }) {
       <Link href="/clubs" className="club-row" style={{ marginTop: 20 }}>
         <span aria-hidden="true" style={{ display: "flex" }}>
           {(clubs.length ? clubs.slice(0, 2) : [{ id: "a", name: "B", color: "ember" as const }, { id: "b", name: "C", color: "cobalt" as const }]).map((c, i) => (
-            <span key={c.id} style={{ marginLeft: i ? -14 : 0, borderRadius: 14, boxShadow: i ? "0 0 0 2px var(--surface)" : undefined, display: "flex" }}>
+            <span key={c.id} style={{ marginLeft: i ? -14 : 0, borderRadius: 16, boxShadow: i ? "0 0 0 2px var(--surface)" : undefined, display: "flex" }}>
               <ClubTile name={c.name} color={c.color} size={40} />
             </span>
           ))}

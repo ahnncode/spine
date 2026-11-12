@@ -239,11 +239,11 @@ function Inner() {
 
                 <DroppedRow items={dropped} />
 
-                <div className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "#fff", display: "flex", alignItems: "center", gap: 14 }}>
+                <div className="card" style={{ marginTop: 12, background: "var(--cobalt)", borderColor: "var(--cobalt)", color: "var(--on-panel)", display: "flex", alignItems: "center", gap: 14 }}>
                   <div className="d stat-big" style={{ fontSize: 44 }}>{data.match?.match != null ? `${data.match.match}%` : "—"}</div>
                   <div style={{ fontSize: 14, lineHeight: 1.35 }}>
                     <strong>Taste match</strong>
-                    <div style={{ color: "#dde1ff", fontSize: 13 }}>
+                    <div style={{ color: "var(--on-cobalt-muted)", fontSize: 13 }}>
                       {data.match?.match != null
                         ? `From ${data.match.overlap} books you’ve both ranked`
                         : `You’ve ranked ${shared.length} of the same books. You need 3`}
@@ -255,7 +255,7 @@ function Inner() {
                       label="Share"
                       filename={`readread-taste-${data.profile.username}`}
                       className="btn"
-                      style={{ marginLeft: "auto", minHeight: 36, fontSize: 13, padding: "0 12px", background: "#fff", color: "#1d2ba8" }}
+                      style={{ marginLeft: "auto", minHeight: 36, fontSize: 13, padding: "0 12px", background: "var(--on-panel)", color: "var(--cobalt-deep)" }}
                     />
                   )}
                 </div>
@@ -326,7 +326,7 @@ function Inner() {
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: "block", fontWeight: 700 }}>See their whole library</span>
-                    <span style={{ display: "block", fontSize: 13, color: "#c9c8c2", marginTop: 2 }}>
+                    <span style={{ display: "block", fontSize: 13, color: "var(--on-panel-muted)", marginTop: 2 }}>
                       {ranked.length} ranked{want.length ? ` · ${want.length} want to read` : ""} · search, filter &amp; sort
                     </span>
                   </span>

@@ -152,7 +152,7 @@ function Inner() {
               const picks = n.kind === "picks";
               const body = picks ? (
                 <>
-                  <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 20, background: "var(--panel)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 800, fontSize: 22, flexShrink: 0 }}>?</span>
+                  <span aria-hidden="true" style={{ width: 40, height: 40, borderRadius: 999, background: "var(--panel)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 20, flexShrink: 0 }}>?</span>
                   <span style={{ flex: 1, minWidth: 0, fontSize: 14, lineHeight: 1.4 }}>
                     <strong>Your weekly picks are here</strong>
                     <span className="muted" style={{ display: "block", fontSize: 13 }}>A mystery book to reveal, and a wildcard</span>

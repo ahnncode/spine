@@ -147,7 +147,7 @@ function Inner() {
             <p className="eyebrow" style={{ marginTop: 8 }}>
               <Link href={`/u/${data.profile.username}`} style={{ color: "inherit", textDecoration: "none" }}>@{data.profile.username}</Link>
             </p>
-            <h1 className="h1" style={{ fontSize: 30 }}>
+            <h1 className="h1" style={{ fontSize: 28 }}>
               {isMe ? "Your library" : <><Name profile={data.profile} markSize={18} />&rsquo;s library</>}
             </h1>
 
