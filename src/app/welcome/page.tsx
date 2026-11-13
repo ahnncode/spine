@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { RequireAuth, peekDestination, takeDestination, useAuth, useProfile } from "@/components/Auth";
-import { claimPendingReferral, fetchMyProfile, refreshBadges, updateMyProfile, usernameAvailable } from "@/lib/data";
+import { claimPendingReferral, claimSignupSource, fetchMyProfile, refreshBadges, updateMyProfile, usernameAvailable } from "@/lib/data";
 
 export default function WelcomePage() {
   return (
@@ -63,6 +63,7 @@ function Welcome() {
       if (saved?.username !== username) throw new Error("Couldn’t save your username. Try again in a moment.");
       // Credit whoever invited them, then hand out the badges they start with.
       await claimPendingReferral();
+      await claimSignupSource();
       await refreshBadges().catch(() => {});
       await reloadProfile();
       // Arriving from a club invite: go join the club; picking books can wait.

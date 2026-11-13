@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
 import { BackIcon } from "@/components/icons";
 import { RowsSkeleton } from "@/components/Skeleton";
-import { adminGrowth, adminGrowthTotals, type GrowthTotals, type GrowthWeek } from "@/lib/data";
+import { adminGrowth, adminGrowthSources, adminGrowthTotals, type GrowthSource, type GrowthTotals, type GrowthWeek } from "@/lib/data";
 
 export default function Page() {
   return (
@@ -51,10 +51,12 @@ function asSheet(weeks: GrowthWeek[]): string {
 function GrowthPage() {
   const [weeks, setWeeks] = useState<GrowthWeek[] | null>(null);
   const [totals, setTotals] = useState<GrowthTotals | null>(null);
+  const [sources, setSources] = useState<GrowthSource[]>([]);
   const [denied, setDenied] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
+    adminGrowthSources(90).then(setSources).catch(() => {});
     Promise.all([adminGrowth(WEEKS), adminGrowthTotals()])
       .then(([w, t]) => {
         setWeeks(w);
@@ -141,6 +143,35 @@ function GrowthPage() {
             <button type="button" className="btn btn--ghost btn--block" style={{ marginTop: 12 }} onClick={copy}>
               {copied ? "Copied. Paste it into your sheet." : "Copy every column for a spreadsheet"}
             </button>
+
+            {sources.length > 0 && (
+              <>
+                <h2 className="h2" style={{ marginTop: 32 }}>Where they came from</h2>
+                <p className="muted" style={{ margin: "4px 0 0", fontSize: 14 }}>Last 90 days. Ads and posts show up here when their link has a utm_source tag.</p>
+                <div className="growth-table__wrap" style={{ marginTop: 12 }}>
+                  <table className="growth-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Source</th>
+                        <th scope="col">Signups</th>
+                        <th scope="col">Ranked</th>
+                        <th scope="col">D7</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sources.map((r) => (
+                        <tr key={`${r.source}:${r.campaign ?? ""}`}>
+                          <th scope="row">{r.source}{r.campaign && <span className="muted"> · {r.campaign}</span>}</th>
+                          <td>{r.signups}</td>
+                          <td>{r.rankers}</td>
+                          <td title={r.d7_cohort ? `${r.d7_back} of ${r.d7_cohort}` : "Too recent to tell"}>{pct(r.d7_back, r.d7_cohort)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
 
             <h2 className="h2" style={{ marginTop: 32 }}>All time</h2>
             <dl className="growth-totals">

@@ -1503,6 +1503,15 @@ export async function adminGrowth(weeks = 12): Promise<GrowthWeek[]> {
   return ((data ?? []) as GrowthWeek[]).map((w) => ({ ...w, week_start: String(w.week_start).slice(0, 10) }));
 }
 
+export type GrowthSource = { source: string; campaign: string | null; signups: number; rankers: number; d7_cohort: number; d7_back: number };
+
+/** Signups in the last `days` days by where they came from (utm_source, invite or direct). Throws for non-admins. */
+export async function adminGrowthSources(days = 90): Promise<GrowthSource[]> {
+  const { data, error } = await supabase().rpc("admin_growth_sources", { p_days: days });
+  if (error) throw error;
+  return (data ?? []) as GrowthSource[];
+}
+
 /** All-time totals. Throws for non-admins. */
 export async function adminGrowthTotals(): Promise<GrowthTotals> {
   const { data, error } = await supabase().rpc("admin_growth_totals");
@@ -1606,6 +1615,30 @@ export async function claimPendingReferral(): Promise<void> {
   await supabase().rpc("claim_referral", { p_username: ref }).then(() => {}, () => {});
   try {
     localStorage.removeItem(REF_KEY);
+  } catch {}
+}
+
+const SOURCE_KEY = "readread:source";
+
+/** Remember where this browser first came from (kept 30 days; the first link wins). */
+export function rememberSignupSource(source: string, campaign: string | null): void {
+  try {
+    const old = JSON.parse(localStorage.getItem(SOURCE_KEY) || "null") as { at: number } | null;
+    if (old && Date.now() - old.at < 30 * 86400000) return;
+    localStorage.setItem(SOURCE_KEY, JSON.stringify({ source: source.slice(0, 40), campaign: campaign?.slice(0, 60) ?? null, at: Date.now() }));
+  } catch {}
+}
+
+/** Save where a new reader came from on their profile, once. Safe to call more than once. */
+export async function claimSignupSource(): Promise<void> {
+  let v: { source: string; campaign: string | null } | null = null;
+  try {
+    v = JSON.parse(localStorage.getItem(SOURCE_KEY) || "null");
+  } catch {}
+  if (!v?.source) return;
+  await supabase().rpc("set_signup_source", { p_source: v.source, p_campaign: v.campaign }).then(() => {}, () => {});
+  try {
+    localStorage.removeItem(SOURCE_KEY);
   } catch {}
 }
 
