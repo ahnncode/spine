@@ -1211,6 +1211,15 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .plain-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 .tag-list .swatch { width: 36px; height: 36px; flex-shrink: 0; }
 .swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--ink); }
+/* First run: bring a library or start fresh */
+.start-choice { display: flex; flex-direction: column; gap: 12px; margin-top: 28px; }
+.start-choice__opt { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 20px; border-radius: var(--radius-l); border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.start-choice__opt--main { background: var(--ink); color: var(--ground); border-color: var(--ink); }
+.start-choice__t { font-family: var(--font-book); font-weight: 700; font-size: 20px; line-height: 1.2; }
+.start-choice__d { font-size: 15px; line-height: 1.4; color: var(--muted); }
+.start-choice__opt--main .start-choice__d { color: var(--ground); opacity: 0.78; }
+.start-choice__opt:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+
 .choice-row { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 14px; border-radius: var(--radius-m); border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; width: 100%; }
 .choice-row[aria-checked="true"] { border: 2px solid var(--ink); padding: 9px 13px; }
 .choice-row__dot { width: 18px; height: 18px; flex-shrink: 0; border-radius: 50%; border: 1.5px solid var(--muted); box-sizing: border-box; }

@@ -65,6 +65,8 @@ export function PickBooks({ embedded = false }: { embedded?: boolean }) {
   const [results, setResults] = useState<BookInput[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // New readers choose first: bring a library, or start by tapping books.
+  const [choosing, setChoosing] = useState(!embedded);
 
   // Fill in real covers (cached for the session so it's quick next time).
   useEffect(() => {
@@ -188,6 +190,33 @@ export function PickBooks({ embedded = false }: { embedded?: boolean }) {
           Coming from Goodreads or StoryGraph? <Link href="/import">Import your library</Link>
         </p>
       </section>
+    );
+  }
+
+  if (choosing) {
+    return (
+      <div className="app">
+        <main className="screen screen--flow">
+          <span className="wordmark">readread</span>
+          <h1 className="h1 h1--xl" style={{ marginTop: 32 }}>Let&rsquo;s get your books in</h1>
+          <p className="lede">Your ranking starts with what you&rsquo;ve already read.</p>
+
+          <div className="start-choice">
+            <Link href="/import" className="start-choice__opt start-choice__opt--main">
+              <span className="start-choice__t">Bring my Goodreads or StoryGraph library</span>
+              <span className="start-choice__d">Upload your export and every book comes over at once. Then pick your top 10 and quick-rate the rest. About two minutes.</span>
+            </Link>
+            <button type="button" className="start-choice__opt" onClick={() => setChoosing(false)}>
+              <span className="start-choice__t">Start fresh</span>
+              <span className="start-choice__d">Tap a few books you&rsquo;ve read and rank them head-to-head.</span>
+            </button>
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: 16 }}>
+            <Link href="/feed" style={{ fontSize: 13, color: "var(--muted)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>Skip for now</Link>
+          </div>
+        </main>
+      </div>
     );
   }
 
