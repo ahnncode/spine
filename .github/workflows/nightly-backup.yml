@@ -62,11 +62,26 @@ jobs:
         run: |
           python3 - <<'PY'
           import os, urllib.parse
-          raw = os.environ["RAW"].strip().strip('"').strip("'").strip()
+          import re
+          raw = os.environ["RAW"].strip()
           notes = []
-          scheme, sep, rest = raw.partition("://")
-          if not sep or scheme not in ("postgres", "postgresql"):
-              raise SystemExit("SUPABASE_DB_URL should start with postgresql:// (copy the Session pooler string from Supabase > Connect).")
+          # Pull the connection string out of whatever was pasted around it
+          # (DATABASE_URL=..., psql "...", quotes, a trailing line).
+          m = re.search(r"postgres(?:ql)?://[^\s'\"]+", raw)
+          if not m:
+              low = raw.lower()
+              if low.startswith("http"):
+                  why = "it looks like the project link (https://...supabase.co), not the database connection string"
+              elif low.startswith("eyj") or low.startswith("sb_"):
+                  why = "it looks like an API key, not the database connection string"
+              elif "host=" in low:
+                  why = "it is in the host=... port=... format; copy the URI format instead"
+              else:
+                  why = "it has no postgresql:// connection string in it"
+              raise SystemExit(f"SUPABASE_DB_URL isn't usable: {why}. In Supabase, click Connect, choose Session pooler, copy the URI that starts with postgresql://, and put your database password in it.")
+          if m.group(0) != raw:
+              notes.append("ignored text around the connection string")
+          scheme, sep, rest = m.group(0).partition("://")
           creds, at, hostpart = rest.rpartition("@")
           if not at:
               raise SystemExit("SUPABASE_DB_URL has no user and password before the host. Copy the Session pooler string from Supabase > Connect.")
