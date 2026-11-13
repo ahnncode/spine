@@ -30,6 +30,7 @@ import {
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { BookSummary } from "@/components/BookSummary";
 import { ElsewhereRatings } from "@/components/ElsewhereRatings";
+import { AppleCoverCredit } from "@/components/AppleCoverCredit";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { BookRooms } from "@/components/ChapterRooms";
@@ -153,6 +154,7 @@ function Inner() {
             </button>
           </div>
           {book ? <Cover book={book} width={140} listened={isListened(mine?.format)} state={mine?.status === "paused" || mine?.status === "dropped" ? mine.status : null} priority /> : <span className="skeleton" style={{ width: 140, height: 210, borderRadius: "3px 6px 6px 3px" }} aria-hidden="true" />}
+          {book && <AppleCoverCredit book={book} />}
         </div>
 
         {!book && <BookSkeleton />}

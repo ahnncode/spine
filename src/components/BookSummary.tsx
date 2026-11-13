@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Book } from "@/lib/books";
 import { fetchBookDescription, saveBookDescription } from "@/lib/data";
 import { findDescription } from "@/lib/descriptions";
+import { appleBooksLink } from "@/lib/applecovers";
 
 const WEEK = 7 * 24 * 3600 * 1000;
 const SOURCE: Record<string, string> = { openlibrary: "Open Library", apple: "Apple Books" };
@@ -16,6 +17,13 @@ export function BookSummary({ book }: { book: Pick<Book, "id" | "title" | "autho
   const { id, title, author, ol_work_key: workKey } = book;
   const [state, setState] = useState<{ text: string | null; source: string | null; looking: boolean }>({ text: null, source: null, looking: true });
   const [open, setOpen] = useState(false);
+  const [appleUrl, setAppleUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (state.source !== "apple") return;
+    let alive = true;
+    appleBooksLink(title, author).then((u) => alive && setAppleUrl(u));
+    return () => { alive = false; };
+  }, [state.source, title, author]);
 
   useEffect(() => {
     let alive = true;
@@ -54,7 +62,14 @@ export function BookSummary({ book }: { book: Pick<Book, "id" | "title" | "autho
             {open ? "Show less" : "Read more"}
           </button>
         )}
-        {state.source && <span className="muted" style={{ fontSize: 12 }}>from {SOURCE[state.source] ?? state.source}</span>}
+        {state.source && (
+          <span className="muted" style={{ fontSize: 12 }}>
+            from{" "}
+            {state.source === "apple" && appleUrl
+              ? <a href={appleUrl} target="_blank" rel="noopener noreferrer" className="elsewhere__link">Apple Books</a>
+              : SOURCE[state.source] ?? state.source}
+          </span>
+        )}
       </div>
     </section>
   );

@@ -24,7 +24,8 @@ export function ElsewhereRatings({ book }: { book: Pick<Book, "id" | "title" | "
       {ratings.map((r) => (
         <span key={r.source}>
           <span aria-hidden="true" style={{ color: "var(--accent-ink)" }}>★</span>{" "}
-          <b>{r.average.toFixed(1)}</b> {r.label} ({r.count.toLocaleString()})
+          <b>{r.average.toFixed(1)}</b>{" "}
+          {r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="elsewhere__link">{r.label}</a> : r.label} ({r.count.toLocaleString()})
         </span>
       ))}
     </p>

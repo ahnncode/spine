@@ -11,6 +11,12 @@ interface AppleResult {
   artistName?: string;
   artworkUrl100?: string;
   genres?: string[];
+  trackViewUrl?: string;
+}
+
+/** Artwork served by Apple (their terms tie it to promoting Apple Books). */
+export function isAppleArt(url: string | null | undefined): boolean {
+  return Boolean(url && /(^|\.)mzstatic\.com\//.test(url.replace(/^https?:\/\//, "")));
 }
 
 function norm(s: string): string {
@@ -47,6 +53,31 @@ export async function findAppleBook(title: string, author: string | null): Promi
   const { results } = (await res.json()) as { results?: AppleResult[] };
   const hit = (results ?? []).find((r) => sameBook({ title, author }, r));
   return hit ? { cover: hit.artworkUrl100 ? bigArtwork(hit.artworkUrl100) : null, genres: hit.genres ?? [] } : null;
+}
+
+// One Apple Books link lookup per book per visit.
+const linkCache = new Map<string, Promise<string | null>>();
+
+/**
+ * The book's Apple Books page. Apple's terms ask that their artwork,
+ * descriptions and ratings sit beside a link to the book in their store.
+ */
+export function appleBooksLink(title: string, author: string | null): Promise<string | null> {
+  const key = `${title}|${author ?? ""}`;
+  let hit = linkCache.get(key);
+  if (!hit) {
+    hit = (async () => {
+      const term = [title.split(":")[0].replace(/[()[\]]/g, " "), author ?? ""].join(" ").replace(/\s+/g, " ").trim();
+      const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: appleCountry(title) });
+      const res = await fetch(`https://itunes.apple.com/search?${params}`);
+      if (!res.ok) return null;
+      const { results } = (await res.json()) as { results?: AppleResult[] };
+      const found = (results ?? []).find((r) => sameBook({ title, author }, r));
+      return found?.trackViewUrl && /^https:\/\/books\.apple\.com\//.test(found.trackViewUrl) ? found.trackViewUrl : null;
+    })().catch(() => null);
+    linkCache.set(key, hit);
+  }
+  return hit;
 }
 
 export async function findAppleCover(title: string, author: string | null): Promise<string | null> {

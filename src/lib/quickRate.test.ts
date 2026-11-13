@@ -72,3 +72,13 @@ describe("tiedRanks", () => {
     expect(labels.has("e-f")).toBe(false);
   });
 });
+
+describe("isAppleArt", () => {
+  it("spots Apple's artwork host and nothing else", async () => {
+    const { isAppleArt } = await import("./applecovers");
+    expect(isAppleArt("https://is1-ssl.mzstatic.com/image/thumb/Publication/400x600bb.jpg")).toBe(true);
+    expect(isAppleArt("https://covers.openlibrary.org/b/id/1-L.jpg")).toBe(false);
+    expect(isAppleArt("https://evil.com/mzstatic.com/x.jpg")).toBe(false);
+    expect(isAppleArt(null)).toBe(false);
+  });
+});

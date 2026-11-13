@@ -52,7 +52,8 @@ export function Wordmark({ s = 40 }: { s?: number }) {
 
 /** Fetch a cover as a data URL (or null), never taking more than a few seconds. */
 export async function coverData(book: PublicBookCard): Promise<string | null> {
-  for (const url of coverCandidates(book, "L")) {
+  // Apple's artwork is for promoting Apple Books, so share images leave it out.
+  for (const url of coverCandidates(book, "L").filter((u) => !/(^|\.)mzstatic\.com\//.test(u.replace(/^https?:\/\//, "")))) {
     try {
       const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
       if (!res.ok) continue;

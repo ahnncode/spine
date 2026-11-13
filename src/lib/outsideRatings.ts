@@ -13,6 +13,8 @@ export interface OutsideRating {
   label: string;
   average: number;
   count: number;
+  /** Where the rating comes from (Apple asks for a link to the book in their store). */
+  url?: string;
 }
 
 type BookRef = { id: string; title: string; author: string | null; ol_work_key?: string | null };
@@ -26,11 +28,12 @@ async function apple(book: BookRef): Promise<OutsideRating | null> {
   const params = new URLSearchParams({ term, media: "ebook", entity: "ebook", limit: "8", country: "us" });
   const res = await fetch(`https://itunes.apple.com/search?${params}`);
   if (!res.ok) return null;
-  const { results } = (await res.json()) as { results?: Array<{ trackName?: string; artistName?: string; averageUserRating?: number; userRatingCount?: number }> };
+  const { results } = (await res.json()) as { results?: Array<{ trackName?: string; artistName?: string; averageUserRating?: number; userRatingCount?: number; trackViewUrl?: string }> };
   // The match with the most ratings (Apple sometimes lists several editions).
   const hits = (results ?? []).filter((r) => r.averageUserRating && r.userRatingCount && sameTitle(book, r));
   const best = hits.sort((a, b) => (b.userRatingCount ?? 0) - (a.userRatingCount ?? 0))[0];
-  return best ? { source: "apple", label: "Apple Books", average: best.averageUserRating!, count: best.userRatingCount! } : null;
+  const url = best?.trackViewUrl && /^https:\/\/books\.apple\.com\//.test(best.trackViewUrl) ? best.trackViewUrl : undefined;
+  return best ? { source: "apple", label: "Apple Books", average: best.averageUserRating!, count: best.userRatingCount!, url } : null;
 }
 
 async function openLibrary(book: BookRef): Promise<OutsideRating | null> {
