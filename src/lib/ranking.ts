@@ -11,6 +11,13 @@ export const BUCKETS: Record<
   disliked: { label: "Not for me", range: [0, 3.3], rangeLabel: "0 – 3.3", color: "var(--faint)" },
 };
 
+/** Which tier a score out of 10 falls in. */
+export function bucketForScore(score: number): Bucket {
+  if (score >= BUCKETS.loved.range[0]) return "loved";
+  if (score >= BUCKETS.fine.range[0]) return "fine";
+  return "disliked";
+}
+
 /**
  * Scores for a bucket's books, best first.
  *

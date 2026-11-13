@@ -107,27 +107,33 @@ function Importer() {
           <>
             <h1 className="h1 h1--xl" style={{ marginTop: 30 }}>Your shelf is in.</h1>
             <p className="lede">
-              {result.added} books added{result.skipped ? `, ${result.skipped} were already on your shelf` : ""}{result.dated ? ` (${result.dated} of those got their finish date filled in)` : ""}. Your
-              starred books are roughly in order. A few quick matchups will make the ranking yours.
+              {result.added} books added{result.skipped ? `, ${result.skipped} were already on your shelf` : ""}{result.dated ? ` (${result.dated} of those got their finish date filled in)` : ""}.
+              {summary.rated > 0 && " Your starred books are already ranked, so you don’t have to sort anything."}
             </p>
-            <div className="card card--ink" style={{ marginTop: 24, display: "flex", gap: 14 }}>
-              <div className="d score score--top" style={{ width: 44, height: 44, fontSize: 17, fontWeight: 700, fontFamily: "var(--font-book)" }}>
-                {summary.loved}
+            {summary.unrated > 0 && (
+              <div className="unlock-row" style={{ marginTop: 24 }}>
+                <span style={{ flex: 1, minWidth: 0, fontSize: 15 }}>
+                  <strong>{summary.unrated} read but unrated.</strong> Give each a number out of 10, about two seconds a book. Or leave them in &ldquo;To rank&rdquo; for later.
+                </span>
               </div>
-              <div>
-                <div style={{ fontWeight: 600 }}>books you loved</div>
-                <div style={{ fontSize: 14, color: "var(--on-panel-muted)", marginTop: 4, lineHeight: 1.4 }}>
-                  Stars can&rsquo;t tell them apart. Head-to-heads can.
-                </div>
-              </div>
-            </div>
+            )}
+            <p className="muted" style={{ fontSize: 14, margin: "16px 0 0" }}>
+              Stars can&rsquo;t tell your {summary.loved} favorites apart. Each day we&rsquo;ll ask you to settle one or two that sit close together, so your order sharpens a little at a time.
+            </p>
             <div className="spacer" style={{ minHeight: 24 }} />
-            <Link href="/sharpen" className="btn btn--block">
-              Start sorting <ArrowIcon size={18} />
+            {summary.unrated > 0 ? (
+              <Link href="/quick-rate" className="btn btn--block">
+                Quick-rate the {summary.unrated} <ArrowIcon size={18} />
+              </Link>
+            ) : (
+              <Link href="/shelf" className="btn btn--block">
+                See my shelf <ArrowIcon size={18} />
+              </Link>
+            )}
+            <Link href="/sharpen" className="btn btn--ghost btn--block" style={{ marginTop: 8 }}>
+              Fine-tune with head-to-heads
             </Link>
-            <Link href="/shelf" className="btn btn--ghost btn--block" style={{ marginTop: 8 }}>
-              See my shelf
-            </Link>
+
           </>
         ) : (
           <>

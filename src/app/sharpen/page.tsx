@@ -9,6 +9,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { useShelf } from "@/components/useShelf";
 import { countHeadToHeads, logMatchup, rankEntries, recordMatchup, type Entry, type RankedEntry } from "@/lib/data";
 import { formatScore } from "@/lib/ranking";
+import { nextPair, applyMatchup } from "@/lib/sharpen";
 import { CardSkeleton } from "@/components/Skeleton";
 
 const ROUNDS = 10;
@@ -19,23 +20,6 @@ export default function SharpenPage() {
       <Sharpen />
     </RequireAuth>
   );
-}
-
-/** Neighbouring books in the same bucket where at least one is still rough. */
-function nextPair(ranked: RankedEntry[], lastKey: string | null): [RankedEntry, RankedEntry] | null {
-  const pairs: Array<[RankedEntry, RankedEntry]> = [];
-  for (let i = 0; i < ranked.length - 1; i++) {
-    const a = ranked[i];
-    const b = ranked[i + 1];
-    if (a.bucket !== b.bucket || !(a.needs_sort || b.needs_sort)) continue;
-    if (`${a.id}:${b.id}` === lastKey) continue;
-    pairs.push([a, b]);
-  }
-  if (!pairs.length) return null;
-  const least = Math.min(...pairs.map(([a, b]) => a.compare_count + b.compare_count));
-  const fewest = pairs.filter(([a, b]) => a.compare_count + b.compare_count === least);
-  // Favour the top of the shelf, where order matters most.
-  return fewest[Math.floor(Math.random() * Math.min(fewest.length, 6))];
 }
 
 function Sharpen() {
@@ -62,14 +46,7 @@ function Sharpen() {
       await recordMatchup(winner, loser);
       countHeadToHeads(1);
       logMatchup(winner.book_id, loser.book_id, { context: "sharpen" });
-      const swap = winner.sort_key < loser.sort_key;
-      const next: Entry[] = entries.map((e) => {
-        if (e.id === winner.id)
-          return { ...e, sort_key: swap ? loser.sort_key : winner.sort_key, compare_count: e.compare_count + 1, needs_sort: e.compare_count + 1 < 2, manual_score: swap ? null : e.manual_score };
-        if (e.id === loser.id)
-          return { ...e, sort_key: swap ? winner.sort_key : loser.sort_key, compare_count: e.compare_count + 1, needs_sort: e.compare_count + 1 < 2, manual_score: swap ? null : e.manual_score };
-        return e;
-      });
+      const next: Entry[] = applyMatchup(entries, winner, loser);
       // After the matchup the winner sits directly above the loser.
       setLastKey(`${winner.id}:${loser.id}`);
       setEntries(next);

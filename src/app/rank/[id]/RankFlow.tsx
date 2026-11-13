@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
+import { ScorePad } from "@/components/ScorePad";
 import { Cover } from "@/components/Cover";
 import { BoltIcon, CloseIcon, SparkIcon } from "@/components/icons";
 import { ScoreChip } from "@/components/ScoreChip";
@@ -12,7 +13,7 @@ import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { FormatToggle } from "@/components/FormatToggle";
 import type { Book } from "@/lib/books";
-import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, rankEntries, refreshBadges, today, type Entry, type RankedEntry, setFormat, type Format } from "@/lib/data";
+import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, quickSpot, rankEntries, refreshBadges, today, type Entry, type RankedEntry, setFormat, type Format } from "@/lib/data";
 import { BADGE } from "@/lib/badges";
 import { Medallion } from "@/components/Badge";
 import {
@@ -35,7 +36,7 @@ export function RankFlow() {
   );
 }
 
-type Phase = "loading" | "bucket" | "compare" | "saving" | "done" | "error";
+type Phase = "loading" | "bucket" | "compare" | "score" | "saving" | "done" | "error";
 
 interface Moment {
   text: string;
@@ -155,13 +156,18 @@ function Flow() {
   );
   const wasDropped = existing?.status === "dropped";
 
-  async function finish(b: Bucket, index: number, sorted: RankedEntry[]) {
+  async function finish(b: Bucket, index: number, sorted: RankedEntry[], manualScore?: number) {
     setPhase("saving");
     let saved = false;
     try {
       // Re-ranking keeps the date already saved; a new finish uses the one picked here.
       // Ranked anyway after dropping it: there's no finish date.
-      await placeBook({ bookId: id, bucket: b, index, list: sorted, existing, finishedOn: current ? undefined : wasDropped ? null : finishedOn });
+      // A score given by hand is kept as set, and Sharpen can fine-tune it later.
+      await placeBook({
+        bookId: id, bucket: b, index, list: sorted, existing,
+        finishedOn: current ? undefined : wasDropped ? null : finishedOn,
+        ...(manualScore != null ? { manualScore, needsSort: true } : {}),
+      });
       saved = true;
       let fresh = await fetchShelf();
       const placed = fresh.find((e) => e.book_id === id);
@@ -217,6 +223,18 @@ function Flow() {
     // Every book, your first ones included, is placed with head-to-heads: you
     // pick the tier, the matchups pick the spot, the score follows.
     step(startPlacement(toCandidates(sorted), genres), b, sorted);
+  }
+
+  // "Just give it a number": skip the head-to-heads and place it by score.
+  const [score, setScore] = useState(7.5);
+  function openScore() {
+    const mid = bucket ? Math.round(((BUCKETS[bucket].range[0] + BUCKETS[bucket].range[1]) / 2) * 10) / 10 : null;
+    setScore(current?.score ?? mid ?? 7.5);
+    setPhase("score");
+  }
+  function saveScore() {
+    const spot = quickSpot(entries, id, score);
+    finish(spot.bucket, spot.index, spot.list, score);
   }
 
   function pick(newIsBetter: boolean) {
@@ -328,6 +346,27 @@ function Flow() {
                 </button>
               ))}
             </div>
+            <button type="button" className="link-btn" style={{ marginTop: 16, padding: "10px 4px" }} onClick={openScore}>
+              Or just give it a score out of 10
+            </button>
+          </div>
+        )}
+
+        {phase === "score" && book && (
+          <div style={{ display: "flex", flexDirection: "column", flex: 1, paddingTop: 10 }}>
+            <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              <Cover book={book} width={64} />
+              <div style={{ minWidth: 0 }}>
+                <div className="d" style={{ fontWeight: 700, fontSize: 18, lineHeight: 1.15 }}>{book.title}</div>
+                <div className="muted" style={{ fontSize: 14, marginTop: 2 }}>{book.author}</div>
+              </div>
+            </div>
+            <h1 className="h1" style={{ fontSize: 28, marginTop: 24 }}>What would you give it?</h1>
+            <p className="lede" style={{ fontSize: 15 }}>It goes in at that score, below anything you scored higher. Sharpen can fine-tune it later.</p>
+            <ScorePad value={score} onChange={setScore} />
+            <div className="spacer" style={{ minHeight: 24 }} />
+            <button className="btn btn--block" onClick={saveScore}>Rank it at {formatScore(score)}</button>
+            <button className="btn btn--ghost btn--block" style={{ marginTop: 8 }} onClick={() => setPhase("bucket")}>Back to head-to-heads</button>
           </div>
         )}
 
@@ -369,6 +408,9 @@ function Flow() {
                 Don&rsquo;t remember it
               </button>
             </div>
+            <button type="button" className="link-btn" style={{ alignSelf: "center", marginTop: 12, padding: "10px 4px" }} onClick={openScore}>
+              Skip the matchups and give it a score
+            </button>
           </>
         )}
 

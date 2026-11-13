@@ -211,6 +211,15 @@ function Shelf() {
 
         {entries && tab === "want" && <AskPrompt entries={entries} compact />}
 
+        {tab === "unsorted" && unsorted.length > 1 && (
+          <Link href="/quick-rate" className="unlock-row" style={{ color: "inherit" }}>
+            <span style={{ flex: 1, minWidth: 0, fontSize: 14 }}>
+              <strong>Quick-rate all {unsorted.length}.</strong> Tap a number out of 10 for each, no head-to-heads.
+            </span>
+            <ArrowIcon size={18} />
+          </Link>
+        )}
+
         {entries && entries.length > 0 && (tab === "want" || tab === "unsorted") && (
           <PlainList
             items={tab === "want" ? want : unsorted}

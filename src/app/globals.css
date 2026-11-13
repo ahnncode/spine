@@ -1228,3 +1228,26 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .report-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
 .report-row { padding: 16px 0; border-bottom: 1px solid var(--line); }
 .report-row__body { margin: 8px 0; padding-left: 12px; border-left: 2px solid var(--line-2); font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Score pad: give a book a number out of 10 */
+.score-pad { margin-top: 20px; }
+.score-pad__top { display: flex; align-items: center; gap: 16px; }
+.score-pad__tier { display: flex; align-items: center; font-weight: 600; font-size: 16px; }
+.score-pad__slider { width: 100%; margin-top: 24px; height: 44px; accent-color: var(--ink); cursor: pointer; }
+.score-pad__nudge { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.score-pad__nudge .icon-btn { font-size: 22px; font-weight: 600; }
+.quick-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.quick-grid__n { min-height: 56px; border: 0; border-radius: var(--radius-m); font-family: var(--font-book); font-weight: 700; font-size: 20px; font-variant-numeric: lining-nums tabular-nums; cursor: pointer; background: var(--well); color: var(--ink); transition: transform 0.12s ease; }
+.quick-grid__n:active { transform: scale(0.94); }
+.quick-grid__n[data-tier="loved"] { background: var(--accent-soft); color: var(--accent-ink); }
+.quick-grid__n[data-tier="fine"] { background: var(--amber-soft); color: var(--amber-ink); }
+.quick-grid__n:disabled { opacity: 0.5; cursor: default; }
+
+/* Today's close call: a two-book matchup from your own shelf, at the top of the feed */
+.close-call { margin-top: 16px; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.close-call__q { margin: 0; font-size: 14px; }
+.close-call__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.close-call__book { display: flex; align-items: center; gap: 10px; min-height: 76px; padding: 8px; border: 1px solid var(--line-2); border-radius: var(--radius-m); background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; transition: transform 0.12s ease; }
+.close-call__book:active { transform: scale(0.97); }
+.close-call__title { font-family: var(--font-book); font-weight: 700; font-size: 14px; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.close-call__done { margin: 16px 0 0; font-size: 14px; color: var(--muted); }

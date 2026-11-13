@@ -6,6 +6,7 @@ import { MentionText } from "@/components/Mentions";
 import { timeAgo } from "@/lib/time";
 import Link from "next/link";
 import { ReactionsCard } from "@/components/Reactions";
+import { DailyCloseCall } from "@/components/DailyCloseCall";
 import { FriendPolls } from "@/components/FriendPolls";
 import { Logo } from "@/components/Logo";
 import { useEffect, useMemo, useState } from "react";
@@ -57,7 +58,7 @@ const ago = timeAgo;
 
 function Feed() {
   const { profile } = useProfile();
-  const { entries, reload } = useShelf();
+  const { entries, reload, setEntries } = useShelf();
   const [checking, setChecking] = useState<Entry | null>(null);
   const [data, setData] = useState<Loaded | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -198,6 +199,7 @@ function Feed() {
           </p>
         )}
 
+        <DailyCloseCall entries={entries ?? null} setEntries={setEntries} />
         <ReactionsCard entries={entries} />
         {/* Polls sit after the first couple of posts (below); with no posts, here. */}
         {!(data && (data.items.length > 0 || data.together.length > 0)) && <FriendPolls mine={mine} />}

@@ -2,7 +2,7 @@ import { dedupeKey, sanitizeBook, type Book, type BookInput } from "./books";
 import type { ImportedBook } from "./goodreads";
 import { startingOrder } from "./goodreads";
 import type { BadgeStatus } from "./badges";
-import { BUCKET_ORDER, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
+import { BUCKET_ORDER, bucketForScore, bucketScores, keyForIndex, renumber, type Bucket } from "./ranking";
 import { findAppleAuthor } from "./applecovers";
 import { authorToCheck, lookup } from "./openlibrary";
 import { rankedInApp } from "./stats";
@@ -549,11 +549,16 @@ export async function placeBook(opts: {
   manualScore?: number | null;
   /** When they finished it (null: don't remember). Left out: keep what's saved, or today. */
   finishedOn?: string | null;
-}): Promise<void> {
+  /** Leave it flagged for Sharpen (quick-rated books are only roughly placed). */
+  needsSort?: boolean;
+  /** Backlog rating: don't post to friends' feeds (dates it by when it was read). */
+  quiet?: boolean;
+}): Promise<{ sortKey: number; renumbered: boolean }> {
   const uid = await myId();
   const { bookId, bucket, index, existing } = opts;
   const list = opts.list;
   let key = keyForIndex(list.map((e) => e.sort_key), index);
+  const renumbered = key === null;
 
   if (key === null) {
     const keys = renumber(list.length);
@@ -570,7 +575,7 @@ export async function placeBook(opts: {
     status: "ranked" as const,
     bucket,
     sort_key: key,
-    needs_sort: false,
+    needs_sort: opts.needsSort ?? false,
     // Re-ranking by head-to-head replaces any score set by hand.
     manual_score: opts.manualScore ?? null,
     finished_on: opts.finishedOn !== undefined ? opts.finishedOn : existing?.finished_on ?? today(),
@@ -579,11 +584,57 @@ export async function placeBook(opts: {
     ...(existing?.status === "dropped" ? { did_not_finish: true } : {}),
     // Finishing a book that was put aside: it's done, so the pause is over.
     ...(existing?.status === "paused" ? { stopped_at: null, stop_reason: null, stop_note: null } : {}),
-    ranked_at: wasRanked ? existing?.ranked_at ?? new Date().toISOString() : new Date().toISOString(),
+    ranked_at: wasRanked
+      ? existing?.ranked_at ?? new Date().toISOString()
+      : opts.quiet
+        ? existing?.finished_on ? `${existing.finished_on}T12:00:00Z` : "2000-01-01T00:00:00Z"
+        : new Date().toISOString(),
     source: existing?.source ?? "app",
   };
   const { error } = await supabase().from("shelf_entries").upsert(row, { onConflict: "user_id,book_id" });
   if (error) throw error;
+  return { sortKey: key, renumbered };
+}
+
+/** Put a quick-rated book back the way it was (undo). */
+export async function restoreEntry(before: Entry): Promise<void> {
+  const { error } = await supabase()
+    .from("shelf_entries")
+    .update({
+      status: before.status, bucket: before.bucket, sort_key: before.sort_key, manual_score: before.manual_score,
+      needs_sort: before.needs_sort, ranked_at: before.ranked_at,
+    })
+    .eq("id", before.id);
+  if (error) throw error;
+}
+
+/** Where a score out of 10 lands: its tier, and the spot below every book scored higher. */
+export function quickSpot(entries: Entry[], bookId: string, score: number): { bucket: Bucket; index: number; list: RankedEntry[] } {
+  const bucket = bucketForScore(score);
+  const list = bucketList(entries, bucket, bookId);
+  const at = list.findIndex((e) => e.score < score);
+  return { bucket, index: at === -1 ? list.length : at, list };
+}
+
+/**
+ * Rank a book by giving it a number instead of head-to-heads. The score is
+ * kept as set; the book stays flagged so Sharpen can fine-tune it later.
+ */
+export async function quickRate(opts: {
+  entries: Entry[];
+  bookId: string;
+  score: number;
+  existing: Entry | null;
+  quiet?: boolean;
+  finishedOn?: string | null;
+}): Promise<{ bucket: Bucket; sortKey: number; renumbered: boolean }> {
+  const score = Math.round(Math.max(0, Math.min(10, opts.score)) * 10) / 10;
+  const { bucket, index, list } = quickSpot(opts.entries, opts.bookId, score);
+  const r = await placeBook({
+    bookId: opts.bookId, bucket, index, list, existing: opts.existing,
+    manualScore: score, needsSort: true, quiet: opts.quiet, finishedOn: opts.finishedOn,
+  });
+  return { bucket, ...r };
 }
 
 /** Swap two neighbours after a quick matchup (lower one won). */
