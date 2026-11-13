@@ -1466,6 +1466,50 @@ export async function resolveReport(type: ReportTarget, targetId: string, action
   if (error) throw error;
 }
 
+/* --------------------------- Growth (admins) ----------------------------- */
+
+export type GrowthWeek = {
+  week_start: string;
+  partial: boolean;
+  signups: number;
+  signups_invited: number;
+  signups_outside: number;
+  active_rankers: number;
+  active_readers: number;
+  matchups: number;
+  importers: number;
+  imported_books: number;
+  d7_cohort: number;
+  d7_back: number;
+  d30_cohort: number;
+  d30_back: number;
+};
+
+export type GrowthTotals = {
+  readers: number;
+  readers_outside: number;
+  invited: number;
+  importers: number;
+  imported_books: number;
+  imported_placed: number;
+  ranked_books: number;
+  matchups: number;
+};
+
+/** Week-by-week growth numbers, newest first. Leaves out admins and test accounts. Throws for non-admins. */
+export async function adminGrowth(weeks = 12): Promise<GrowthWeek[]> {
+  const { data, error } = await supabase().rpc("admin_growth", { p_weeks: weeks });
+  if (error) throw error;
+  return ((data ?? []) as GrowthWeek[]).map((w) => ({ ...w, week_start: String(w.week_start).slice(0, 10) }));
+}
+
+/** All-time totals. Throws for non-admins. */
+export async function adminGrowthTotals(): Promise<GrowthTotals> {
+  const { data, error } = await supabase().rpc("admin_growth_totals");
+  if (error) throw error;
+  return ((data ?? []) as GrowthTotals[])[0];
+}
+
 /* -------------------------------- Pokes ---------------------------------- */
 
 /** Nudge someone you follow about their reading (once a day each). */

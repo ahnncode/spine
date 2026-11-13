@@ -1225,6 +1225,22 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .club-list__year { width: 38px; flex-shrink: 0; font-family: var(--font-book); font-weight: 700; font-size: 14px; color: var(--muted); }
 
 /* Moderation */
+/* Growth (admins): weekly numbers */
+.growth-table__wrap { margin-top: 24px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.growth-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.growth-table th, .growth-table td { padding: 10px 6px; text-align: right; border-bottom: 1px solid var(--line); }
+.growth-table thead th { font-size: 12px; font-weight: 600; color: var(--muted); vertical-align: bottom; white-space: normal; }
+.growth-table th[scope="row"], .growth-table thead th:first-child { text-align: left; padding-left: 0; font-weight: 600; }
+.growth-table tr > :last-child { padding-right: 0; }
+.growth-table__partial td, .growth-table__partial th { color: var(--muted); }
+.growth-totals { margin: 12px 0 0; }
+.growth-totals > div { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.growth-totals dt { color: var(--ink-2); }
+.growth-totals dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.growth-notes { margin: 12px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.5; color: var(--muted); }
+.growth-notes li + li { margin-top: 8px; }
+.growth-notes strong { color: var(--ink); font-weight: 600; }
+
 .report-list { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid var(--line); }
 .report-row { padding: 16px 0; border-bottom: 1px solid var(--line); }
 .report-row__body { margin: 8px 0; padding-left: 12px; border-left: 2px solid var(--line-2); font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }

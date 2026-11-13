@@ -391,6 +391,12 @@ function You() {
               <ArrowIcon size={18} />
             </Link>
           )}
+          {mod && (
+            <Link href="/you/growth" className="link-group__row">
+              <span>Growth</span>
+              <ArrowIcon size={18} />
+            </Link>
+          )}
         </nav>
 
         <button className="btn btn--ghost btn--block" style={{ marginTop: 20 }} onClick={signOut}>
