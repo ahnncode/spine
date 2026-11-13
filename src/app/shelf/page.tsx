@@ -21,6 +21,8 @@ import { useShelf } from "@/components/useShelf";
 import { AskPrompt } from "@/components/AskPrompt";
 import { useStreak } from "@/components/useStreak";
 import { rankEntries, type Entry, type RankedEntry, isListened } from "@/lib/data";
+import { formatScore } from "@/lib/ranking";
+import { tiedRanks } from "@/lib/sharpen";
 import { GENRES } from "@/lib/genres";
 import { RowsSkeleton } from "@/components/Skeleton";
 import { ReadingCard } from "@/components/ReadingCard";
@@ -63,6 +65,8 @@ function Shelf() {
     [entries],
   );
   const roughCount = ranked.filter((e) => e.needs_sort).length;
+  // Books quick-rated to the same number aren't really ordered yet: show them as tied (=14).
+  const rankLabel = useMemo(() => tiedRanks(ranked), [ranked]);
 
   const genresPresent = useMemo(() => GENRES.filter((g) => ranked.some((e) => e.book.genres?.includes(g.key))), [ranked]);
   const thisYear = String(new Date().getFullYear());
@@ -154,14 +158,12 @@ function Shelf() {
                 ))}
               </div>
             )}
-            {roughCount > 1 && (
-              <Link href="/sharpen" className="card card--ink" style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 16, textDecoration: "none" }}>
-                <span className="score score--top d" style={{ width: 44, height: 44, fontSize: 17, fontFamily: "var(--font-book)", fontWeight: 700 }}>
-                  {roughCount > 99 ? "99+" : roughCount}
-                </span>
-                <span style={{ flex: 1 }}>
-                  <span style={{ display: "block", fontWeight: 600, fontSize: 15 }}>imported books are only roughly sorted</span>
-                  <span style={{ display: "block", fontSize: 13, color: "var(--on-panel-muted)", marginTop: 2 }}>Sharpen them with quick matchups</span>
+            {roughCount > 0 && (
+              <Link href="/sharpen" className="unlock-row" style={{ color: "inherit" }}>
+                <span className="rough-dot" aria-hidden="true" style={{ marginLeft: 4 }} />
+                <span style={{ flex: 1, minWidth: 0, fontSize: 14 }}>
+                  <strong>{roughCount === 1 ? "1 book is" : `${roughCount} books are`} roughly placed.</strong>{" "}
+                  They settle as you answer close calls, or sharpen them now.
                 </span>
                 <ArrowIcon size={18} />
               </Link>
@@ -186,7 +188,7 @@ function Shelf() {
                 {shown.map((e, i) => (
                   <li key={e.id} id={i === 0 || shown[i - 1].bucket !== e.bucket ? `tier-${e.bucket}` : undefined} style={{ scrollMarginTop: 16 }}>
                     <button className="book-row" style={rowButton} onClick={() => setSheet(e)}>
-                      <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}${e.rank === 1 ? " book-row__rank--first" : ""}`}>{e.rank}</span>
+                      <span className={`book-row__rank ${e.rank <= 3 ? "book-row__rank--top" : ""}${e.rank === 1 && !rankLabel.get(e.id) ? " book-row__rank--first" : ""}`} aria-label={rankLabel.get(e.id) ? `Tied ${rankLabel.get(e.id)!.slice(1)}` : undefined}>{rankLabel.get(e.id) ?? e.rank}</span>
                       <Cover book={e.book} width={44} listened={isListened(e.format)} />
                       <span className="book-row__body">
                         <span className="book-row__title" style={{ display: "block" }}>{e.book.title}</span>
@@ -197,6 +199,7 @@ function Shelf() {
                           </span>
                         )}
                       </span>
+                      {e.needs_sort && <span className="rough-dot" role="img" aria-label="Roughly placed" title="Roughly placed: settles as you answer close calls" />}
                       <ScoreChip score={e.score} bucket={e.bucket} />
                     </button>
                   </li>
@@ -251,6 +254,12 @@ function Shelf() {
               </div>
               {"score" in sheet && <ScoreChip score={sheet.score} bucket={sheet.bucket} size={52} />}
             </div>
+            {sheet.status === "ranked" && sheet.needs_sort && (
+              <p className="muted" style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 0", fontSize: 13 }}>
+                <span className="rough-dot" aria-hidden="true" />
+                Roughly placed{sheet.manual_score != null ? ` at the ${formatScore(Number(sheet.manual_score))} you gave it` : " from your import"}. It moves to its exact spot as you answer close calls.
+              </p>
+            )}
             {sheet.status === "ranked" && (
               <div style={{ marginTop: 16 }}>
                 {editingThoughts ? (
@@ -375,3 +384,4 @@ function TierKey() {
     </div>
   );
 }
+

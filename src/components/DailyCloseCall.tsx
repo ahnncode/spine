@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { countHeadToHeads, logMatchup, rankEntries, recordMatchup, today, type Entry, type RankedEntry } from "@/lib/data";
 import { applyMatchup, nextPair } from "@/lib/sharpen";
@@ -41,14 +42,25 @@ export function DailyCloseCall({ entries, setEntries }: { entries: Entry[] | nul
   const pair = useMemo(() => (done < PER_DAY ? nextPair(ranked, lastKey) : null), [ranked, lastKey, done]);
 
   if (!entries) return null;
+  // Read but never rated: offer a small batch on days the close calls are done.
+  const unrated = entries.filter((e) => e.status === "unsorted").length;
+  const nudge = unrated > 0 && (
+    <Link href="/quick-rate?limit=5" className="close-call__nudge">
+      {unrated === 1 ? "1 book you’ve read is still unrated." : `${unrated} books you’ve read are still unrated.`}{" "}
+      <strong>Quick-rate {Math.min(5, unrated)} {unrated === 1 ? "" : "more "}→</strong>
+    </Link>
+  );
   if (thanks && !pair) {
     return (
-      <p className="close-call__done" aria-live="polite">
-        Settled for today. {rough > 0 ? `${rough} book${rough === 1 ? "" : "s"} still roughly placed; more tomorrow.` : "Your ranking is all yours now."}
-      </p>
+      <div className="close-call close-call--quiet" aria-live="polite">
+        <p className="close-call__done">
+          Settled for today. {rough > 0 ? `${rough} book${rough === 1 ? "" : "s"} still roughly placed; more tomorrow.` : "Your ranking is all yours now."}
+        </p>
+        {nudge}
+      </div>
     );
   }
-  if (!pair) return null;
+  if (!pair) return nudge ? <div className="close-call close-call--quiet">{nudge}</div> : null;
 
   async function choose(winner: RankedEntry, loser: RankedEntry) {
     if (!entries || saving) return;

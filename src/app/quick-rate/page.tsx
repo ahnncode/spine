@@ -31,6 +31,13 @@ function QuickRate() {
   const [last, setLast] = useState<{ before: Entry; score: number } | null>(null);
   const [rated, setRated] = useState(0);
   const [total, setTotal] = useState(0);
+  // ?limit=5 from the feed: a small batch, then stop.
+  const [limit, setLimit] = useState<number | null>(null);
+  useEffect(() => {
+    const n = Number(new URLSearchParams(window.location.search).get("limit"));
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (n > 0) setLimit(n);
+  }, []);
 
   useEffect(() => {
     fetchShelf()
@@ -42,7 +49,8 @@ function QuickRate() {
   }, []);
 
   const queue = useMemo(() => (entries ?? []).filter((e) => e.status === "unsorted" && !skipped.has(e.id)), [entries, skipped]);
-  const book = queue[0] ?? null;
+  const batchDone = limit !== null && rated >= limit && queue.length > 0;
+  const book = batchDone ? null : queue[0] ?? null;
 
   async function rate(n: number) {
     if (!entries || !book || busy) return;
@@ -80,18 +88,21 @@ function QuickRate() {
   }
 
   const done = total - queue.length;
+  // In a batch, count within the batch.
+  const shownTotal = limit !== null ? Math.min(limit, total) : total;
+  const shownDone = limit !== null ? Math.min(rated, shownTotal) : done;
 
   return (
     <div className="app">
       <main className="screen screen--flow">
         <div className="topbar">
           <Link href="/shelf" className="icon-btn" aria-label="Back to your shelf"><BackIcon size={20} /></Link>
-          {total > 0 && <span className="m muted" style={{ fontSize: 13 }}>{Math.min(done + 1, total)} of {total}</span>}
+          {shownTotal > 0 && <span className="m muted" style={{ fontSize: 13 }}>{Math.min(shownDone + 1, shownTotal)} of {shownTotal}</span>}
           <span style={{ width: 44 }} />
         </div>
         {total > 0 && (
           <div className="bar" style={{ marginTop: 12 }} aria-hidden="true">
-            <span style={{ width: `${(done / total) * 100}%`, background: "var(--accent)" }} />
+            <span style={{ width: `${(shownDone / Math.max(1, shownTotal)) * 100}%`, background: "var(--accent)" }} />
           </div>
         )}
 
@@ -99,15 +110,18 @@ function QuickRate() {
           <div aria-busy="true" className="spacer" />
         ) : !book ? (
           <div style={{ marginTop: 32 }}>
-            <h1 className="h1">{rated ? "That’s the lot" : "Nothing to rate"}</h1>
+            <h1 className="h1">{batchDone ? `${rated} done` : rated ? "That’s the lot" : "Nothing to rate"}</h1>
             <p className="lede">
-              {rated
+              {batchDone
+                ? `${queue.length} still waiting in “To rank”. Do a few more any day; the feed will remind you.`
+                : rated
                 ? `${rated} book${rated === 1 ? "" : "s"} rated and on your ranking. Each day we’ll ask you to settle one or two that sit close together, so the order gets sharper without a marathon.`
                 : "Everything you’ve read is already ranked."}
               {skipped.size > 0 && ` You skipped ${skipped.size}; they’re still in “To rank”.`}
             </p>
             <div className="spacer" style={{ minHeight: 24 }} />
-            <Link href="/shelf" className="btn btn--block">See your ranking</Link>
+            {batchDone && <button type="button" className="btn btn--block" style={{ marginBottom: 8 }} onClick={() => setLimit(null)}>Keep going</button>}
+            <Link href="/shelf" className={batchDone ? "btn btn--ghost btn--block" : "btn btn--block"}>See your ranking</Link>
             {rated > 0 && <Link href="/sharpen" className="btn btn--ghost btn--block" style={{ marginTop: 8 }}>Fine-tune some now</Link>}
           </div>
         ) : (

@@ -30,3 +30,20 @@ export function applyMatchup(entries: Entry[], winner: RankedEntry, loser: Ranke
     return e;
   });
 }
+
+/** Consecutive books given the same number by hand share a rank label like "=14". */
+export function tiedRanks(ranked: RankedEntry[]): Map<string, string> {
+  const out = new Map<string, string>();
+  let i = 0;
+  while (i < ranked.length) {
+    const a = ranked[i];
+    let j = i + 1;
+    while (
+      j < ranked.length && a.manual_score != null && ranked[j].manual_score != null &&
+      ranked[j].bucket === a.bucket && Number(ranked[j].manual_score) === Number(a.manual_score)
+    ) j++;
+    if (j - i > 1) for (let k = i; k < j; k++) out.set(ranked[k].id, `=${a.rank}`);
+    i = j;
+  }
+  return out;
+}

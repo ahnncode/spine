@@ -199,7 +199,8 @@ function Feed() {
           </p>
         )}
 
-        <DailyCloseCall entries={entries ?? null} setEntries={setEntries} />
+        {/* With an empty feed it leads; otherwise it sits after the first post so friends come first. */}
+        {data && data.items.length === 0 && data.together.length === 0 && <DailyCloseCall entries={entries ?? null} setEntries={setEntries} />}
         <ReactionsCard entries={entries} />
         {/* Polls sit after the first couple of posts (below); with no posts, here. */}
         {!(data && (data.items.length > 0 || data.together.length > 0)) && <FriendPolls mine={mine} />}
@@ -242,6 +243,7 @@ function Feed() {
             ].sort((a, b) => b.at.localeCompare(a.at)).flatMap(({ item: row, together: t }, idx, all) => {
               // A disagreement after the third post, the month's board after the eighth (or at the end).
               const extras = [
+                idx === 0 && <DailyCloseCall key="close-call" entries={entries ?? null} setEntries={setEntries} />,
                 idx === Math.min(1, all.length - 1) && <FriendPolls key="polls" mine={mine} />,
                 ...(scope !== "following" ? [] : [
                   idx === Math.min(2, all.length - 1) && <SplitCard key="split" friends={followingIds ?? []} mine={mine} me={profile?.id} />,

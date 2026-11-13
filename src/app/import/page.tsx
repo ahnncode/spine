@@ -113,15 +113,21 @@ function Importer() {
             {summary.unrated > 0 && (
               <div className="unlock-row" style={{ marginTop: 24 }}>
                 <span style={{ flex: 1, minWidth: 0, fontSize: 15 }}>
-                  <strong>{summary.unrated} read but unrated.</strong> Give each a number out of 10, about two seconds a book. Or leave them in &ldquo;To rank&rdquo; for later.
+                  <strong>{summary.unrated} read but unrated.</strong> Give each a number out of 10, about two seconds a book{summary.loved >= 3 ? ", right after your top 10" : ""}. Or leave them in &ldquo;To rank&rdquo; for later.
                 </span>
               </div>
             )}
             <p className="muted" style={{ fontSize: 14, margin: "16px 0 0" }}>
-              Stars can&rsquo;t tell your {summary.loved} favorites apart. Each day we&rsquo;ll ask you to settle one or two that sit close together, so your order sharpens a little at a time.
+              {summary.loved >= 3
+                ? <>First, a minute on what matters most: stars can&rsquo;t tell your {summary.loved} favorites apart, so pick your top 10. After that, each day we&rsquo;ll ask you to settle one or two books that sit close together.</>
+                : <>Each day we&rsquo;ll ask you to settle one or two books that sit close together, so your order sharpens a little at a time.</>}
             </p>
             <div className="spacer" style={{ minHeight: 24 }} />
-            {summary.unrated > 0 ? (
+            {summary.loved >= 3 ? (
+              <Link href="/top-ten" className="btn btn--block">
+                Pick your top 10 <ArrowIcon size={18} />
+              </Link>
+            ) : summary.unrated > 0 ? (
               <Link href="/quick-rate" className="btn btn--block">
                 Quick-rate the {summary.unrated} <ArrowIcon size={18} />
               </Link>

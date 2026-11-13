@@ -596,6 +596,24 @@ export async function placeBook(opts: {
   return { sortKey: key, renumbered };
 }
 
+/**
+ * Your top picks, best first, become the top of Loved in that order. You chose
+ * the order, so they count as settled (no longer rough).
+ */
+export async function setTopPicks(entries: Entry[], bookIds: string[]): Promise<void> {
+  const loved = entries.filter((e) => e.status === "ranked" && e.bucket === "loved" && e.sort_key !== null);
+  const top = Math.max(0, ...loved.map((e) => e.sort_key as number));
+  const byBook = new Map(loved.map((e) => [e.book_id, e]));
+  const picks = bookIds.map((id) => byBook.get(id)).filter((e): e is Entry => Boolean(e));
+  for (let i = 0; i < picks.length; i++) {
+    const { error } = await supabase()
+      .from("shelf_entries")
+      .update({ sort_key: top + (picks.length - i) * 1024, needs_sort: false, manual_score: null })
+      .eq("id", picks[i].id);
+    if (error) throw error;
+  }
+}
+
 /** Put a quick-rated book back the way it was (undo). */
 export async function restoreEntry(before: Entry): Promise<void> {
   const { error } = await supabase()

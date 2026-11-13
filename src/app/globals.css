@@ -1250,4 +1250,21 @@ button.link-group__row { width: 100%; border: 0; border-top: 1px solid var(--lin
 .close-call__book { display: flex; align-items: center; gap: 10px; min-height: 76px; padding: 8px; border: 1px solid var(--line-2); border-radius: var(--radius-m); background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; transition: transform 0.12s ease; }
 .close-call__book:active { transform: scale(0.97); }
 .close-call__title { font-family: var(--font-book); font-weight: 700; font-size: 14px; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-.close-call__done { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
+.close-call__done { margin: 0; font-size: 14px; color: var(--muted); }
+.close-call--quiet { display: flex; flex-direction: column; gap: 6px; }
+.close-call__nudge { display: block; min-height: 24px; font-size: 14px; color: var(--ink); text-decoration: none; }
+.close-call__nudge strong { color: var(--cobalt-ink); }
+
+/* Roughly placed (imported or quick-rated, not yet settled by matchups) */
+.rough-dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: var(--radius-pill); background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
+
+/* Pick your top 10 */
+.pick-grid { list-style: none; margin: 20px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px; }
+.pick-grid__book { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; text-align: center; }
+.pick-grid__book:disabled { opacity: 0.45; cursor: default; }
+.pick-grid__cover { position: relative; display: block; border-radius: 6px; transition: transform 0.12s ease; }
+.pick-grid__book[aria-pressed="true"] .pick-grid__cover { transform: translateY(-3px); box-shadow: 0 0 0 3px var(--accent); }
+.pick-grid__n { position: absolute; top: -10px; right: -10px; width: 30px; height: 30px; border-radius: var(--radius-pill); background: var(--accent); color: var(--black); font-family: var(--font-book); font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums; }
+.pick-grid__title { font-size: 12px; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pick-bar { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px max(20px, env(safe-area-inset-left, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)); background: var(--ground); border-top: 1px solid var(--line); }
+.pick-bar > * { max-width: 520px; margin-left: auto; margin-right: auto; }

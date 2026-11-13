@@ -4,6 +4,7 @@ vi.mock("./supabase", () => ({ supabase: () => ({}) }));
 
 import { quickSpot, rankEntries, type Entry } from "./data";
 import { bucketForScore } from "./ranking";
+import { tiedRanks } from "./sharpen";
 
 function entry(bookId: string, bucket: Entry["bucket"], sortKey: number, manual: number | null = null): Entry {
   return {
@@ -47,5 +48,27 @@ describe("quickSpot", () => {
     expect(quickSpot(shelf, "new", 5).bucket).toBe("fine");
     expect(quickSpot(shelf, "new", 5).index).toBe(0);
     expect(quickSpot(shelf, "b3", 9.9).list.some((e) => e.book_id === "b3")).toBe(false);
+  });
+});
+
+
+describe("tiedRanks", () => {
+  it("labels runs of the same hand-set score as tied, and nothing else", () => {
+    const shelf = [
+      entry("a", "loved", 9),
+      entry("b", "loved", 8, 8),
+      entry("c", "loved", 7, 8),
+      entry("d", "loved", 6, 8),
+      entry("e", "loved", 5, 7.5),
+      entry("f", "loved", 4),
+    ];
+    const ranked = rankEntries(shelf);
+    const labels = tiedRanks(ranked);
+    expect(labels.get("e-b")).toBe("=2");
+    expect(labels.get("e-c")).toBe("=2");
+    expect(labels.get("e-d")).toBe("=2");
+    expect(labels.has("e-a")).toBe(false);
+    expect(labels.has("e-e")).toBe(false);
+    expect(labels.has("e-f")).toBe(false);
   });
 });
