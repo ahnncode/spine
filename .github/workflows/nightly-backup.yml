@@ -52,10 +52,48 @@ jobs:
         with:
           version: latest
 
-      - name: Dump the database
+      # Pasted connection strings often carry a stray space or quotes, the
+      # [YOUR-PASSWORD] brackets, or a password with @ # / ? % in it, which
+      # breaks parsing. Tidy and encode the password; never print it.
+      - name: Tidy the connection string
         if: steps.check.outputs.ready == 'true'
         env:
-          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          RAW: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          python3 - <<'PY'
+          import os, urllib.parse
+          raw = os.environ["RAW"].strip().strip('"').strip("'").strip()
+          notes = []
+          scheme, sep, rest = raw.partition("://")
+          if not sep or scheme not in ("postgres", "postgresql"):
+              raise SystemExit("SUPABASE_DB_URL should start with postgresql:// (copy the Session pooler string from Supabase > Connect).")
+          creds, at, hostpart = rest.rpartition("@")
+          if not at:
+              raise SystemExit("SUPABASE_DB_URL has no user and password before the host. Copy the Session pooler string from Supabase > Connect.")
+          user, colon, password = creds.partition(":")
+          if not colon or not password:
+              raise SystemExit("SUPABASE_DB_URL has no password in it.")
+          if password.upper() == "[YOUR-PASSWORD]" or password.upper() == "YOUR-PASSWORD":
+              raise SystemExit("SUPABASE_DB_URL still has the [YOUR-PASSWORD] placeholder. Put your database password there.")
+          if password.startswith("[") and password.endswith("]"):
+              password = password[1:-1]; notes.append("removed the square brackets around the password")
+          decoded = urllib.parse.unquote(password)
+          encoded = urllib.parse.quote(decoded, safe="")
+          if encoded != password:
+              notes.append("encoded special characters in the password")
+          url = f"{scheme}://{user}:{encoded}@{hostpart}"
+          print("::add-mask::" + url)
+          print("::add-mask::" + encoded)
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write("DB_URL=" + url + "\n")
+          host = hostpart.split("/")[0].split("@")[-1]
+          print("Connecting to", host.split(":")[0], "as", user.split(".")[0] + (".…" if "." in user else ""))
+          for n in notes:
+              print("Fixed:", n)
+          PY
+
+      - name: Dump the database
+        if: steps.check.outputs.ready == 'true'
         run: |
           mkdir backup
           supabase db dump --db-url "$DB_URL" -f backup/roles.sql --role-only
