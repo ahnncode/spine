@@ -1304,7 +1304,7 @@ export async function respondToPick(id: string, response: "want" | "reading" | "
 export interface Notification {
   id: string;
   actor_id: string;
-  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks" | "ask" | "room" | "club";
+  kind: "reaction" | "comment" | "follow" | "badge" | "mention" | "poke" | "read_along" | "picks" | "ask" | "room" | "club" | "growth";
   /** For read-along notifications: invite, joined, message or verdict. */
   detail?: string | null;
   /** For badge notifications: which badge. */

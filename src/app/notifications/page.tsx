@@ -74,6 +74,12 @@ function Inner() {
   }, []);
 
   function describe(n: Notification): string {
+    if (n.kind === "growth") {
+      // detail is "<source>:<count>", e.g. "reddit:1"
+      const [src, count] = (n.detail ?? "").split(":");
+      const where = src === "reddit" ? "Reddit" : src === "tiktok" ? "TikTok" : src === "instagram" ? "Instagram" : src || "a link";
+      return count === "1" ? `just joined from ${where}. Your first reader from there` : `just joined from ${where}. That’s ${count} from there`;
+    }
     if (n.kind === "follow") return "started following you";
     if (n.kind === "poke") return "poked you. How’s the book going?";
     if (n.kind === "read_along") {
@@ -197,6 +203,8 @@ function Inner() {
                     <Link href={`/book/${data.rooms.get(n.target_id!)!.book_id}/room/${data.rooms.get(n.target_id!)!.chapter}`} style={rowStyle}>{body}</Link>
                   ) : n.kind === "read_along" && n.target_id ? (
                     <Link href={`/together/${n.target_id}`} style={rowStyle}>{body}</Link>
+                  ) : n.kind === "growth" ? (
+                    <Link href="/you/growth" style={rowStyle}>{body}</Link>
                   ) : badge ? (
                     <Link href={`/badges/${badge.key}`} style={rowStyle}>{body}</Link>
                   ) : opensThread ? (
