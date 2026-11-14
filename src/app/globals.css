@@ -474,6 +474,30 @@ html.sheet-open, html.sheet-open body { overflow: hidden; overscroll-behavior: n
 .small-btn { min-height: 36px; padding: 0 12px; border-radius: var(--radius-xs); border: 0; background: var(--ink); color: var(--on-ink); font-size: 13px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; }
 
 /* ---------- Stats ---------- */
+/* World passport */
+.world-stamp { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 50%; border: 2px solid currentColor; font-weight: 700; letter-spacing: 0.04em; line-height: 1; box-sizing: border-box; }
+.world-stamp small { font-weight: 600; letter-spacing: 0.08em; margin-top: 2px; }
+.world-row { display: flex; flex-direction: column; gap: 14px; color: inherit; text-decoration: none; }
+.world-row__stamps { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.world-row__foot { display: flex; justify-content: space-between; align-items: center; font-size: 14px; color: var(--muted); }
+.world-map { display: block; width: 100%; height: auto; aspect-ratio: 2 / 1; }
+.world-map--loading { border-radius: var(--radius-m); background: var(--line); opacity: 0.4; }
+.world-map__land { fill: var(--line); stroke: var(--ground); stroke-width: 0.6; }
+.world-map__read { fill: var(--focus); stroke: var(--ground); stroke-width: 0.6; }
+.world-map__ring { fill: none; stroke: var(--focus); stroke-width: 2; }
+.world-list { list-style: none; margin: 20px 0 0; padding: 0; }
+.world-list__continent { border-bottom: 1px solid var(--line); padding: 4px 0; }
+.world-list__name { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--muted); }
+.world-list__countries { list-style: none; margin: 0; padding: 0; }
+.world-country { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.world-country__name { font-family: var(--font-book); font-size: 17px; }
+.world-country[aria-expanded="true"] .world-country__name { font-weight: 700; }
+.world-books { list-style: none; margin: 0 0 8px; padding: 0; }
+.world-books__row { display: flex; gap: 12px; align-items: center; padding: 8px 0; color: inherit; text-decoration: none; }
+.world-next { display: flex; flex-direction: column; gap: 4px; margin: 20px 0 0; padding: 14px 16px; border-radius: var(--radius-m); border: 1.5px dashed var(--dash); color: inherit; text-decoration: none; font-size: 14px; line-height: 1.4; }
+.world-next__k { font-size: 13px; font-weight: 600; color: var(--accent-ink); }
+.world-new { display: flex; gap: 14px; align-items: center; margin-top: 16px; padding: 14px 16px; border-radius: var(--radius-l); border: 1px solid var(--line); background: var(--surface); color: inherit; text-decoration: none; }
+
 .stamp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .stamp {
   aspect-ratio: 1; border-radius: var(--radius-m);

@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { openLibraryAuthor, wikidataCountries } from "@/lib/countryLookup";
+import { countryName, isNewCountry } from "@/lib/world";
+import { WorldStamp } from "@/components/WorldStamp";
 import { useParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { RequireAuth } from "@/components/Auth";
@@ -13,7 +16,7 @@ import { ThoughtsEditor } from "@/components/ThoughtsEditor";
 import { FinishedPicker } from "@/components/FinishedPicker";
 import { FormatToggle } from "@/components/FormatToggle";
 import type { Book } from "@/lib/books";
-import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, quickSpot, rankEntries, refreshBadges, today, type Entry, type RankedEntry, setFormat, type Format } from "@/lib/data";
+import { bucketList, countHeadToHeads, logMatchup, fetchBook, fetchCheckinDays, fetchShelf, placeBook, quickSpot, rankEntries, refreshBadges, today, type Entry, type RankedEntry, setFormat, type Format, setBookCountry } from "@/lib/data";
 import { BADGE } from "@/lib/badges";
 import { Medallion } from "@/components/Badge";
 import {
@@ -52,6 +55,27 @@ interface Result {
   moments: Moment[];
   /** Badges this ranking just earned. */
   badges: string[];
+  /** First book from this country: its code, for the world passport stamp. */
+  stamp: string | null;
+}
+
+/** Where this book's author is from: saved already, or a quick lookup (gives up after a few seconds). */
+async function authorCountry(book: Book): Promise<string | null> {
+  if (book.author_country) return book.author_country;
+  if (book.country_checked_at) return null;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 4000);
+  try {
+    const author = await openLibraryAuthor(book, ctrl.signal);
+    if (!author) return null;
+    const r = (await wikidataCountries([author], ctrl.signal)).get(author);
+    await setBookCountry(book.id, r?.country ?? null, r?.translated ?? null).catch(() => {});
+    return r?.country ?? null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 const COUNT_MILESTONES = [10, 25, 50, 100, 250, 500, 1000];
@@ -176,9 +200,10 @@ function Flow() {
         await setFormat(placed.id, format).catch(() => {});
         fresh = fresh.map((e) => (e.id === placed.id ? { ...e, format } : e));
       }
-      const [checkinDays, badges] = await Promise.all([
+      const [checkinDays, badges, country] = await Promise.all([
         fetchCheckinDays().catch(() => []),
         refreshBadges().catch(() => []),
+        book ? authorCountry(book) : Promise.resolve(null),
       ]);
       const ranked = rankEntries(fresh);
       const meIdx = ranked.findIndex((e) => e.book_id === id);
@@ -191,6 +216,8 @@ function Flow() {
         below: meIdx < ranked.length - 1 ? ranked[meIdx + 1] : null,
         moments: momentsFor(entries, fresh, id, checkinDays),
         badges: badges.filter((x) => x.fresh && BADGE[x.key]).map((x) => x.key),
+        // Only a first: re-ranking a book, or your 12th American novel, stays quiet.
+        stamp: !current && isNewCountry(entries, id, country) ? country : null,
       });
       setEntries(fresh);
       setQueueLeft(shiftQueue(id));
@@ -446,6 +473,17 @@ function Flow() {
                   </span>
                 ))}
               </div>
+            )}
+            {result.stamp && (
+              <Link href="/you/world" className="moment world-new" style={{ animationDelay: `${0.55 + result.badges.length * 0.15}s` }}>
+                <span className="medal-pop" style={{ display: "flex", animationDelay: `${0.65 + result.badges.length * 0.15}s` }}>
+                  <WorldStamp code={result.stamp} size={60} year={new Date().getFullYear()} />
+                </span>
+                <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  <strong style={{ fontSize: 15 }}>New stamp: {countryName(result.stamp)}</strong>
+                  <span className="muted" style={{ fontSize: 14 }}>Your first book from there. See your world passport</span>
+                </span>
+              </Link>
             )}
             {result.moments.length > 0 && (
               <div className="moments">

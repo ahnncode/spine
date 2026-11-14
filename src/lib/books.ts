@@ -26,6 +26,12 @@ export interface Book extends BookInput {
   cover_checked?: boolean;
   /** Who picked this genre by hand, if anyone (they can change it). */
   genre_set_by?: string | null;
+  /** Where the author is from (ISO alpha-2), for the world passport. */
+  author_country?: string | null;
+  /** Read in English translation, when we know. */
+  translated?: boolean | null;
+  /** When the author's country was last looked up. */
+  country_checked_at?: string | null;
 }
 
 /** Drop a trailing series marker like "(The Expanse, #1)". */

@@ -24,6 +24,9 @@ import { TabBar } from "@/components/TabBar";
 import { useAuthorFix } from "@/components/useAuthorFix";
 import { useCoverBackfill } from "@/components/useCoverBackfill";
 import { useEnrichment } from "@/components/useEnrichment";
+import { useCountryLookup } from "@/components/useCountryLookup";
+import { WorldStamp } from "@/components/WorldStamp";
+import { worldPassport } from "@/lib/world";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import { isEarlyAdopter, type BadgeStatus } from "@/lib/badges";
@@ -48,6 +51,7 @@ function You() {
   const { profile, reloadProfile } = useProfile();
   const { entries, reload } = useShelf();
   const { active: lookingUp } = useEnrichment(entries, reload);
+  useCountryLookup(entries, reload);
   useCoverBackfill(entries, reload);
   useAuthorFix(entries, reload);
   const [counts, setCounts] = useState<{ followers: number; following: number } | null>(null);
@@ -71,6 +75,7 @@ function You() {
   const [checking, setChecking] = useState<Entry | null>(null);
   const stamps = useMemo(() => passport(ranked), [ranked]);
   const earnedStamps = stamps.filter((s) => s.count > 0).length;
+  const world = useMemo(() => worldPassport(entries ?? []), [entries]);
   // Earned stamps plus the next three to unlock, not a wall of padlocks.
   const [allStamps, setAllStamps] = useState(false);
   const shownStamps = allStamps ? stamps : [...stamps.filter((s) => s.count > 0), ...stamps.filter((s) => s.count === 0).slice(0, 3)];
@@ -327,6 +332,27 @@ function You() {
             <p className="muted" style={{ fontSize: 12, margin: "8px 0 0" }}>Wrong genre? Tap a stamp, then Fix genres.</p>
           )}
         </section>
+
+        {world.countries.length > 0 && (
+          <section style={{ marginTop: 32 }}>
+            <Link href="/you/world" className="world-row" aria-label={`Around the world: ${world.countries.length} ${world.countries.length === 1 ? "country" : "countries"}. Open your world passport`}>
+              <span style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span className="section-title" style={{ margin: 0 }}>Around the world</span>
+                <span className="m muted" style={{ fontSize: 12 }}>{world.countries.length} {world.countries.length === 1 ? "country" : "countries"}</span>
+              </span>
+              <span className="world-row__stamps">
+                {world.countries.slice(0, 5).map((c, i) => <WorldStamp key={c.code} code={c.code} index={i} />)}
+                {world.countries.length > 5 && <span className="m muted" style={{ fontSize: 14, fontWeight: 600 }}>+{world.countries.length - 5}</span>}
+              </span>
+              <span className="world-row__foot">
+                <span>
+                  {world.continents} of 6 continents{world.translated > 0 ? ` · ${world.translated} in translation` : ""}
+                </span>
+                <ArrowIcon size={18} />
+              </span>
+            </Link>
+          </section>
+        )}
 
         {readAlongs.length > 0 && (
           <section style={{ marginTop: 32 }}>

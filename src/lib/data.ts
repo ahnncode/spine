@@ -255,6 +255,12 @@ export async function saveBookDescription(bookId: string, text: string | null, s
 }
 
 /** Fill in cover, genres and year on a catalog book (only where missing). */
+/** Save a world-passport lookup on a catalog book. A null country just records that we tried. */
+export async function setBookCountry(id: string, country: string | null, translated: boolean | null): Promise<void> {
+  const { error } = await supabase().rpc("set_book_country", { p_book: id, p_country: country, p_translated: translated });
+  if (error) throw error;
+}
+
 export async function enrichBook(id: string, raw: BookInput): Promise<void> {
   const b = sanitizeBook(raw);
   const { error } = await supabase().rpc("enrich_book", {
