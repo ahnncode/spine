@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { addToWant } from "@/lib/data";
+import { addToWant, removeFromWant } from "@/lib/data";
 import { BookmarkIcon } from "./icons";
 
-/** Save a book to your want-to-read list in one tap, without leaving the page. */
+/** Save a book to your want-to-read list in one tap, without leaving the page. Tap again to take it back off. */
 export function WantButton({
   bookId,
   compact = false,
@@ -19,27 +19,40 @@ export function WantButton({
 }) {
   const [state, setState] = useState<"idle" | "saved" | "error">(initialSaved ? "saved" : "idle");
   const [popped, setPopped] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  // Optimistic: shows "Saved" straight away, flips back if the save fails.
-  async function save() {
-    if (state === "saved") return;
-    setState("saved");
-    setPopped(true);
-    try {
-      await addToWant(bookId);
-      onSaved?.();
-    } catch {
-      setState("error");
+  // Optimistic both ways: flips straight away, flips back if the change fails.
+  async function toggle() {
+    if (busy) return;
+    setBusy(true);
+    if (state === "saved") {
+      setState("idle");
+      setPopped(false);
+      try {
+        await removeFromWant(bookId);
+      } catch {
+        setState("saved");
+      }
+    } else {
+      setState("saved");
+      setPopped(true);
+      try {
+        await addToWant(bookId);
+        onSaved?.();
+      } catch {
+        setState("error");
+      }
     }
+    setBusy(false);
   }
 
   const label = state === "saved" ? "Saved" : state === "error" ? "Try again" : "Save";
   return (
     <button
       className="action-btn" data-pop={popped && state === "saved" ? "on" : undefined}
-      onClick={save}
+      onClick={toggle}
       aria-pressed={state === "saved"}
-      aria-label={state === "saved" ? "Saved to want to read" : "Save to want to read"}
+      aria-label={state === "saved" ? "Saved to want to read. Tap to remove" : "Save to want to read"}
       style={state === "saved" ? { color: "var(--cobalt-ink)", background: "var(--cobalt-soft)" } : undefined}
     >
       <BookmarkIcon size={16} style={state === "saved" ? { fill: "currentColor" } : undefined} />

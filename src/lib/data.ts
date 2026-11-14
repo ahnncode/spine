@@ -314,6 +314,18 @@ export async function addToWant(bookId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Take a book back off your want-to-read list. Only touches it while it's still a "want"; never a book you're reading or have ranked. */
+export async function removeFromWant(bookId: string): Promise<void> {
+  const uid = await myId();
+  const { error } = await supabase()
+    .from("shelf_entries")
+    .delete()
+    .eq("user_id", uid)
+    .eq("book_id", bookId)
+    .eq("status", "want");
+  if (error) throw error;
+}
+
 /** Add books you've read but haven't ranked yet (they wait in "To rank"). */
 export async function addToRank(bookIds: string[]): Promise<void> {
   if (!bookIds.length) return;
