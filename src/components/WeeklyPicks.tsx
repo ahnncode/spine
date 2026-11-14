@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Cover } from "@/components/Cover";
-import { addToWant, fetchWeeklyPicks, respondToPick, revealPick, startReading, type WeeklyPick, type WeeklyPicks as Picks } from "@/lib/data";
+import { addToWant, fetchWeeklyPicks, respondToPick, revealPick, startReading, type WeeklyPick, type WeeklyPicks as Picks, removeFromWant } from "@/lib/data";
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { formatScore } from "@/lib/ranking";
 
@@ -160,9 +160,31 @@ function PickActions({ pick, onChange, dark = false }: { pick: WeeklyPick; onCha
     }
   }
 
+  // Take back "Want to read" or "Not for me" (a mis-tap shouldn't cost you this week's pick).
+  async function undo() {
+    setBusy(true);
+    try {
+      if (pick.response === "want") await removeFromWant(b.id);
+      await respondToPick(pick.id, null);
+      onChange({ response: null });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (pick.response) {
     const text = { want: "Saved for later", reading: "Added to reading now", skip: "Skipped. New picks Monday" }[pick.response];
-    return <p className="m" style={{ margin: "14px 0 0", fontSize: 13, color: dark ? "var(--on-panel-muted)" : "var(--muted)" }}>✓ {text}</p>;
+    const muted = dark ? "var(--on-panel-muted)" : "var(--muted)";
+    return (
+      <p className="m" style={{ margin: "14px 0 0", fontSize: 13, color: muted, display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span>✓ {text}</span>
+        {pick.response !== "reading" && (
+          <button type="button" className="link-btn" style={{ fontSize: 13, minHeight: 44, color: dark ? "var(--on-panel)" : undefined }} disabled={busy} onClick={undo}>
+            Undo
+          </button>
+        )}
+      </p>
+    );
   }
   const quiet = dark ? { background: "transparent", color: "var(--on-panel)", border: "1px solid var(--on-panel-line)" } : undefined;
   return (

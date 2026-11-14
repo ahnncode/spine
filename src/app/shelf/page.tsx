@@ -168,6 +168,11 @@ function Shelf() {
                 <ArrowIcon size={18} />
               </Link>
             )}
+            {roughCount > 0 && ranked.some((e) => e.bucket === "loved") && (
+              <Link href="/top-ten" className="link-btn" style={{ fontSize: 14, minHeight: 44, display: "inline-flex", alignItems: "center" }}>
+                Pick your top 10 by hand
+              </Link>
+            )}
             {shown.length === 0 ? (
               <div className="empty">
                 <p className="h2">{ranked.length ? "Nothing here yet" : "Nothing ranked yet"}</p>

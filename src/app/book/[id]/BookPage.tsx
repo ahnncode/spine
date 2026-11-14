@@ -13,7 +13,7 @@ import { Avatar, displayName } from "@/components/Avatar";
 import { Name } from "@/components/Badge";
 import { BookActions } from "@/components/BookActions";
 import { Cover } from "@/components/Cover";
-import { BackIcon } from "@/components/icons";
+import { BackIcon, CloseIcon } from "@/components/icons";
 import { EntryThread } from "@/components/EntryThread";
 import { ScoreChip } from "@/components/ScoreChip";
 import { NoteText, TagList, VibePill } from "@/components/Social";
@@ -22,11 +22,7 @@ import { TabBar } from "@/components/TabBar";
 import type { Book } from "@/lib/books";
 import { openLibraryHasCover } from "@/components/useCoverBackfill";
 import { findAppleCover } from "@/lib/applecovers";
-import {
-  fixBookDetails, setBookCover, saveFinishedOn,
-  fetchCheckins, type Checkin,
-  bookStats, fetchBook, fetchFollowing, fetchProfiles, fetchShelf, friendsOnBook, predictedScore,
-  rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry, isListened } from "@/lib/data";
+import { fixBookDetails, setBookCover, saveFinishedOn, fetchCheckins, type Checkin, bookStats, fetchBook, fetchFollowing, fetchProfiles, fetchShelf, friendsOnBook, predictedScore, rankEntries, tasteMatches, type Entry, type Match, type Profile, type ScoredEntry, isListened, deleteCheckin } from "@/lib/data";
 import { GENRE_BY_KEY } from "@/lib/genres";
 import { BookSummary } from "@/components/BookSummary";
 import { ElsewhereRatings } from "@/components/ElsewhereRatings";
@@ -70,6 +66,17 @@ function Inner() {
     if (new URLSearchParams(window.location.search).get("checkin") === "1") setCheckIn(true);
   }, []);
   const [diary, setDiary] = useState<Checkin[]>([]);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  async function removeCheckin(checkinId: string) {
+    setConfirmDelete(null);
+    const before = diary;
+    setDiary((d) => d.filter((x) => x.id !== checkinId));
+    try {
+      await deleteCheckin(checkinId);
+    } catch {
+      setDiary(before);
+    }
+  }
   const [editing, setEditing] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [starting, setStarting] = useState(false);
@@ -346,6 +353,16 @@ function Inner() {
                         </div>
                         {c.note && <p className="note" style={{ fontSize: 14 }}><MentionText text={c.note} /></p>}
                       </div>
+                      {confirmDelete === c.id ? (
+                        <span style={{ display: "flex", gap: 4, alignItems: "center", flexShrink: 0 }}>
+                          <button type="button" className="link-btn" style={{ fontSize: 13, minHeight: 44, color: "var(--error-ink)" }} onClick={() => removeCheckin(c.id)}>Delete</button>
+                          <button type="button" className="link-btn" style={{ fontSize: 13, minHeight: 44, color: "var(--muted)", fontWeight: 500 }} onClick={() => setConfirmDelete(null)}>Keep</button>
+                        </span>
+                      ) : (
+                        <button type="button" className="icon-btn" aria-label="Delete this check-in" style={{ flexShrink: 0, color: "var(--muted)" }} onClick={() => setConfirmDelete(c.id)}>
+                          <CloseIcon size={16} />
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ol>

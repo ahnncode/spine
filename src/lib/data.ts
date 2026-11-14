@@ -326,6 +326,13 @@ export async function removeFromWant(bookId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Delete one of your own check-ins. The book's current progress stays as it is. */
+export async function deleteCheckin(id: string): Promise<void> {
+  const uid = await myId();
+  const { error } = await supabase().from("reading_checkins").delete().eq("id", id).eq("user_id", uid);
+  if (error) throw error;
+}
+
 /** Add books you've read but haven't ranked yet (they wait in "To rank"). */
 export async function addToRank(bookIds: string[]): Promise<void> {
   if (!bookIds.length) return;
@@ -1306,8 +1313,9 @@ export async function revealPick(id: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function respondToPick(id: string, response: "want" | "reading" | "skip"): Promise<void> {
-  const { error } = await supabase().rpc("respond_pick", { p_id: id, p_response: response });
+/** Answer this week's pick. `null` takes the answer back (respond_pick stores anything else as no answer). */
+export async function respondToPick(id: string, response: "want" | "reading" | "skip" | null): Promise<void> {
+  const { error } = await supabase().rpc("respond_pick", { p_id: id, p_response: response ?? "none" });
   if (error) throw error;
 }
 
