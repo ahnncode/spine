@@ -30,9 +30,9 @@ describe("Korean and other non-Latin books", () => {
     expect(new Set([dedupeKey("ノルウェイの森", "村上春樹"), dedupeKey("三体", "刘慈欣"), dedupeKey("Мастер и Маргарита", "Булгаков")]).size).toBe(3);
   });
 
-  it("leaves English keys exactly as they were", () => {
-    expect(dedupeKey("The Remains of the Day", "Kazuo Ishiguro")).toBe("remains of day|ishiguro");
-    expect(dedupeKey("Søren's Café: A Novel", "Anne Brontë")).toBe("s ren s cafe|bronte");
+  it("keys English books by title and the author's initial and surname", () => {
+    expect(dedupeKey("The Remains of the Day", "Kazuo Ishiguro")).toBe("remains of day|k ishiguro");
+    expect(dedupeKey("Søren's Café: A Novel", "Anne Brontë")).toBe("s ren s cafe|a bronte");
     expect(sameBookKey("a confed of dunces|toole", "a confederacy of dunces|toole")).toBe(true);
   });
 

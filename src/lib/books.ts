@@ -53,13 +53,28 @@ function cleanKoreanTitle(title: string): string {
     .trim();
 }
 
+const SPELLED = "one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve";
+
+/** Bracket labels that describe an edition, imprint, award or book club rather than the book. */
+const LABEL = /\s*[(\[][^()[\]]*\b(?:edition|classics?|finalist|winner|prize|award|book club|anniversary|illustrated|deluxe|tie-?in|unabridged|abridged|reprint|paperback|hardcover|large print|a novel)\b[^()[\]]*[)\]]\s*$/i;
+
 export function cleanTitle(title: string): string {
-  return cleanKoreanTitle(title)
-    .replace(/\s*\([^()]*#\s*[\d.]+[^()]*\)\s*$/, "")
-    // "(Harry Potter, Book 3)", "(Wings of Fire Series Vol. 2)" — but not a bare "(Book II)" that is the title.
-    .replace(/\s*\([^()]*[A-Za-z][^()]*,?\s+(book|vol\.?|volume)\s*[\d.]+\)\s*$/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
+  let t = cleanKoreanTitle(title);
+  // Labels can stack: "Dune (Deluxe Edition) (Penguin Galaxy)" — strip from the end.
+  for (let i = 0; i < 3; i++) {
+    const before = t;
+    t = t
+      .replace(/\s*\([^()]*#\s*[\d.]+[^()]*\)\s*$/, "")
+      // "(Harry Potter, Book 3)", "(Wings of Fire Series Vol. 2)" — but not a bare "(Book II)" that is the title.
+      .replace(/\s*\([^()]*[A-Za-z][^()]*,?\s+(book|vol\.?|volume)\s*[\d.]+\)\s*$/i, "")
+      // "(Kingkiller Chronicle, Book One)"
+      .replace(new RegExp(`\\s*\\([^()]*[A-Za-z][^()]*,?\\s+(book|volume|part)\\s+(${SPELLED})\\)\\s*$`, "i"), "")
+      // Amazon-style "(The Empyrean, 1)"
+      .replace(/\s*\([^()]*[A-Za-z][^()]*,\s*[\d.]+\)\s*$/, "")
+      .replace(LABEL, "");
+    if (t === before) break;
+  }
+  return t.replace(/\s+/g, " ").trim();
 }
 
 function norm(s: string): string {
@@ -73,15 +88,92 @@ function norm(s: string): string {
     .trim();
 }
 
+/** Words that open a descriptive subtitle ("Sapiens: A Brief History…") rather than a title of its own. */
+const SUBTITLE_OPENER = new Set([
+  "a", "an", "the", "or", "being", "how", "why", "what", "when", "where", "who", "from", "on", "in", "my", "our",
+  "notes", "stories", "poems", "essays", "letters", "adapted", "volume", "vol", "book", "part",
+]);
+/** Words that mark a subtitle as an edition label ("1984: 75th Anniversary Edition"). */
+const SUBTITLE_LABEL = /\b(edition|anniversary|illustrated|deluxe|classics?|novel|memoir|unabridged|abridged|annotated|tie in|young readers)\b/;
+/** A series label in the main title: "Percy Jackson and the Olympians, Book One: The Lightning Thief". */
+const SERIES_IN_MAIN = new RegExp(`\\b(book|vol|volume|part|no)\\s+(\\d+|${SPELLED}|[ivx]+)\\s*$|#\\s*\\d+\\s*$`, "i");
+
 /**
- * Same book from different sources → same key. Uses the main title (before any
- * subtitle) and the author's surname, which survive most edition differences.
+ * The part of a title that names the book. Usually the main title before a
+ * colon, since subtitles vary by edition ("Sapiens" / "Sapiens: A Brief
+ * History of Humankind"). Two exceptions keep the subtitle:
+ * - a short series or franchise name before the colon ("Dune: House
+ *   Atreides", "Warriors: Into the Wild"), when the subtitle reads like a
+ *   title and not a description or an edition label;
+ * - a series label before the colon ("… Olympians, Book One: The Lightning
+ *   Thief"), where the subtitle is the title.
+ */
+function keyTitle(title: string): string {
+  const clean = cleanTitle(title);
+  const cut = clean.search(/[:;]/);
+  if (cut < 0) return norm(clean) || norm(title);
+  const mainRaw = clean.slice(0, cut);
+  const sub = norm(clean.slice(cut + 1));
+  const main = norm(mainRaw);
+  if (!sub) return main || norm(title);
+  if (!main) return sub;
+  if (SERIES_IN_MAIN.test(mainRaw.trim())) return sub;
+  const subWords = sub.split(" ");
+  const subRaw = fold(clean.slice(cut + 1)).replace(/[^a-z0-9 ]+/g, " ").trim();
+  const opener = subRaw.split(/\s+/)[0] ?? "";
+  const titleLike =
+    subRaw !== "" && // subtitles in other scripts ("한강 장편소설") are descriptions
+    main.split(" ").length <= 2 &&
+    subWords.length <= 5 &&
+    !SUBTITLE_OPENER.has(opener) &&
+    !SUBTITLE_LABEL.test(subRaw) &&
+    !/^\d/.test(sub);
+  return titleLike ? `${main} ${sub}` : main;
+}
+
+/** Honorifics and titles that come and go between sources. */
+const HONORIFIC = new Set(["dr", "sir", "dame", "mr", "mrs", "ms", "miss", "prof", "professor", "count", "countess", "lord", "lady", "saint", "st", "rev", "jr", "sr", "ii", "iii"]);
+
+/**
+ * The first listed author's surname, with the first initial when we know it:
+ * "Frank Herbert" → "f herbert". Translators and co-authors after "&", "and",
+ * ";" or a comma are left out ("Han Kang & Deborah Smith" → "h kang"), and
+ * "García Márquez, Gabriel" is read as surname first.
+ */
+export function authorKey(author: string | null): string {
+  const raw = fold(author || "").trim();
+  if (!raw) return "";
+  // First author only. A comma followed by one word (and initials) is "Last, First".
+  const firstAuthor = raw.split(/\s*(?:&|;|\band\b|\bwith\b|\btranslated by\b|\btrans\.?\b)\s*/)[0];
+  let given = "";
+  let family = firstAuthor;
+  const comma = firstAuthor.indexOf(",");
+  if (comma >= 0) {
+    const before = firstAuthor.slice(0, comma);
+    const after = firstAuthor.slice(comma + 1).split(",")[0];
+    const afterWords = after.replace(/\./g, " ").trim().split(/\s+/).filter(Boolean);
+    const lastFirst = afterWords.length >= 1 && afterWords.filter((w) => w.length > 1 && !HONORIFIC.has(w)).length <= 1;
+    if (lastFirst) {
+      family = before;
+      given = afterWords.find((w) => !HONORIFIC.has(w)) ?? "";
+    } else {
+      family = before; // "Homer, Emily Wilson": the second name is someone else.
+    }
+  }
+  const words = norm(family.replace(/\./g, " ")).split(" ").filter((w) => w && !HONORIFIC.has(w));
+  if (words.length === 0) return "";
+  const surname = words[words.length - 1];
+  if (!given && words.length > 1) given = words[0];
+  const initial = given && /^[a-z]/.test(given) ? given[0] : "";
+  return `${initial ? `${initial} ` : ""}${surname}`.slice(0, 100);
+}
+
+/**
+ * Same book from different sources → same key: the title that names the book
+ * (see keyTitle) and the first author's initial and surname (see authorKey).
  */
 export function dedupeKey(title: string, author: string | null): string {
-  const main = norm(cleanTitle(title).split(/[:;]/)[0] || title);
-  const authorParts = norm(author || "").split(" ").filter(Boolean);
-  const surname = authorParts[authorParts.length - 1] || "";
-  return `${main.slice(0, 400)}|${surname.slice(0, 100)}`;
+  return `${keyTitle(title).slice(0, 400)}|${authorKey(author)}`;
 }
 
 /**

@@ -1545,6 +1545,34 @@ export async function adminGrowthTotals(): Promise<GrowthTotals> {
   return ((data ?? []) as GrowthTotals[])[0];
 }
 
+/* ---------------------------- Book keys (admin) --------------------------- */
+
+/** One page of the catalogue, for re-keying (REA-103). */
+export async function adminBooksPage(after: string | null, limit = 1000): Promise<Array<{ id: string; title: string; author: string | null; dedupe_key: string }>> {
+  let q = supabase().from("books").select("id, title, author, dedupe_key").order("id").limit(limit);
+  if (after) q = q.gt("id", after);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as Array<{ id: string; title: string; author: string | null; dedupe_key: string }>;
+}
+
+/** Stage new keys for apply_book_rekey(), which runs in the SQL Editor. Returns how many are staged in total. */
+export async function adminStageRekey(rows: Array<{ id: string; key: string }>): Promise<number> {
+  let staged = 0;
+  for (let i = 0; i < rows.length; i += 500) {
+    const chunk = rows.slice(i, i + 500);
+    const { data, error } = await supabase().rpc("admin_stage_rekey", { p_ids: chunk.map((r) => r.id), p_keys: chunk.map((r) => r.key) });
+    if (error) throw error;
+    staged = Number(data ?? 0);
+  }
+  return staged;
+}
+
+export async function adminClearRekey(): Promise<void> {
+  const { error } = await supabase().rpc("admin_clear_rekey");
+  if (error) throw error;
+}
+
 /* -------------------------------- Pokes ---------------------------------- */
 
 /** Nudge someone you follow about their reading (once a day each). */
