@@ -1440,7 +1440,7 @@ export async function unblock(userId: string): Promise<void> {
   if (error) throw error;
 }
 
-export async function report(targetType: "comment" | "entry" | "checkin" | "profile" | "chapter_comment" | "club_comment", targetId: string, reason?: string): Promise<void> {
+export async function report(targetType: ReportTarget, targetId: string, reason?: string): Promise<void> {
   const { error } = await supabase()
     .from("reports")
     .insert({ target_type: targetType, target_id: targetId, reason: reason?.trim().slice(0, 500) || null });
@@ -1449,7 +1449,7 @@ export async function report(targetType: "comment" | "entry" | "checkin" | "prof
 
 /* ------------------------------ Moderation ------------------------------- */
 
-export type ReportTarget = "comment" | "entry" | "checkin" | "profile" | "chapter_comment" | "club_comment";
+export type ReportTarget = "comment" | "entry" | "checkin" | "profile" | "chapter_comment" | "club_comment" | "club";
 
 export type OpenReport = {
   target_type: ReportTarget;

@@ -7,6 +7,7 @@ import { RequireAuth } from "@/components/Auth";
 import { Avatar, displayName } from "@/components/Avatar";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { ClubPick } from "@/components/ClubPick";
+import { MeetingSection, RevealRowLink } from "@/components/ClubMeeting";
 import { ClubScreen, ClubTile, shortDate, today, useClub } from "@/components/ClubBits";
 import { Cover } from "@/components/Cover";
 import { LockIcon } from "@/components/icons";
@@ -17,7 +18,7 @@ import {
   inviteUrl, joinClub, joinClubByInvite, leaveClub, removeClubMember, resetInviteCode, setClubRole, setReadBefore, updateClub, weekOpen,
   atLabel, behindLabel, weekRange, type ClubColor, type PaceRow,
 } from "@/lib/clubs";
-import { fetchFollowing, startReading } from "@/lib/data";
+import { fetchFollowing, report, startReading } from "@/lib/data";
 
 export function ClubPage() {
   return (
@@ -119,7 +120,7 @@ function Inner() {
           <div className="card" style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 16 }}>
             <Cover book={book} width={44} />
             <div style={{ minWidth: 0 }}>
-              <span className="eyebrow">Reading now</span>
+              <span className="muted" style={{ fontSize: 13, fontWeight: 600 }}>Reading now</span>
               <strong style={{ display: "block", fontSize: 15 }}>{book.title}</strong>
               <span className="muted" style={{ fontSize: 13 }}>Week {currentWeek(current.plan, day)} of {current.plan.length || 1} · finishes {shortDate(current.ends_on)}</span>
             </div>
@@ -148,6 +149,7 @@ function Inner() {
             <button className="btn btn--block" style={{ marginTop: 16 }} disabled={busy} onClick={() => join()}>{busy ? "Joining…" : invite ? "Accept and join" : "Join the club"}</button>
           </>
         )}
+        <ReportClub clubId={id} />
       </ClubScreen>
     );
   }
@@ -221,8 +223,7 @@ function Inner() {
             <Link href={`/book/${book.id}`} style={{ display: "flex", gap: 14, color: "inherit", textDecoration: "none" }}>
               <Cover book={book} width={64} />
               <span style={{ minWidth: 0 }}>
-                <span className="eyebrow club-accent">Reading now</span>
-                <span className="g" style={{ display: "block", fontSize: 20, lineHeight: 1.15, marginTop: 2 }}>{book.title}</span>
+                <span className="g" style={{ display: "block", fontSize: 20, lineHeight: 1.15 }}>{book.title}</span>
                 <span className="muted" style={{ display: "block", fontSize: 13, marginTop: 2 }}>{book.author} · finishes {shortDate(current.ends_on)}</span>
               </span>
             </Link>
@@ -286,6 +287,9 @@ function Inner() {
               <span aria-hidden="true" className="muted">›</span>
             </Link>
 
+            <MeetingSection readId={current.id} isHost={isHost} meId={me?.id ?? ""} people={people} memberCount={members.length} />
+            <RevealRowLink clubId={id} readId={current.id} isHost={isHost} meId={me?.id ?? ""} people={people} memberCount={members.length} />
+
             {current.plan.length > 0 && (
               <section aria-label="Week rooms" style={{ marginTop: 20 }}>
                 <h2 className="section-title" style={{ fontSize: 20 }}>Week rooms</h2>
@@ -319,12 +323,12 @@ function Inner() {
 
         <div className="club-tiles">
           <Link href={`/clubs/${id}/list`}>
-            <span className="eyebrow">{card.list_id ? "The list" : "Read together"}</span>
+            <span className="muted" style={{ fontSize: 13, fontWeight: 600 }}>{card.list_id ? "The list" : "Read together"}</span>
             <span className="d" style={{ fontWeight: 700, fontSize: 20 }}>{data.reads.filter((r) => r.finished_at).length} read</span>
             <span className="muted" style={{ fontSize: 12 }}>{card.list_id ? "See the whole list" : "Every book so far"}</span>
           </Link>
           <Link href={`/clubs/${id}/shelf`}>
-            <span className="eyebrow">Club shelf</span>
+            <span className="muted" style={{ fontSize: 13, fontWeight: 600 }}>Club shelf</span>
             <span className="d" style={{ fontWeight: 700, fontSize: 20 }}>Verdicts</span>
             <span className="muted" style={{ fontSize: 12 }}>The club&rsquo;s ranking</span>
           </Link>
@@ -448,6 +452,7 @@ function MembersSheet({ clubId, data, meId, onClose, onChange, onEdit, onGone }:
           ) : (
             <button className="link-btn" style={{ minHeight: 44 }} onClick={() => setConfirm("leave")}>Leave the club</button>
           )}
+          {role !== "host" && <ReportClub clubId={clubId} />}
           {role === "host" && (confirm === "delete" ? (
             <button className="btn btn--block" style={{ background: "var(--error)", color: "var(--on-ink)" }} disabled={busy !== null} onClick={() => leaveOrDelete("delete")}>Delete the club for everyone</button>
           ) : (
@@ -470,7 +475,7 @@ function EditClubSheet({ clubId, data, onClose, onDone }: { clubId: string; data
   const [error, setError] = useState<string | null>(null);
 
   async function save() {
-    if (locked && !data.card.has_password && password.length < 4) return setError("Use a password of at least 4 characters");
+    if (locked && ((!data.card.has_password && password.length < 6) || (password.length > 0 && password.length < 6))) return setError("Use a password of at least 6 characters");
     setBusy(true);
     try {
       await updateClub(clubId, { name, description: about, color, password: locked ? password || null : null, clearPassword: !locked && data.card.has_password });
@@ -611,5 +616,20 @@ function WrapSheet({ title, onClose, onWrap }: { title: string; onClose: () => v
         </div>
       </div>
     </div>
+  );
+}
+
+/** Flag a club's name or description for review. */
+function ReportClub({ clubId }: { clubId: string }) {
+  const [state, setState] = useState<"idle" | "confirm" | "done">("idle");
+  if (state === "done") return <p className="muted" role="status" style={{ margin: "16px 0 0", fontSize: 13 }}>Thanks for flagging it. We&rsquo;ll take a look.</p>;
+  return state === "confirm" ? (
+    <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16, flexWrap: "wrap" }}>
+      <span style={{ fontSize: 13 }}>Report this club&rsquo;s name or description?</span>
+      <button className="small-btn small-btn--outline" onClick={async () => { await report("club", clubId).catch(() => {}); setState("done"); }}>Report</button>
+      <button className="link-btn" style={{ minHeight: 36, fontSize: 13 }} onClick={() => setState("idle")}>Never mind</button>
+    </div>
+  ) : (
+    <button className="link-btn" style={{ minHeight: 44, fontSize: 13, color: "var(--ink-2)", marginTop: 8 }} onClick={() => setState("confirm")}>Report this club</button>
   );
 }

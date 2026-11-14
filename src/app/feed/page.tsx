@@ -24,6 +24,7 @@ import { ScoreChip } from "@/components/ScoreChip";
 import { TabBar } from "@/components/TabBar";
 import { CheckInSheet } from "@/components/CheckInSheet";
 import { InstallHint } from "@/components/InstallHint";
+import { YourClubs } from "@/components/YourClubs";
 import { useShelf } from "@/components/useShelf";
 import { useStreak } from "@/components/useStreak";
 import {
@@ -170,6 +171,9 @@ function Feed() {
         </div>
 
         <InstallHint />
+
+        {/* Only when one of your clubs meets within a week. */}
+        <YourClubs where="feed" />
 
         {/* One line, not a banner: the feed is the point of this screen. */}
         {streak.weeks > 0 && !streak.activeThisWeek && (

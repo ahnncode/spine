@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlan, currentWeek, expectedChapter, planProblem, weekOpen, weekRange } from "./clubs";
+import { buildPlan, currentWeek, expectedChapter, planProblem, weekOpen, weekRange, meetingCountdown, revealSummary } from "./clubs";
 
 describe("club plans", () => {
   it("splits chapters evenly over four weeks, ending on the finish date", () => {
@@ -58,5 +58,34 @@ describe("percent plans", () => {
     expect(weekRange(plan, 1, "percent")).toBe("Up to 25%");
     expect(weekRange(plan, 2, "percent")).toBe("25–50%");
     expect(planProblem([{ through: 25, due: "x" }, { through: 90, due: "y" }], 100, "percent")).toMatch(/100%/);
+  });
+});
+
+describe("meetings and the reveal", () => {
+  const at = (s: string) => new Date(s);
+  it("counts down to a meeting", () => {
+    const now = at("2026-11-14T10:00:00");
+    expect(meetingCountdown("2026-11-20T19:00:00", now)).toBe("in 6 days");
+    expect(meetingCountdown("2026-11-15T19:00:00", now)).toBe("tomorrow");
+    expect(meetingCountdown("2026-11-14T19:00:00", now)).toBe("tonight");
+    expect(meetingCountdown("2026-11-14T10:20:00", now)).toBe("in 20 min");
+    expect(meetingCountdown("2026-11-14T09:30:00", now)).toBe("now");
+    expect(meetingCountdown("2026-11-14T05:00:00", now)).toBeNull();
+    expect(meetingCountdown("2026-12-30T19:00:00", now)).toBeNull();
+  });
+  it("sums up the reveal", () => {
+    const s = revealSummary([
+      { user_id: "maya", score: 9.4 },
+      { user_id: "theo", score: 3.1 },
+      { user_id: "sam", score: 6.5 },
+      { user_id: "jo", score: null },
+    ]);
+    expect(s.avg).toBe(6.3);
+    expect(s.high?.user_id).toBe("maya");
+    expect(s.low?.user_id).toBe("theo");
+    expect(s.closest?.user_id).toBe("sam");
+  });
+  it("has nothing to say before anyone ranks", () => {
+    expect(revealSummary([{ user_id: "a", score: null }])).toEqual({ avg: null, high: null, low: null, closest: null });
   });
 });

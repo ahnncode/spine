@@ -508,3 +508,114 @@ export async function fetchClubLinks(readIds: string[], commentIds: string[], cl
   }
   return out;
 }
+
+// ---------------------------------------------------------------- meetings (REA-91)
+
+export type RsvpAnswer = "going" | "maybe" | "no";
+
+export interface ClubMeeting {
+  read_id: string;
+  /** ISO timestamp. */
+  starts_at: string;
+  place: string | null;
+  link: string | null;
+  note: string | null;
+}
+
+export interface ClubRsvp {
+  user_id: string;
+  answer: RsvpAnswer;
+}
+
+export async function fetchMeeting(readId: string): Promise<{ meeting: ClubMeeting | null; rsvps: ClubRsvp[] }> {
+  const [m, r] = await Promise.all([
+    supabase().from("club_meetings").select("read_id, starts_at, place, link, note").eq("read_id", readId).maybeSingle(),
+    supabase().from("club_rsvps").select("user_id, answer").eq("read_id", readId),
+  ]);
+  if (m.error) throw m.error;
+  return { meeting: (m.data as ClubMeeting | null) ?? null, rsvps: (r.data as ClubRsvp[] | null) ?? [] };
+}
+
+/** Set or move the meeting (host or co-host). Pass null to cancel it. */
+export async function setMeeting(readId: string, input: { startsAt: Date; place?: string; link?: string; note?: string } | null): Promise<void> {
+  const { error } = await supabase().rpc("set_club_meeting", {
+    p_read: readId,
+    p_starts_at: input ? input.startsAt.toISOString() : null,
+    p_place: input?.place?.trim() || null,
+    p_link: input?.link?.trim() || null,
+    p_note: input?.note?.trim() || null,
+  });
+  if (error) throw new Error(error.message);
+}
+
+export async function rsvp(readId: string, answer: RsvpAnswer | null): Promise<void> {
+  const { error } = await supabase().rpc("rsvp_club_meeting", { p_read: readId, p_answer: answer });
+  if (error) throw new Error(error.message);
+}
+
+/** Upcoming meetings for your clubs, keyed by club id. */
+export async function myClubMeetings(): Promise<Map<string, { read_id: string; starts_at: string; answer: RsvpAnswer | null }>> {
+  const { data, error } = await supabase().rpc("my_club_meetings");
+  if (error) return new Map();
+  return new Map(((data as Array<{ club_id: string; read_id: string; starts_at: string; answer: RsvpAnswer | null }>) || []).map((r) => [r.club_id, r]));
+}
+
+/** "Thu, Nov 20 · 7:00 PM" in the reader's own time zone. */
+export function meetingWhen(iso: string): string {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  return `${day} · ${time}`;
+}
+
+/** "in 3 days", "tomorrow", "tonight", "now", or null once it's well past. */
+export function meetingCountdown(iso: string, now: Date = new Date()): string | null {
+  const start = new Date(iso);
+  const ms = start.getTime() - now.getTime();
+  if (ms < -3 * 3600e3) return null;
+  if (ms <= 0) return "now";
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const days = Math.round((startDay - today) / 864e5);
+  if (days === 0) return start.getHours() >= 17 ? "tonight" : ms < 3600e3 ? `in ${Math.max(1, Math.round(ms / 60e3))} min` : "today";
+  if (days === 1) return "tomorrow";
+  if (days < 14) return `in ${days} days`;
+  return null;
+}
+
+// ---------------------------------------------------------------- the reveal (REA-92)
+
+export interface RevealRow {
+  user_id: string;
+  /** Null for other members until the reveal opens. */
+  score: number | null;
+}
+
+export async function fetchReveal(readId: string): Promise<{ open: boolean; rows: RevealRow[] }> {
+  const { data, error } = await supabase().rpc("club_reveal", { p_read: readId });
+  if (error) throw error;
+  const rows = (data as Array<{ user_id: string; score: number | string | null; is_open: boolean }>) || [];
+  return {
+    open: rows.some((r) => r.is_open),
+    rows: rows.map((r) => ({ user_id: r.user_id, score: r.score == null ? null : Number(r.score) })),
+  };
+}
+
+export async function openReveal(readId: string): Promise<void> {
+  const { error } = await supabase().rpc("open_club_reveal", { p_read: readId });
+  if (error) throw new Error(error.message);
+}
+
+/** The club's score, the biggest split and who ranked it most like the club. */
+export function revealSummary(rows: RevealRow[]): {
+  avg: number | null;
+  high: RevealRow | null;
+  low: RevealRow | null;
+  closest: RevealRow | null;
+} {
+  const scored = rows.filter((r): r is RevealRow & { score: number } => r.score != null).sort((a, b) => b.score - a.score);
+  if (!scored.length) return { avg: null, high: null, low: null, closest: null };
+  const avg = Math.round((scored.reduce((a, r) => a + r.score, 0) / scored.length) * 10) / 10;
+  const closest = scored.length >= 3 ? [...scored].sort((a, b) => Math.abs(a.score - avg) - Math.abs(b.score - avg))[0] : null;
+  return { avg, high: scored[0], low: scored.length >= 2 ? scored[scored.length - 1] : null, closest };
+}

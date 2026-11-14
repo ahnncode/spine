@@ -37,7 +37,7 @@ function Inner() {
     e.preventDefault();
     if (busy) return;
     if (name.trim().length < 2) return setError("Give the club a name");
-    if (locked && password.length < 4) return setError("Use a password of at least 4 characters");
+    if (locked && password.length < 6) return setError("Use a password of at least 6 characters");
     setBusy(true);
     setError(null);
     try {
@@ -99,7 +99,7 @@ function Inner() {
           {locked && (
             <div style={{ marginTop: 10 }}>
               <label htmlFor="club-pass" className="field-label">Password</label>
-              <input id="club-pass" className="input" type="text" autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 4 characters" />
+              <input id="club-pass" className="input" type="text" autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
             </div>
           )}
         </fieldset>

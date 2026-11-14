@@ -108,6 +108,9 @@ function Inner() {
       if (n.detail === "joined") return `joined ${c?.club ?? "your club"}`;
       if (n.detail === "finished") return c ? `wrapped up ${c.where} in ${c.club}. Rank it to add to the verdict` : "wrapped up your club’s book";
       if (n.detail === "new_read") return c ? `picked ${c.where} for ${c.club}` : "picked your club’s next book";
+      if (n.detail === "meeting") return c ? `set a meeting for ${c.where} in ${c.club}` : "set your club’s next meeting";
+      if (n.detail === "meeting_moved") return c ? `moved the ${c.club} meeting` : "moved your club’s meeting";
+      if (n.detail === "reveal") return c ? `opened the reveal for ${c.where}. See how ${c.club} ranked it` : "opened your club’s reveal";
       return c ? `replied to you in ${c.club}, ${c.where}` : "replied to you in your club";
     }
     if (n.target_type === "club_comment") {
