@@ -10,14 +10,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Shipping
 
-readread deploys once a day. Commit and push work to the `dev` branch, never
-straight to `main`. `.github/workflows/daily-deploy.yml` moves `dev` onto
-`main` at 09:07 UTC when there's anything new, and Netlify deploys `main`.
-Netlify skips every other branch (see `netlify.toml`). To ship sooner, run
-"Daily deploy" from the GitHub Actions tab.
+readread deploys every other day. Commit and push work to the `dev` branch,
+never straight to `main`. `.github/workflows/daily-deploy.yml` moves `dev`
+onto `main` at 09:07 UTC every second night (when the days since 1970 are
+even) if there's anything new, and Netlify deploys `main`. Netlify skips every
+other branch (see `netlify.toml`). To ship sooner, run "Deploy" from the
+GitHub Actions tab.
 
 Database changes the new code needs must be run in the Supabase SQL Editor
-before the next daily deploy.
+before the next deploy.
 
 ## Design
 

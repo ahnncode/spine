@@ -1,4 +1,4 @@
-# Only main goes live (once a day, see .github/workflows/daily-deploy.yml).
+# Only main goes live (every other day, see .github/workflows/daily-deploy.yml).
 # Pushes to any other branch never build. Exit 0 here means "skip".
 [build]
   ignore = "test \"$BRANCH\" != main"
