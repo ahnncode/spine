@@ -88,15 +88,40 @@ export function dedupeKey(title: string, author: string | null): string {
  * Two dedupe keys that are probably the same book: same surname, and titles
  * that match word for word where one word may be cut short ("a confed of
  * dunces" and "a confederacy of dunces"). Numbers must match exactly, so
- * volume 1 and volume 10 stay apart.
+ * volume 1 and volume 10 stay apart. A volume number at the end counts the
+ * same however it's written: "volume i", "volume 1" and "book 1" match.
+ * Mirrors public._same_book_key in the database.
  */
 export function sameBookKey(a: string, b: string): boolean {
   if (a === b) return true;
   const [ta, sa = ""] = a.split("|");
   const [tb, sb = ""] = b.split("|");
   if (sa !== sb || !ta || !tb) return false;
-  const wa = ta.split(" ");
-  const wb = tb.split(" ");
+  const fb = volumeForms(tb.split(" "));
+  return volumeForms(ta.split(" ")).some((wa) => fb.some((wb) => sameWords(wa, wb)));
+}
+
+const ROMAN: Record<string, string> = {
+  i: "1", ii: "2", iii: "3", iv: "4", v: "5", vi: "6", vii: "7", viii: "8", ix: "9", x: "10",
+  xi: "11", xii: "12", xiii: "13", xiv: "14", xv: "15", xvi: "16", xvii: "17", xviii: "18", xix: "19", xx: "20",
+};
+const VOLUME_WORD = new Set(["book", "vol", "volume", "part"]);
+
+/**
+ * A title's spellings with its last-word volume number written one way:
+ * "volume i" → "volume 1"; "volume book i" → also "volume 1" (the label word
+ * dropped). Both are offered, since "volume" can be part of the title itself.
+ */
+function volumeForms(words: string[]): string[][] {
+  const last = words.length - 1;
+  if (last < 1) return [words];
+  const num = ROMAN[words[last]] ?? words[last];
+  const forms = [[...words.slice(0, last), num]];
+  if (/^\d+$/.test(num) && VOLUME_WORD.has(words[last - 1])) forms.push([...words.slice(0, last - 1), num]);
+  return forms;
+}
+
+function sameWords(wa: string[], wb: string[]): boolean {
   if (wa.length !== wb.length) return false;
   return wa.every((x, i) => {
     const y = wb[i];
