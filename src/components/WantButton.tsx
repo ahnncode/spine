@@ -1,10 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { addToWant, removeFromWant } from "@/lib/data";
+import { savedOverride, savedVersion, setSaved, subscribeSaved } from "@/lib/saved";
 import { BookmarkIcon } from "./icons";
 
-/** Save a book to your want-to-read list in one tap, without leaving the page. Tap again to take it back off. */
+/**
+ * Save a book to your want-to-read list in one tap, without leaving the page.
+ * Tap again to take it back off. Every Save button for the same book stays in
+ * step (see lib/saved.ts), so a book that appears twice in the feed flips on
+ * both cards.
+ */
 export function WantButton({
   bookId,
   compact = false,
@@ -17,30 +23,36 @@ export function WantButton({
   initialSaved?: boolean;
   onSaved?: () => void;
 }) {
-  const [state, setState] = useState<"idle" | "saved" | "error">(initialSaved ? "saved" : "idle");
+  useSyncExternalStore(subscribeSaved, savedVersion, savedVersion);
+  const isSaved = savedOverride(bookId) ?? initialSaved;
+  const [failed, setFailed] = useState(false);
   const [popped, setPopped] = useState(false);
   const [busy, setBusy] = useState(false);
+  const state: "idle" | "saved" | "error" = failed ? "error" : isSaved ? "saved" : "idle";
 
-  // Optimistic both ways: flips straight away, flips back if the change fails.
+  // Optimistic both ways: flips straight away (on every card for this book),
+  // flips back if the change fails.
   async function toggle() {
     if (busy) return;
     setBusy(true);
-    if (state === "saved") {
-      setState("idle");
+    setFailed(false);
+    if (isSaved) {
+      setSaved(bookId, false);
       setPopped(false);
       try {
         await removeFromWant(bookId);
       } catch {
-        setState("saved");
+        setSaved(bookId, true);
       }
     } else {
-      setState("saved");
+      setSaved(bookId, true);
       setPopped(true);
       try {
         await addToWant(bookId);
         onSaved?.();
       } catch {
-        setState("error");
+        setSaved(bookId, false);
+        setFailed(true);
       }
     }
     setBusy(false);
